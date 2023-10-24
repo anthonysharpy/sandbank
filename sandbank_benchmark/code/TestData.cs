@@ -6,6 +6,7 @@ internal class TestData
 {
 	public static PlayerData TestData1 = new PlayerData()
 	{
+		ID = "",
 		Health = 100,
 		Name = "TestPlayer1",
 		Level = 10,
@@ -15,6 +16,7 @@ internal class TestData
 
 	public static PlayerData TestData2 = new PlayerData()
 	{
+		ID = "",
 		Health = 90,
 		Name = "TestPlayer2",
 		Level = 15,

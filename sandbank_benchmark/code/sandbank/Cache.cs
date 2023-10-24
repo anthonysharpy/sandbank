@@ -2,8 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
-using System.Threading.Tasks;
 using Sandbox;
 
 namespace NSSandbank;
@@ -12,11 +10,11 @@ static internal class Cache
 {
 	private static ConcurrentDictionary<string, Collection> _collections = new();
 	private static TimeSince _timeSinceLastFullWrite = 0;
+	private static object _timeSinceLastFullWriteLock = new();
 	private static int _staleDocumentsFoundAfterLastFullWrite;
 	private static int _staleDocumentsWrittenSinceLastFullWrite;
 	private static Dictionary<Collection, List<Document>> _staleDocumentsToWrite = new();
 	private static int _partialWriteTickInterval = Game.TickRate / Config.PARTIAL_WRITES_PER_SECOND;
-	private static bool _writeInProgress = false;
 	private static object _writeInProgressLock = new();
 
 	public static Collection GetCollectionByName<T>( string name )
@@ -52,14 +50,25 @@ static internal class Cache
 		return _collections[name];
 	}
 
-	public static bool CollectionExists( string name )
-	{
-		return _collections.ContainsKey( name );
-	}
-
 	public static void WipeCollectionsCache()
 	{
 		_collections.Clear();
+	}
+
+	private static float GetTimeSinceLastFullWrite()
+	{
+		lock ( _timeSinceLastFullWriteLock )
+		{
+			return _timeSinceLastFullWrite;
+		}
+	}
+
+	private static void ResetTimeSinceLastFullWrite()
+	{
+		lock ( _timeSinceLastFullWriteLock )
+		{
+			_timeSinceLastFullWrite = 0;
+		}
 	}
 
 	public static void CreateCollection( string name, Type documentClassType )
@@ -86,21 +95,43 @@ static internal class Cache
 	[GameEvent.Tick.Server]
 	private static void Tick()
 	{
+		if ( GetTimeSinceLastFullWrite() >= Config.PERSIST_EVERY_N_SECONDS )
+		{
+			GameTask.RunInThreadAsync( async () => 
+			{
+				lock ( _writeInProgressLock )
+				{
+					FullWrite();
+				}
+			});
+		}
+		else if ( Time.Tick % _partialWriteTickInterval == 0 )
+		{
+			GameTask.RunInThreadAsync( async () => 
+			{ 
+				lock ( _writeInProgressLock )
+				{
+					PartialWrite();
+				}
+			});
+		}
+	}
+
+	/// <summary>
+	/// Force the cache to perform a full-write of all stale entries.
+	/// </summary>
+	public static void ForceFullWrite()
+	{
 		lock ( _writeInProgressLock )
 		{
-			// Don't try and write anything if we are already doing a write
-			// (possibly asynchronously).
-			if ( _writeInProgress )
-				return;
-		}
+			if ( Config.ENABLE_LOGGING )
+				Log.Info( "Sandbank: beginning forced full-write..." );
 
-		if ( _timeSinceLastFullWrite >= Config.PERSIST_EVERY_N_SECONDS )
-		{
-			GameTask.RunInThreadAsync( async () => FullWriteAsync() );
-		}
-		else if (Time.Tick % _partialWriteTickInterval == 0)
-		{
-			GameTask.RunInThreadAsync(async () => PartialWriteAsync() );
+			ReevaluateStaleDocuments();
+			FullWrite();
+
+			if ( Config.ENABLE_LOGGING )
+				Log.Info( "Sandbank: finished forced full-write..." );
 		}
 	}
 
@@ -109,7 +140,7 @@ static internal class Cache
 	/// </summary>
 	private static int GetNumberOfDocumentsToWrite()
 	{
-		float progressToNextWrite = _timeSinceLastFullWrite / Config.PERSIST_EVERY_N_SECONDS;
+		float progressToNextWrite = GetTimeSinceLastFullWrite() / Config.PERSIST_EVERY_N_SECONDS;
 		int documentsWeShouldHaveWrittenByNow = (int)(_staleDocumentsFoundAfterLastFullWrite * progressToNextWrite);
 		int numberToWrite = documentsWeShouldHaveWrittenByNow - _staleDocumentsWrittenSinceLastFullWrite;
 
@@ -123,13 +154,8 @@ static internal class Cache
 	/// Write some (but probably not all) of the stale documents to disk. The longer
 	/// it's been since our last partial write, the more documents we will write.
 	/// </summary>
-	private static void PartialWriteAsync()
+	private static void PartialWrite()
 	{
-		lock ( _writeInProgressLock )
-		{
-			_writeInProgress = true;
-		}
-
 		try
 		{
 			var numberOfDocumentsToWrite = GetNumberOfDocumentsToWrite();
@@ -146,26 +172,14 @@ static internal class Cache
 		{
 			Log.Error( "Sandbank: partial write failed: " + e.Message );
 		}
-		finally
-		{
-			lock ( _writeInProgressLock )
-			{
-				_writeInProgress = false;
-			}
-		}
 	}
 
 	/// <summary>
-	/// Perform a full-write to guarantee we meet our write deadline target. Also,
-	/// re-evaluate cache to determine what is now stale.
+	/// Perform a full-write to (maybe) guarantee we meet our write deadline target.
+	/// Also, re-evaluate cache to determine what is now stale.
 	/// </summary>
-	private static void FullWriteAsync()
+	private static void FullWrite()
 	{
-		lock ( _writeInProgressLock )
-		{
-			_writeInProgress = true;
-		}
-
 		try
 		{
 			if ( Config.ENABLE_LOGGING )
@@ -175,19 +189,12 @@ static internal class Cache
 			PersistStaleDocuments();
 			ReevaluateStaleDocuments();
 
-			_timeSinceLastFullWrite = 0;
+			ResetTimeSinceLastFullWrite();
 			_staleDocumentsWrittenSinceLastFullWrite = 0;
 		}
 		catch (Exception e)
 		{
 			Log.Error("Sandbank: full write failed: "+e.Message );
-		}
-		finally
-		{
-			lock ( _writeInProgressLock )
-			{
-				_writeInProgress = false;
-			}
 		}
 	}
 
@@ -242,9 +249,6 @@ static internal class Cache
 	/// </summary>
 	private static void ReevaluateStaleDocuments()
 	{
-		if ( _staleDocumentsToWrite.Count > 0 )
-			throw new Exception( "Sandbank: can't re-fetch stale documents when there are still stale documents to be written" );
-
 		_staleDocumentsFoundAfterLastFullWrite = 0;
 
 		foreach (var collectionPair in _collections)

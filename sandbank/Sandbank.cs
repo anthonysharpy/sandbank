@@ -2,6 +2,7 @@
 using Sandbox;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 static class Sandbank
 {
@@ -12,24 +13,22 @@ static class Sandbank
 	public static bool IsInitialised => Initialisation.IsInitialised;
 
 	/// <summary>
-	/// Insert a document into the database. Returns the document with the ID set,
-	/// unless it was already set.
+	/// Insert a document into the database. The document will have its ID set
+	/// if it is empty.
 	/// </summary>
-	public static T Insert<T>( string collection, T document ) where T : class
+	public static void Insert<T>( string collection, T document ) where T : class
 	{
 		var relevantCollection = Cache.GetCollectionByName<T>(collection);
 
 		Document newDocument = new( document, typeof(T), true );
 		relevantCollection.CachedDocuments[newDocument.ID] = newDocument;
-
-		return document;
 	}
 
 	/// <summary>
-	/// Insert a List of documents into the database. Returns the documents with the
-	/// IDs set, unless they were already set.
+	/// Insert a List of documents into the database. The documents will have their IDs
+	/// set, unless they are empty.
 	/// </summary>
-	public static List<T> InsertMany<T>( string collection, List<T> documents ) where T : class
+	public static void InsertMany<T>( string collection, List<T> documents ) where T : class
 	{
 		var relevantCollection = Cache.GetCollectionByName<T>( collection );
 
@@ -38,8 +37,6 @@ static class Sandbank
 			Document newDocument = new Document( document, typeof(T), true );
 			relevantCollection.CachedDocuments[newDocument.ID] = newDocument;
 		}
-
-		return documents;
 	}
 
 	/// <summary>
@@ -64,11 +61,9 @@ static class Sandbank
 	public static T? SelectOneWithID<T>( string collection, string id ) where T : class
 	{
 		var relevantCollection = Cache.GetCollectionByName<T>( collection );
+		relevantCollection.CachedDocuments.TryGetValue(id, out Document document);
 
-		if ( !relevantCollection.CachedDocuments.ContainsKey( id ) )
-			return null;
-
-		return relevantCollection.CachedDocuments[id].Data as T;
+		return document == null ? null : document.Data as T;
 	}
 
 	/// <summary>
@@ -104,7 +99,7 @@ static class Sandbank
 
 		foreach ( var id in idsToDelete )
 		{
-			relevantCollection.CachedDocuments.Remove( id, out _ );
+			relevantCollection.CachedDocuments.TryRemove( id, out _ );
 
 			int attempt = 0;
 
@@ -127,7 +122,7 @@ static class Sandbank
 	public static void DeleteWithID<T>( string collection, string id) where T : class
 	{
 		var relevantCollection = Cache.GetCollectionByName<T>( collection );
-		relevantCollection.CachedDocuments.Remove( id, out _ );
+		relevantCollection.CachedDocuments.TryRemove( id, out _ );
 
 		int attempt = 0;
 
@@ -231,5 +226,20 @@ static class Sandbank
 	{
 		Config.INDENT_JSON = false;
 		Serialisation.UpdateJSONOptions();
+	}
+
+	/// <summary>
+	/// Call this to force-write all remaining cache. It is recommended to call this
+	/// when your server is shutting down to avoid data loss, if that's important to
+	/// you. <br/>
+	/// <br/>
+	/// If anything is being inserted into or deleted from the database when this is
+	/// called, then what happens to that data is undefined behaviour; this does not
+	/// guarantee any ongoing inserts or deletions will be saved. If that matters to
+	/// you, then don't make inserts or deletions while shutting down the server.
+	/// </summary>
+	public static void ForceWriteCache()
+	{
+		Cache.ForceFullWrite();
 	}
 }

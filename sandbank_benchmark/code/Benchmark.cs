@@ -1,6 +1,7 @@
 ﻿using Sandbox;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace SandbankBenchmark;
@@ -15,7 +16,7 @@ static class Benchmark
 		Sandbank.WipeAllData();
 		Sandbank.DisableIndentJSON();
 
-		List<Action> benchmarks = new()	{
+		List<Func<Task>> benchmarks = new()	{
 			BenchmarkInsert,
 			BenchmarkInsertThreaded,
 			BenchmarkSelect,
@@ -24,7 +25,7 @@ static class Benchmark
 
 		foreach ( var benchmark in benchmarks )
 		{
-			benchmark.Invoke();
+			await benchmark.Invoke();
 			Sandbank.WipeAllData();
 
 			// We want a delay to let the PC cool-off.
@@ -32,7 +33,7 @@ static class Benchmark
 		}
 	}
 
-	private static void BenchmarkInsert()
+	private static async Task BenchmarkInsert()
 	{
 		int documents = 100000;
 
@@ -62,10 +63,10 @@ static class Benchmark
 		Log.Info( $"Insert() - {documents} documents inserted in {totalTime} seconds" );
 	}
 
-	private static async void BenchmarkInsertThreaded()
+	private static async Task BenchmarkInsertThreaded()
 	{
 		int documents = 100000;
-		int threads = 100;
+		int threads = 24;
 		int documentsPerThread = documents / threads;
 
 		List<PlayerData> testData = new();
@@ -103,7 +104,7 @@ static class Benchmark
 		Log.Info( $"[multi-threaded] Insert() - {documents} documents inserted in {totalTime} seconds" );
 	}
 
-	private static void BenchmarkSelect()
+	private static async Task BenchmarkSelect()
 	{
 		int repeats = 5000;
 
@@ -126,10 +127,10 @@ static class Benchmark
 		Log.Info( $"Select() - {repeats} documents searched {repeats} times in {totalTime} seconds" );
 	}
 
-	private static async void BenchmarkSelectThreaded()
+	private static async Task BenchmarkSelectThreaded()
 	{
 		int repeats = 5000;
-		int threads = 100;
+		int threads = 24;
 		int searchesPerThread = repeats / threads;
 
 		for ( int i = 0; i < repeats; i++ )

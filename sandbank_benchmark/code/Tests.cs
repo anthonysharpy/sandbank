@@ -1,6 +1,7 @@
 ﻿using Sandbox;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SandbankBenchmark;
 
@@ -25,7 +26,8 @@ static class Tests
 			TestAnyWithID,
 			TestEnableIndentJSON,
 			TestConcurrencySafety,
-			TestDisableUnsafeMode
+			TestForceWriteCache,
+			TestDisableUnsafeMode,
 		};
 
 		foreach (var test in tests)
@@ -42,86 +44,86 @@ static class Tests
 
 	private static void TestInsertAndSelectOne()
 	{
-		var insertedData = Sandbank.Insert<PlayerData>( "players", TestData.TestData1 );
+		Sandbank.Insert<PlayerData>( "players", TestData.TestData1 );
 
-		if ( insertedData.ID.Length <= 10 )
-			Fail( insertedData.ID );
+		if ( TestData.TestData1.ID.Length <= 10 )
+			Fail( "TestInsertAndSelectOne() 1:" + TestData.TestData1.ID );
 
-		var data = Sandbank.SelectOne<PlayerData>("players", x => x.ID == insertedData.ID );
+		var data = Sandbank.SelectOne<PlayerData>("players", x => x.ID == TestData.TestData1.ID );
 
 		if ( data.Name != TestData.TestData1.Name )
-			Fail( data.Name );
+			Fail( "TestInsertAndSelectOne() 2:" + data.Name );
 	}
 
 	private static void TestInsertManyAndSelect()
 	{
 		var players = new List<PlayerData> { TestData.TestData1, TestData.TestData2 };
-		var insertedData = Sandbank.InsertMany<PlayerData>( "players", players);
+		Sandbank.InsertMany<PlayerData>( "players", players);
 
-		if ( insertedData[0].ID.Length <= 10 )
-			Fail( insertedData[0].ID );
-		if ( insertedData[1].ID.Length <= 10 )
-			Fail( insertedData[1].ID );
+		if ( players[0].ID.Length <= 10 )
+			Fail( "TestInsertManyAndSelect() 1:" + players[0].ID );
+		if ( players[1].ID.Length <= 10 )
+			Fail( "TestInsertManyAndSelect() 2:" + players[1].ID );
 
 		var data = Sandbank.Select<PlayerData>( "players", x => true );
 
 		if ( data[0].Name != TestData.TestData1.Name && data[0].Name != TestData.TestData2.Name )
-			Fail( data[0].Name );
+			Fail( "TestInsertManyAndSelect() 3:" + data[0].Name );
 		if ( data[1].Name != TestData.TestData1.Name && data[1].Name != TestData.TestData2.Name )
-			Fail( data[1].Name );
+			Fail( "TestInsertManyAndSelect() 4:" + data[1].Name );
 	}
 
 	private static void TestSelectOneWithID()
 	{
-		var insertedData = Sandbank.Insert<PlayerData>( "players", TestData.TestData1 );
+		Sandbank.Insert<PlayerData>( "players", TestData.TestData1 );
 
-		if ( insertedData.ID.Length <= 10 )
-			Fail( insertedData.ID );
+		if ( TestData.TestData1.ID.Length <= 10 )
+			Fail( "TestSelectOneWithID() 1:" + TestData.TestData1.ID );
 
-		var data = Sandbank.SelectOneWithID<PlayerData>( "players", insertedData.ID );
+		var data = Sandbank.SelectOneWithID<PlayerData>( "players", TestData.TestData1.ID );
 
-		if ( data.Name != TestData.TestData1.Name )
-			Fail( data.Name );
+		if ( data?.Name != TestData.TestData1.Name )
+			Fail( "TestSelectOneWithID() 2:" + data?.Name );
 	}
 
 	private static void TestDelete()
 	{
-		var insertedData = Sandbank.Insert<PlayerData>( "players", TestData.TestData1 );
+		Sandbank.Insert<PlayerData>( "players", TestData.TestData1 );
 
-		Sandbank.Delete<PlayerData>( "players", x => x.ID == insertedData.ID );
+		Sandbank.Delete<PlayerData>( "players", x => x.ID == TestData.TestData1.ID );
 
-		var data = Sandbank.SelectOneWithID<PlayerData>( "players", insertedData.ID );
+		var data = Sandbank.SelectOneWithID<PlayerData>( "players", TestData.TestData1.ID );
 
 		if ( data != null )
-			Fail( data.Name );
+			Fail( "TestDelete() 1:" + data.Name );
 	}
 
 	private static void TestDeleteWithID()
 	{
-		var insertedData = Sandbank.Insert<PlayerData>( "players", TestData.TestData1 );
+		Sandbank.Insert<PlayerData>( "players", TestData.TestData1 );
 
-		Sandbank.DeleteWithID<PlayerData>( "players", insertedData.ID );
+		Sandbank.DeleteWithID<PlayerData>( "players", TestData.TestData1.ID );
 
-		var data = Sandbank.SelectOneWithID<PlayerData>( "players", insertedData.ID );
+		var data = Sandbank.SelectOneWithID<PlayerData>( "players", TestData.TestData1.ID );
 
 		if ( data != null )
-			Fail( data.Name );
+			Fail( "TestDeleteWithID() 1:" + data.Name );
 	}
 
 	private static void TestAny()
 	{
-		var insertedData = Sandbank.Insert<PlayerData>( "players", TestData.TestData1 );
+		Sandbank.Insert<PlayerData>( "players", TestData.TestData1 );
 
-		if ( !Sandbank.Any<PlayerData>( "players", x => x.Level == insertedData.Level ) )
-			Fail("");
+		if ( !Sandbank.Any<PlayerData>( "players", x => x.Level == TestData.TestData1.Level ) )
+			Fail( "TestAny()" );
 	}
 
 	private static void TestAnyWithID()
 	{
-		var insertedData = Sandbank.Insert<PlayerData>( "players", TestData.TestData1 );
+		Sandbank.Insert<PlayerData>( "players", TestData.TestData1 );
 
-		if ( !Sandbank.AnyWithID<PlayerData>( "players", insertedData.ID ) )
-			Fail( "" );
+		if ( !Sandbank.AnyWithID<PlayerData>( "players", TestData.TestData1.ID ) )
+			Fail( "TestAnyWithID()" );
 	}
 
 	private static void TestEnableUnsafeMode()
@@ -129,7 +131,7 @@ static class Tests
 		Sandbank.EnableUnsafeMode();
 
 		if ( NSSandbank.Config.UNSAFE_MODE != true )
-			Fail( NSSandbank.Config.UNSAFE_MODE.ToString() );
+			Fail( "TestEnableUnsafeMode() 1:" + NSSandbank.Config.UNSAFE_MODE.ToString() );
 	}
 
 	private static void TestDisableUnsafeMode()
@@ -137,7 +139,7 @@ static class Tests
 		Sandbank.DisableUnsafeMode();
 
 		if ( NSSandbank.Config.UNSAFE_MODE != false )
-			Fail( NSSandbank.Config.UNSAFE_MODE.ToString() );
+			Fail( "TestDisableUnsafeMode() 1:" + NSSandbank.Config.UNSAFE_MODE.ToString() );
 	}
 
 	private static void TestEnableIndentJSON()
@@ -145,7 +147,7 @@ static class Tests
 		Sandbank.EnableIndentJSON();
 
 		if ( NSSandbank.Config.INDENT_JSON != true )
-			Fail( NSSandbank.Config.INDENT_JSON.ToString() );
+			Fail( "TestEnableIndentJSON() 1:" + NSSandbank.Config.INDENT_JSON.ToString() );
 	}
 
 	private static void TestDisableIndentJSON()
@@ -153,20 +155,39 @@ static class Tests
 		Sandbank.DisableIndentJSON();
 
 		if ( NSSandbank.Config.INDENT_JSON != false )
-			Fail( NSSandbank.Config.INDENT_JSON.ToString() );
+			Fail( "TestDisableIndentJSON() 1:" + NSSandbank.Config.INDENT_JSON.ToString() );
+	}
+
+	private static void TestForceWriteCache()
+	{
+		TestData.TestData1.ID = "";
+		Sandbank.Insert<PlayerData>( "players", TestData.TestData1 );
+
+		var collection = NSSandbank.Cache.GetCollectionByName<PlayerData>( "players" );
+
+		if ( !collection.CachedDocuments[TestData.TestData1.ID].Stale )
+			Fail( "TestForceWriteCache() 1" );
+
+		Sandbank.ForceWriteCache();
+
+		if ( collection.CachedDocuments[TestData.TestData1.ID].Stale )
+			Fail( "TestForceWriteCache() 2" );
 	}
 
 	private static void TestConcurrencySafety()
 	{
-		for (int i = 0; i < 100; i++ )
+		List<Task> tasks = new();
+
+		for (int i = 0; i < 10; i++ )
 		{
-			GameTask.RunInThreadAsync( async () =>
+			tasks.Add(GameTask.RunInThreadAsync( async () =>
 			{
 				Sandbank.EnableIndentJSON();
 				Sandbank.DisableIndentJSON();
 
 				var data = new PlayerData()
 				{
+					ID = "",
 					Health = Game.Random.Next(101),
 					Name = "TestPlayer1",
 					Level = 10,
@@ -186,7 +207,9 @@ static class Tests
 
 				Sandbank.Delete<PlayerData>( "players", x => x.Health <= 20 );
 				Sandbank.Any<PlayerData>( "players", x => x.Name == "Tim" );
-			} );
+			} ));
 		}
+
+		GameTask.WaitAll( tasks.ToArray() );
 	}
 }
