@@ -6,7 +6,7 @@ public partial class SandbankBenchmarkGame : GameManager
 {
 	public override void ClientJoined( IClient cl )
 	{
-		//Tests.Run();
+		Tests.Run();
 		Benchmark.Run();
 	}
 }

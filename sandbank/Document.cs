@@ -49,9 +49,9 @@ class Document
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				throw new Exception( $"Sandbank: failed to persist document from collection \"{collectionName}\" to disk after 10 tries - is the file in use by something else?" );
+				throw new Exception( $"failed to persist document from collection \"{collectionName}\" to disk after 10 tries - is the file in use by something else?" );
 
-			if ( FileIO.SaveDocument( collectionName, this, collectionType ) )
+			if ( FileIO.SaveDocument( collectionName, this, collectionType ) == null )
 				break;
 
 			GameTask.Delay( 50 );

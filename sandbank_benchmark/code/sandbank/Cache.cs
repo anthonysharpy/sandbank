@@ -18,14 +18,19 @@ static internal class Cache
 	private static Dictionary<Collection, List<Document>> _staleDocumentsToWrite = new();
 	private static int _partialWriteTickInterval = Game.TickRate / Config.PARTIAL_WRITES_PER_SECOND;
 
-	public static Collection GetCollectionByName<T>( string name )
+	public static Collection GetCollectionByName<T>( string name, bool createIfDoesntExist )
 	{
 		if ( !_collections.ContainsKey( name ) )
 		{
-			if ( Config.ENABLE_LOGGING )
-				Log.Info( $"Sandbank: creating new collection \"{name}\"" );
-
-			CreateCollection( name, typeof( T ) );
+			if ( createIfDoesntExist )
+			{
+				Logging.Log( $"creating new collection \"{name}\"" );
+				CreateCollection( name, typeof( T ) );
+			}
+			else
+			{
+				return null;
+			}
 		}
 
 		return _collections[name];
@@ -55,7 +60,6 @@ static internal class Cache
 		}
 	}
 
-
 	public static void CreateCollection( string name, Type documentClassType )
 	{
 		if ( _collections.ContainsKey( name ) )
@@ -76,9 +80,9 @@ static internal class Cache
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				throw new Exception( $"Sandbank: failed to save \"{name}\" collection definition after 10 tries - is the file in use by something else?" );
+				throw new Exception( $"failed to save \"{name}\" collection definition after 10 tries - is the file in use by something else?" );
 
-			if ( FileIO.SaveCollectionDefinition( newCollection ) )
+			if ( FileIO.SaveCollectionDefinition( newCollection ) == null )
 				break;
 
 			GameTask.Delay( 50 );
@@ -96,7 +100,11 @@ static internal class Cache
 	{
 		if ( GetTimeSinceLastFullWrite() >= Config.PERSIST_EVERY_N_SECONDS )
 		{
-			GameTask.RunInThreadAsync( async () => 
+			// Do this immediately otherwise when the server is stuttering it can spam
+			// full writes.
+			ResetTimeSinceLastFullWrite();
+
+			GameTask.RunInThreadAsync( async () =>
 			{
 				lock ( WriteInProgressLock )
 				{
@@ -123,14 +131,12 @@ static internal class Cache
 	{
 		lock ( WriteInProgressLock )
 		{
-			if ( Config.ENABLE_LOGGING )
-				Log.Info( "Sandbank: beginning forced full-write..." );
+			Logging.Log( "beginning forced full-write..." );
 
 			ReevaluateStaleDocuments();
 			FullWrite();
 
-			if ( Config.ENABLE_LOGGING )
-				Log.Info( "Sandbank: finished forced full-write..." );
+			Logging.Log( "finished forced full-write..." );
 		}
 	}
 
@@ -161,15 +167,14 @@ static internal class Cache
 
 			if ( numberOfDocumentsToWrite > 0 )
 			{
-				if ( Config.ENABLE_LOGGING )
-					Log.Info( "Sandbank: performing partial write..." );
+				Logging.Log( "performing partial write..." );
 
 				PersistStaleDocuments( numberOfDocumentsToWrite );
 			}
 		}
 		catch ( Exception e )
 		{
-			Log.Error( "Sandbank: partial write failed: " + e.Message );
+			Logging.Throw( "partial write failed: " + e.Message );
 		}
 	}
 
@@ -181,19 +186,17 @@ static internal class Cache
 	{
 		try
 		{
-			if ( Config.ENABLE_LOGGING )
-				Log.Info( "Sandbank: performing full write..." );
+			Logging.Log( "performing full write..." );
 
 			// Persist any remaining items first.
 			PersistStaleDocuments();
 			ReevaluateStaleDocuments();
 
-			ResetTimeSinceLastFullWrite();
 			_staleDocumentsWrittenSinceLastFullWrite = 0;
 		}
 		catch (Exception e)
 		{
-			Log.Error("Sandbank: full write failed: "+e.Message );
+			Logging.Throw( "full write failed: "+e.Message );
 		}
 	}
 
@@ -203,13 +206,10 @@ static internal class Cache
 	/// </summary>
 	private static void PersistStaleDocuments(int number = int.MaxValue)
 	{
-		if ( Config.ENABLE_LOGGING )
-		{
-			if (number == int.MaxValue)
-				Log.Info( $"Sandbank: persisting {_staleDocumentsFoundAfterLastFullWrite-_staleDocumentsWrittenSinceLastFullWrite} stale documents..." );
-			else
-				Log.Info( $"Sandbank: persisting {number} stale documents..." );
-		}
+		if (number == int.MaxValue)
+			Logging.Log( $"persisting {_staleDocumentsFoundAfterLastFullWrite-_staleDocumentsWrittenSinceLastFullWrite} stale documents..." );
+		else
+			Logging.Log( $"persisting {number} stale documents..." );
 
 		if ( number != int.MaxValue )
 			_staleDocumentsWrittenSinceLastFullWrite += number;
@@ -264,7 +264,6 @@ static internal class Cache
 			_staleDocumentsFoundAfterLastFullWrite += staleDocuments.Count();
 		}
 
-		if ( Config.ENABLE_LOGGING )
-			Log.Info( $"Sandbank: found {_staleDocumentsFoundAfterLastFullWrite} stale documents" );
+		Logging.Log( $"found {_staleDocumentsFoundAfterLastFullWrite} stale documents" );
 	}
 }

@@ -18,7 +18,7 @@ static class Sandbank
 	/// </summary>
 	public static void Insert<T>( string collection, T document ) where T : class
 	{
-		var relevantCollection = Cache.GetCollectionByName<T>(collection);
+		var relevantCollection = Cache.GetCollectionByName<T>( collection, true );
 
 		Document newDocument = new( document, typeof(T), true );
 		relevantCollection.CachedDocuments[newDocument.ID] = newDocument;
@@ -30,7 +30,7 @@ static class Sandbank
 	/// </summary>
 	public static void InsertMany<T>( string collection, List<T> documents ) where T : class
 	{
-		var relevantCollection = Cache.GetCollectionByName<T>( collection );
+		var relevantCollection = Cache.GetCollectionByName<T>( collection, true );
 
 		foreach (var document in documents)
 		{
@@ -44,7 +44,10 @@ static class Sandbank
 	/// </summary>
 	public static T SelectOne<T>( string collection, Func<T, bool> selector ) where T : class
 	{
-		var relevantCollection = Cache.GetCollectionByName<T>( collection );
+		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
+
+		if ( relevantCollection == null )
+			return null;
 
 		foreach ( var pair in relevantCollection.CachedDocuments )
 		{
@@ -60,7 +63,11 @@ static class Sandbank
 	/// </summary>
 	public static T? SelectOneWithID<T>( string collection, string id ) where T : class
 	{
-		var relevantCollection = Cache.GetCollectionByName<T>( collection );
+		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
+
+		if ( relevantCollection == null )
+			return null;
+
 		relevantCollection.CachedDocuments.TryGetValue(id, out Document document);
 
 		return document == null ? null : Serialisation.CloneObject((T)document.Data);
@@ -71,13 +78,16 @@ static class Sandbank
 	/// </summary>
 	public static List<T> Select<T>( string collection, Func<T, bool> selector ) where T : class
 	{
-		var relevantCollection = Cache.GetCollectionByName<T>( collection );
+		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 		List<T> output = new();
+
+		if ( relevantCollection == null )
+			return output;
 
 		foreach ( var pair in relevantCollection.CachedDocuments )
 		{
 			if ( selector.Invoke( (T)pair.Value.Data ) )
-				output.Add( Serialisation.CloneObject((T)pair.Value.Data) );
+				output.Add( Serialisation.CloneObject( (T)pair.Value.Data) );
 		}
 
 		return output;
@@ -88,7 +98,11 @@ static class Sandbank
 	/// </summary>
 	public static void Delete<T>( string collection, Predicate<T> selector ) where T : class
 	{
-		var relevantCollection = Cache.GetCollectionByName<T>( collection );
+		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
+
+		if ( relevantCollection == null )
+			return;
+
 		List<string> idsToDelete = new();
 
 		foreach ( var pair in relevantCollection.CachedDocuments )
@@ -106,9 +120,9 @@ static class Sandbank
 			while ( true )
 			{
 				if ( attempt++ >= 10 )
-					throw new Exception( $"Sandbank: failed to delete document from collection \"{collection}\" after 10 tries - is the file in use by something else?" );
+					throw new Exception( $"failed to delete document from collection \"{collection}\" after 10 tries - is the file in use by something else?" );
 
-				if ( FileIO.DeleteDocument( collection, id ) )
+				if ( FileIO.DeleteDocument( collection, id ) == null )
 					break;
 
 				GameTask.Delay( 50 );
@@ -121,7 +135,11 @@ static class Sandbank
 	/// </summary>
 	public static void DeleteWithID<T>( string collection, string id) where T : class
 	{
-		var relevantCollection = Cache.GetCollectionByName<T>( collection );
+		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
+
+		if ( relevantCollection == null )
+			return;
+
 		relevantCollection.CachedDocuments.TryRemove( id, out _ );
 
 		int attempt = 0;
@@ -129,9 +147,9 @@ static class Sandbank
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				throw new Exception( $"Sandbank: failed to delete document from collection \"{collection}\" after 10 tries - is the file in use by something else?" );
+				throw new Exception( $"failed to delete document from collection \"{collection}\" after 10 tries - is the file in use by something else?" );
 
-			if ( FileIO.DeleteDocument( collection, id ) )
+			if ( FileIO.DeleteDocument( collection, id ) == null )
 				break;
 
 			GameTask.Delay( 50 );
@@ -144,7 +162,10 @@ static class Sandbank
 	/// </summary>
 	public static bool Any<T>( string collection, Func<T, bool> selector ) where T : class
 	{
-		var relevantCollection = Cache.GetCollectionByName<T>( collection );
+		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
+				
+		if ( relevantCollection == null )
+			return false;
 
 		foreach ( var pair in relevantCollection.CachedDocuments )
 		{
@@ -160,7 +181,11 @@ static class Sandbank
 	/// </summary>
 	public static bool AnyWithID<T>( string collection, string id )
 	{
-		var relevantCollection = Cache.GetCollectionByName<T>( collection );
+		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
+
+		if ( relevantCollection == null )
+			return false;
+
 		return relevantCollection.CachedDocuments.ContainsKey( id );
 	}
 
@@ -171,7 +196,7 @@ static class Sandbank
 	{
 		if (!Config.UNSAFE_MODE)
 		{
-			Log.Warning( "Sandbank: must enable unsafe mode to call WipeAllData() - see Config.cs" );
+			Log.Warning( "must enable unsafe mode to call WipeAllData() - see Config.cs" );
 			return;
 		}
 
@@ -182,9 +207,9 @@ static class Sandbank
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				throw new System.Exception( "Sandbank: failed to load collections after 10 tries - are the files in use by something else?" );
+				throw new System.Exception( "failed to load collections after 10 tries - are the files in use by something else?" );
 
-			if ( FileIO.WipeFilesystem() )
+			if ( FileIO.WipeFilesystem() == null )
 				return;
 
 			GameTask.Delay( 50 );

@@ -15,7 +15,7 @@ static class Config
 	/// is lost, so lower numbers are safer. But lower numbers can lead to decreased
 	/// performance under heavy loads due to increased disk writing.
 	/// </summary>
-	public const float PERSIST_EVERY_N_SECONDS = 10f;
+	public const float PERSIST_EVERY_N_SECONDS = 100f;
 	/// <summary>
 	/// We will only try to perform a partial write this many times per second. A partial
 	/// write doesn't write everything, so changing this will not really change

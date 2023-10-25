@@ -179,7 +179,7 @@ static class Tests
 		TestData.TestData1.ID = "";
 		Sandbank.Insert<PlayerData>( "players", TestData.TestData1 );
 
-		var collection = NSSandbank.Cache.GetCollectionByName<PlayerData>( "players" );
+		var collection = NSSandbank.Cache.GetCollectionByName<PlayerData>( "players", false );
 
 		if ( !collection.CachedDocuments[TestData.TestData1.ID].Stale )
 			Fail( "TestForceWriteCache() 1" );

@@ -30,10 +30,14 @@ static class Initialisation
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				throw new System.Exception( "Sandbank: failed to load collections after 10 tries - are the files in use by something else?" );
+				throw new System.Exception( "failed to load collections after 10 tries - are the files in use by something else?" );
 
-			if ( FileIO.EnsureFileSystemSetup() )
+			var error = FileIO.EnsureFileSystemSetup();
+
+			if (error == null)
 				return;
+
+			Logging.Log( $"failed to ensure filesystem setup: {error}" );
 
 			GameTask.Delay( 50 );
 		}
@@ -46,15 +50,20 @@ static class Initialisation
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				throw new System.Exception( "Sandbank: failed to load collections after 10 tries - are the files in use by something else?" );
+				throw new System.Exception( "failed to load collections after 10 tries - are the files in use by something else?" );
 
-			var (collectionNames, success) = FileIO.ListCollectionNames();
+			var (collectionNames, error) = FileIO.ListCollectionNames();
 
-			if ( !success )
+			if (error != null)
+			{
+				Logging.Log( $"failed to load collections: {error}" );
 				goto retry;
+			}
 
 			foreach ( var collectionName in collectionNames )
 			{
+				Logging.Log( $"attempting to load collection \"{collectionName}\"" );
+
 				if ( !LoadCollection( collectionName ) )
 					goto retry;
 			}
@@ -72,10 +81,13 @@ static class Initialisation
 	/// </summary>
 	private static bool LoadCollection(string name)
 	{
-		var (definition, success) = FileIO.LoadCollectionDefinition( name );
+		var (definition, error) = FileIO.LoadCollectionDefinition( name );
 
-		if ( success == false )
+		if ( error != null)
+		{
+			Logging.Log( $"failed loading collection definition for \"{name}\": {error}" );
 			return false;
+		}
 
 		if (definition == null)
 		{
@@ -83,10 +95,13 @@ static class Initialisation
 			return true;
 		}
 
-		(var documents, success) = FileIO.LoadAllCollectionsDocuments( definition );
+		(var documents, error) = FileIO.LoadAllCollectionsDocuments( definition );
 
-		if ( success == false )
+		if ( error != null )
+		{
+			Logging.Log( $"failed loading collection documents for \"{name}\": {error}" );
 			return false;
+		}
 
 		Cache.CreateCollection( name, definition.DocumentClassType );
 		Cache.InsertDocumentsIntoCollection( name, documents );

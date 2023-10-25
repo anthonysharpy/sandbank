@@ -1,4 +1,5 @@
-﻿using Sandbox;
+﻿using NSSandbank;
+using Sandbox;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -17,21 +18,9 @@ static class Benchmark
 		Sandbank.DisableIndentJSON();
 
 		List<Func<Task>> benchmarks = new()	{
-			//BenchmarkInsert,
-			//BenchmarkInsertThreaded,
-			//BenchmarkSelect,
-			BenchmarkSelectThreaded,
-			BenchmarkSelectThreaded,
-			BenchmarkSelectThreaded,
-			BenchmarkSelectThreaded,
-			BenchmarkSelectThreaded,
-			BenchmarkSelectThreaded,
-			BenchmarkSelectThreaded,
-			BenchmarkSelectThreaded,
-			BenchmarkSelectThreaded,
-			BenchmarkSelectThreaded,
-			BenchmarkSelectThreaded,
-			BenchmarkSelectThreaded,
+			BenchmarkInsert,
+			BenchmarkInsertThreaded,
+			BenchmarkSelect,
 			BenchmarkSelectThreaded,
 		};
 
@@ -45,9 +34,9 @@ static class Benchmark
 		}
 	}
 
-	private static async Task BenchmarkInsert()
+	private static Task BenchmarkInsert()
 	{
-		int documents = 100000;
+		int documents = 100800;
 
 		List<PlayerData> testData = new();
 
@@ -67,17 +56,18 @@ static class Benchmark
 
 		for ( int i = 0; i < testData.Count; i++ )
 		{
-			Sandbank.Insert<PlayerData>( "players", testData[i] );
+			Sandbank.Insert( "players", testData[i] );
 		}
 
 		double totalTime = DateTime.Now.Subtract( startTime ).TotalSeconds;
 
 		Log.Info( $"Insert() - {documents} documents inserted in {totalTime} seconds" );
+		return Task.CompletedTask;
 	}
 
 	private static async Task BenchmarkInsertThreaded()
 	{
-		int documents = 100000;
+		int documents = 100800;
 		int threads = 24;
 		int documentsPerThread = documents / threads;
 
@@ -116,55 +106,57 @@ static class Benchmark
 		Log.Info( $"[multi-threaded] Insert() - {documents} documents inserted in {totalTime} seconds" );
 	}
 
-	private static async Task BenchmarkSelect()
+	private static Task BenchmarkSelect()
 	{
-		int collectionSize = 5000;
-		int searches = 1200;
+		int collectionSize = 100800;
 
 		for ( int i = 0; i < collectionSize; i++ )
 		{
-			TestData.TestData1.ID = "";
-			TestData.TestData1.Health = Game.Random.Next( 101 );
-			Sandbank.Insert<PlayerData>( "players", TestData.TestData1 );
+			Sandbank.Insert( "players", new PlayerData()
+			{
+				Health = Game.Random.Next( 101 ),
+				Name = "TestPlayer1",
+				Level = 10,
+				LastPlayTime = DateTime.Now,
+				Items = new() { "gun", "frog", "banana" }
+			} );
 		}
 
 		var startTime = DateTime.Now;
 
-		for ( int i = 0; i < searches; i++ )
-		{
-			var results = Sandbank.Select<PlayerData>( "players", x => x.Health >= 90 );
-		}
+		var results = Sandbank.Select<PlayerData>( "players", x => x.Health >= 90 );
 
 		double totalTime = DateTime.Now.Subtract( startTime ).TotalSeconds;
 
-		Log.Info( $"Select() - {collectionSize} documents searched {searches} times in {totalTime} seconds" );
+		Log.Info( $"Select() - {collectionSize} documents searched in {totalTime} seconds" );
+		return Task.CompletedTask;
 	}
 
 	private static async Task BenchmarkSelectThreaded()
 	{
-		int collectionSize = 5000;
-		int searches = 1200;
+		int collectionSize = 100800;
 		int threads = 24;
-		int searchesPerThread = searches / threads;
 
 		for ( int i = 0; i < collectionSize; i++ )
 		{
-			TestData.TestData1.ID = "";
-			TestData.TestData1.Health = Game.Random.Next( 101 );
-			Sandbank.Insert<PlayerData>( "players", TestData.TestData1 );
+			Sandbank.Insert<PlayerData>( "players", new PlayerData()
+			{
+				Health = Game.Random.Next( 101 ),
+				Name = "TestPlayer1",
+				Level = 10,
+				LastPlayTime = DateTime.Now,
+				Items = new() { "gun", "frog", "banana" }
+			} );
 		}
 
 		List<Task> tasks = new();
 		var startTime = DateTime.Now;
 
-		for (int t = 0; t < threads; t++ )
+		for ( int t = 0; t < threads; t++ )
 		{
 			tasks.Add( GameTask.RunInThreadAsync( async () =>
 			{
-				for ( int i = 0; i < searchesPerThread; i++ )
-				{
-					var results = Sandbank.Select<PlayerData>( "players", x => x.Health >= 90 );
-				}
+				Sandbank.Select<PlayerData>( "players", x => x.Health >= 90 );
 			} ));
 		}
 
@@ -172,6 +164,6 @@ static class Benchmark
 
 		double totalTime = DateTime.Now.Subtract( startTime ).TotalSeconds;
 
-		Log.Info( $"[multi-threaded] Select() - {collectionSize} documents searched {searches} times in {totalTime} seconds" );
+		Log.Info( $"[multi-threaded] Select() - {collectionSize} documents searched {threads} times in {totalTime} seconds" );
 	}
 }

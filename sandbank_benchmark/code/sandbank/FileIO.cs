@@ -16,16 +16,15 @@ static class FileIO
 
 	public static void CreateCollectionLock(string collection)
 	{
-		if ( Config.ENABLE_LOGGING )
-			Log.Info( $"Sandbank: creating collection write lock for collection \"{collection}\"" );
+		Logging.Log( $"creating collection write lock for collection \"{collection}\"" );
 
 		_collectionWriteLocks[collection] = new();
 	}
 
 	/// <summary>
-	/// Returns true on success.
+	/// Returns null on success, or the error message on failure.
 	/// </summary>
-	public static bool DeleteDocument( string collection, string documentID )
+	public static string DeleteDocument( string collection, string documentID )
 	{
 		try
 		{
@@ -34,18 +33,18 @@ static class FileIO
 				FileSystem.Data.DeleteFile( $"sandbank/{collection}/{documentID}" );
 			}
 
-			return true;
+			return null;
 		}
-		catch
+		catch (Exception e)
 		{
-			return false;
+			return e.Message;
 		}
 	}
 
 	/// <summary>
-	/// Returns true on success.
+	/// Returns null on success, or the error message on failure.
 	/// </summary>
-	public static bool SaveDocument(string collection, Document document, Type documentClassType)
+	public static string SaveDocument(string collection, Document document, Type documentClassType)
 	{
 		try
 		{
@@ -56,37 +55,41 @@ static class FileIO
 				FileSystem.Data.WriteAllText( $"sandbank/{collection}/{document.ID}", data );
 			}
 
-			return true;
+			return null;
 		}
-		catch
+		catch (Exception e)
 		{
-			return false;
+			return e.Message;
 		}
 	}
 
 	/// <summary>
-	/// The second return value indicates success.
+	/// The second return value is null on success, and contains the error message
+	/// on failure.
 	/// </summary>
-	public static (List<string>, bool) ListCollectionNames()
+	public static (List<string>, string) ListCollectionNames()
 	{
 		try
 		{
-			return ( FileSystem.Data.FindDirectory( "sandbank" ).ToList(), true );
+			return ( FileSystem.Data.FindDirectory( "sandbank" ).ToList(), null );
 		}
-		catch
+		catch (Exception e)
 		{
-			return (null, false);
+			return (null, e.Message);
 		}
 	}
 
 	/// <summary>
-	/// The second return value indicates success.
+	/// The second return value contains the error message (or null if successful).
 	/// </summary>
-	public static (Collection, bool) LoadCollectionDefinition(string collectionName)
+	public static (Collection, string) LoadCollectionDefinition(string collectionName)
 	{
 		try
 		{
 			string data;
+
+			if ( !_collectionWriteLocks.ContainsKey(collectionName) )
+				CreateCollectionLock(collectionName);
 
 			lock ( _collectionWriteLocks[collectionName] )
 			{
@@ -99,19 +102,19 @@ static class FileIO
 				.GetType( collection.DocumentClassTypeSerialized )
 				.TargetType;
 
-			return (collection, true);
+			return (collection, null);
 
 		}
-		catch
+		catch (Exception e)
 		{
-			return (null, false);
+			return (null, e.Message);
 		}
 	}
 
 	/// <summary>
-	/// The second return value indicates success.
+	/// The second return value contains the error message (or null if successful).
 	/// </summary>
-	public static (List<Document>, bool) LoadAllCollectionsDocuments( Collection collection )
+	public static (List<Document>, string) LoadAllCollectionsDocuments( Collection collection )
 	{
 		try
 		{
@@ -134,18 +137,18 @@ static class FileIO
 				}
 			}
 
-			return (output, true);
+			return (output, null);
 		}
-		catch
+		catch (Exception e)
 		{
-			return (null, false);
+			return (null, e.Message);
 		}
 	}
 
 	/// <summary>
-	/// Returns true on success.
+	/// Returns null on success, or the error message on failure.
 	/// </summary>
-	public static bool SaveCollectionDefinition(Collection collection)
+	public static string SaveCollectionDefinition(Collection collection)
 	{
 		try
 		{
@@ -159,18 +162,18 @@ static class FileIO
 				FileSystem.Data.WriteAllText( $"sandbank/{collection.CollectionName}/definition.txt", data );
 			}
 
-			return true;
+			return null;
 		}
-		catch
+		catch (Exception e)
 		{
-			return false;
+			return e.Message;
 		}
 	}
 
 	/// <summary>
-	/// Returns true on success.
+	/// Returns null on success, or the error message on failure.
 	/// </summary>
-	private static bool DeleteCollection(string name)
+	private static string DeleteCollection(string name)
 	{
 		try
 		{
@@ -179,66 +182,68 @@ static class FileIO
 				FileSystem.Data.DeleteDirectory( $"sandbank/{name}", true );
 			}
 
-			return true;
+			return null;
 		}
-		catch
+		catch (Exception e)
 		{
-			return false;
+			return e.Message;
 		}
 	}
 
 	/// <summary>
-	/// Wipes all sandbank files. Requires unsafe mode. Returns true
-	/// on success or if safe mode is not enabled.
+	/// Wipes all sandbank files. Requires unsafe mode. Returns null on success
+	/// or if safe mode is not enabled, and the error message on failure.
 	/// </summary>
-	public static bool WipeFilesystem()
+	public static string WipeFilesystem()
 	{
 		try
 		{
 			if ( !Config.UNSAFE_MODE )
 			{
-				Log.Warning( "Sandbank: must enable unsafe mode to call WipeFilesystem() - see Config.cs" );
-				return true;
+				Log.Warning( "must enable unsafe mode to call WipeFilesystem() - see Config.cs" );
+				return null;
 			}
 
-			var (collections, success) = ListCollectionNames();
+			var (collections, error) = ListCollectionNames();
 
-			if ( success == false )
-				return false;
+			if ( error != null )
+				return $"failed to wipe filesystem: {error}";
 
 			// Don't delete collection folders when we are half-way through writing to them.
 			lock ( Cache.WriteInProgressLock )
 			{
 				foreach ( var collection in collections )
 				{
-					if ( !DeleteCollection( collection ) )
-						return false;
+					error = DeleteCollection( collection );
+
+					if ( error != null )
+						return $"failed to wipe filesystem: {error}";
 				}
 			}
 
-			return true;
+			return null;
 		}
-		catch
+		catch (Exception e)
 		{
-			return false;
+			return e.Message;
 		}
 	}
 
 	/// <summary>
-	/// Returns true on success.
+	/// Returns null on success, or the error message on failure.
 	/// </summary>
-	public static bool EnsureFileSystemSetup()
+	public static string EnsureFileSystemSetup()
 	{
 		try
 		{
 			if ( !FileSystem.Data.DirectoryExists( "sandbank" ) )
 				FileSystem.Data.CreateDirectory( "sandbank" );
 
-			return true;
+			return null;
 		}
-		catch
+		catch (Exception e)
 		{
-			return false;
+			return e.Message;
 		}
 	}
 }
