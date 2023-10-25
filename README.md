@@ -1,6 +1,6 @@
 # Sandbank
 
-Sandbank is the easy-to-use database for s&amp;box. Installation is click-and-drag, with zero setup required.
+Sandbank is the easy-to-use no-SQL database for s&amp;box. Installation is click-and-drag, with zero setup required.
 
 ## Installation
 
@@ -39,19 +39,19 @@ private PlayerData _myPlayerData = new();
 
 public void SaveData()
 {
-  Log.Info($"My ID is empty: {_myPlayerData.ID}");
+	Log.Info($"My ID is empty: {_myPlayerData.ID}");
 
-  // Insert the player. Their ID is populated from within the function because the
-  // class is passed by reference.
-  Sandbank.Insert<PlayerData>("players", _myPlayerData);
+	// Insert the player. Their ID is populated from within the function because the
+	// class is passed by reference.
+	Sandbank.Insert<PlayerData>("players", _myPlayerData);
 
-  Log.Info($"My ID is now populated: {_myPlayerData.ID}");
+	Log.Info($"My ID is now populated: {_myPlayerData.ID}");
 
-  var playerWith100Health = Sandbank.Select<PlayerData>("players", x => x.Health == 100);
+	var playerWith100Health = Sandbank.Select<PlayerData>("players", x => x.Health == 100);
 
-  Log.Info($"The player with 100 health was: {playerWith100Health.Name}");
+	Log.Info($"The player with 100 health was: {playerWith100Health.Name}");
 
-  Sandbank.DeleteWithID<PlayerData>("players", playerWith100Health.ID);
+	Sandbank.DeleteWithID<PlayerData>("players", playerWith100Health.ID);
 }
 ```
 
@@ -61,10 +61,12 @@ public void SaveData()
 
 Sandbank is designed to be threadsafe so you can squeeze a lot out of it. In fact, since there is no network overhead, it is probably faster than a conventional database, unless you're talking about efficiently-indexed tables with millions of records. Here are some benchmarks using the above PlayerData class on a Ryzen 5 5500 with 12 logical processors:
 
-- 100,000 inserts (one thread): 0.69 seconds
-- 100,000 inserts (24 threads): 0.172 seconds
-- 5,000 selects [x => x.Health >= 90] on a collection with 5,000 records (one thread): 0.884 seconds (0.0001768 seconds/query)
-- 5,000 selects [x => x.Health >= 90] on a collection with 5,000 records (24 threads): 0.206 seconds (0.0000412 seconds/query)
+| Operation                                                                         | Total Time    | Time Per Query   |
+|-----------------------------------------------------------------------------------|---------------|------------------|
+| 100,000 inserts (one thread)                                                      | 0.69 seconds  | 0.0000069 seconds/insert |
+| 100,000 inserts (24 threads)                                                      | 0.172 seconds | 0.00000172 seconds/insert |
+| 5,000 selects [x => x.Health >= 90] on a 5,000 document collection (one thread)   | 0.884 seconds | 0.0001768 seconds/query |
+| 5,000 selects [x => x.Health >= 90] on a 5,000 document collection (24 threads)   | 0.206 seconds | 0.0000412 seconds/query |
 
 The above figures represent the time it took to write/read the data to/from the cache only (not to disk).
 
@@ -82,4 +84,4 @@ Data is written to disk slowly over time. The frequency at which this is done is
 
 Transactions are not currently supported but if this is something that you would find useful then please make an issue or let me know :-)
 
-With all the concurrency support this got quite complicated so let me know if you find bugs.
+With all the concurrency support this got quite complicated so please raise an issue if you encounter any bugs. Contributions are welcome too.
