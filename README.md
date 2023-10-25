@@ -78,7 +78,7 @@ The database stores all data in memory in a cache. You may think that'd be quite
 
 ### Disk
 
-The disk space used is less than the amount of memory used. Changes to the cache are written slowly to the disk over time in a background thread. Under extreme loads (i.e. hundreds/thousands of documents being written to disk per second) this may throttle your hard-drive a little, but it shouldn't impact performance too much. Using a HDD though is not recommended.
+The disk space used is less than the amount of memory used. Changes to the cache are written slowly to the disk over time in a background thread. Under extreme loads (i.e. thousands of documents being inserted per second) this may throttle your hard-drive a little, but it shouldn't impact performance too much. Using a HDD though is not recommended.
 
 ## Consistency and Safety
 
