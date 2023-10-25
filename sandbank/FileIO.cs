@@ -10,9 +10,17 @@ namespace NSSandbank;
 static class FileIO
 {
 	/// <summary>
-	/// Only let one thread write/read the disk at a time using this lock.
+	/// Only let one thread write/read a collection at a time using this lock.
 	/// </summary>
-	public static object DiskInUseLock = new();
+	private static Dictionary<string, object> _collectionWriteLocks = new();
+
+	public static void CreateCollectionLock(string collection)
+	{
+		if ( Config.ENABLE_LOGGING )
+			Log.Info( $"Sandbank: creating collection write lock for collection \"{collection}\"" );
+
+		_collectionWriteLocks[collection] = new();
+	}
 
 	/// <summary>
 	/// Returns true on success.
@@ -21,7 +29,7 @@ static class FileIO
 	{
 		try
 		{
-			lock (DiskInUseLock ) 
+			lock ( _collectionWriteLocks[collection] ) 
 			{
 				FileSystem.Data.DeleteFile( $"sandbank/{collection}/{documentID}" );
 			}
@@ -43,7 +51,7 @@ static class FileIO
 		{
 			string data = Serialisation.SerialiseClass( document.Data, documentClassType );
 
-			lock ( DiskInUseLock )
+			lock ( _collectionWriteLocks[collection] )
 			{
 				FileSystem.Data.WriteAllText( $"sandbank/{collection}/{document.ID}", data );
 			}
@@ -63,10 +71,7 @@ static class FileIO
 	{
 		try
 		{
-			lock ( DiskInUseLock )
-			{
-				return (FileSystem.Data.FindDirectory( "sandbank" ).ToList(), true);
-			}
+			return ( FileSystem.Data.FindDirectory( "sandbank" ).ToList(), true );
 		}
 		catch
 		{
@@ -83,7 +88,7 @@ static class FileIO
 		{
 			string data;
 
-			lock ( DiskInUseLock )
+			lock ( _collectionWriteLocks[collectionName] )
 			{
 				data = FileSystem.Data.ReadAllText( $"sandbank/{collectionName}/definition.txt" );
 			}
@@ -110,28 +115,23 @@ static class FileIO
 	{
 		try
 		{
-			List<string> files = new();
-
-			lock ( DiskInUseLock )
-			{
-				files = FileSystem.Data.FindFile( $"sandbank/{collection.CollectionName}/" )
-					.Where( x => x != "definition.txt" )
-					.ToList();
-			}
-
 			List<Document> output = new();
 
-			foreach ( var file in files )
+			lock ( _collectionWriteLocks[collection.CollectionName] )
 			{
-				string contents;
+				var files = FileSystem.Data.FindFile( $"sandbank/{collection.CollectionName}/" )
+					.Where( x => x != "definition.txt" )
+					.ToList();
 
-				lock ( DiskInUseLock )
+				foreach ( var file in files )
 				{
-					contents = FileSystem.Data.ReadAllText( $"sandbank/{collection.CollectionName}/{file}" );
-				}
+					string contents;
 
-				var document = new Document( Serialisation.DeserialiseClass( contents, collection.DocumentClassType ), null, false );
-				output.Add( document );
+					contents = FileSystem.Data.ReadAllText( $"sandbank/{collection.CollectionName}/{file}" );
+
+					var document = new Document( Serialisation.DeserialiseClass( contents, collection.DocumentClassType ), null, false );
+					output.Add( document );
+				}
 			}
 
 			return (output, true);
@@ -150,8 +150,8 @@ static class FileIO
 		try
 		{
 			var data = Serialisation.SerialiseClass( collection );
-			 
-			lock ( DiskInUseLock )
+
+			lock ( _collectionWriteLocks[collection.CollectionName] )
 			{
 				if ( !FileSystem.Data.DirectoryExists( $"sandbank/{collection.CollectionName}" ) )
 					FileSystem.Data.CreateDirectory( $"sandbank/{collection.CollectionName}" );
@@ -174,7 +174,7 @@ static class FileIO
 	{
 		try
 		{
-			lock ( DiskInUseLock )
+			lock ( _collectionWriteLocks[name] )
 			{
 				FileSystem.Data.DeleteDirectory( $"sandbank/{name}", true );
 			}
@@ -206,10 +206,14 @@ static class FileIO
 			if ( success == false )
 				return false;
 
-			foreach ( var collection in collections )
+			// Don't delete collection folders when we are half-way through writing to them.
+			lock ( Cache.WriteInProgressLock )
 			{
-				if ( !DeleteCollection( collection ) )
-					return false;
+				foreach ( var collection in collections )
+				{
+					if ( !DeleteCollection( collection ) )
+						return false;
+				}
 			}
 
 			return true;
@@ -227,11 +231,8 @@ static class FileIO
 	{
 		try
 		{
-			lock ( DiskInUseLock )
-			{
-				if ( !FileSystem.Data.DirectoryExists( "sandbank" ) )
-					FileSystem.Data.CreateDirectory( "sandbank" );
-			}
+			if ( !FileSystem.Data.DirectoryExists( "sandbank" ) )
+				FileSystem.Data.CreateDirectory( "sandbank" );
 
 			return true;
 		}

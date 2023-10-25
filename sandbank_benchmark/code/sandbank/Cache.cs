@@ -8,6 +8,8 @@ namespace NSSandbank;
 
 static internal class Cache
 {
+	public static object WriteInProgressLock = new();
+
 	private static ConcurrentDictionary<string, Collection> _collections = new();
 	private static TimeSince _timeSinceLastFullWrite = 0;
 	private static object _timeSinceLastFullWriteLock = new();
@@ -15,36 +17,15 @@ static internal class Cache
 	private static int _staleDocumentsWrittenSinceLastFullWrite;
 	private static Dictionary<Collection, List<Document>> _staleDocumentsToWrite = new();
 	private static int _partialWriteTickInterval = Game.TickRate / Config.PARTIAL_WRITES_PER_SECOND;
-	private static object _writeInProgressLock = new();
 
 	public static Collection GetCollectionByName<T>( string name )
 	{
 		if ( !_collections.ContainsKey( name ) )
 		{
 			if ( Config.ENABLE_LOGGING )
-				Log.Info( $"Sandbank: creating new collection {name}" );
+				Log.Info( $"Sandbank: creating new collection \"{name}\"" );
 
-			var newCollection = new Collection()
-			{
-				CollectionName = name,
-				DocumentClassType = typeof( T ),
-				DocumentClassTypeSerialized = typeof( T ).ToString()
-			};
-
-			_collections[name] = newCollection;
-
-			int attempt = 0;
-
-			while ( true )
-			{
-				if ( attempt++ >= 10 )
-					throw new Exception( $"Sandbank: failed to save \"{name}\" collection definition after 10 tries - is the file in use by something else?" );
-
-				if ( FileIO.SaveCollectionDefinition( newCollection ) )
-					break;
-
-				GameTask.Delay( 50 );
-			}
+			CreateCollection( name, typeof( T ) );
 		}
 
 		return _collections[name];
@@ -52,7 +33,10 @@ static internal class Cache
 
 	public static void WipeCollectionsCache()
 	{
-		_collections.Clear();
+		lock ( WriteInProgressLock )
+		{
+			_collections.Clear();
+		}
 	}
 
 	private static float GetTimeSinceLastFullWrite()
@@ -71,6 +55,7 @@ static internal class Cache
 		}
 	}
 
+
 	public static void CreateCollection( string name, Type documentClassType )
 	{
 		if ( _collections.ContainsKey( name ) )
@@ -83,7 +68,21 @@ static internal class Cache
 			DocumentClassTypeSerialized = documentClassType.ToString()
 		};
 
+		FileIO.CreateCollectionLock( name );
 		_collections[name] = newCollection;
+
+		int attempt = 0;
+
+		while ( true )
+		{
+			if ( attempt++ >= 10 )
+				throw new Exception( $"Sandbank: failed to save \"{name}\" collection definition after 10 tries - is the file in use by something else?" );
+
+			if ( FileIO.SaveCollectionDefinition( newCollection ) )
+				break;
+
+			GameTask.Delay( 50 );
+		}
 	}
 
 	public static void InsertDocumentsIntoCollection( string collection, List<Document> documents )
@@ -99,7 +98,7 @@ static internal class Cache
 		{
 			GameTask.RunInThreadAsync( async () => 
 			{
-				lock ( _writeInProgressLock )
+				lock ( WriteInProgressLock )
 				{
 					FullWrite();
 				}
@@ -109,7 +108,7 @@ static internal class Cache
 		{
 			GameTask.RunInThreadAsync( async () => 
 			{ 
-				lock ( _writeInProgressLock )
+				lock ( WriteInProgressLock )
 				{
 					PartialWrite();
 				}
@@ -122,7 +121,7 @@ static internal class Cache
 	/// </summary>
 	public static void ForceFullWrite()
 	{
-		lock ( _writeInProgressLock )
+		lock ( WriteInProgressLock )
 		{
 			if ( Config.ENABLE_LOGGING )
 				Log.Info( "Sandbank: beginning forced full-write..." );

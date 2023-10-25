@@ -39,4 +39,15 @@ internal class Serialisation
 	{
 		return JsonSerializer.Deserialize( data, type, _jsonOptions );
 	}
+
+	public static T CloneObject<T>( T theObject )
+	{
+		return Serialisation.DeserialiseClass<T>( Serialisation.SerialiseClass<T>( theObject ) );
+	}
+
+	public static object CloneObject( object theObject, Type objectType )
+	{
+		var json = Serialisation.SerialiseClass( theObject, objectType );
+		return Serialisation.DeserialiseClass( json, objectType );
+	}
 }

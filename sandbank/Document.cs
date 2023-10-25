@@ -36,10 +36,7 @@ class Document
 		// We want to avoid modifying a passed-in reference, so we clone it.
 		// But this is redundant in some cases, in which case we don't do it.
 		if ( needsCloning )
-		{
-			var json = Serialisation.SerialiseClass( data, documentType );
-			data = Serialisation.DeserialiseClass( json, documentType );
-		}
+			data = Serialisation.CloneObject( data, documentType );
 
 		Data = data;
 		Stale = true;

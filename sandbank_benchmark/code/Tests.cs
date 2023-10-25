@@ -24,6 +24,7 @@ static class Tests
 			TestDeleteWithID,
 			TestAny,
 			TestAnyWithID,
+			TestReferenceDoesntModifyCache,
 			TestEnableIndentJSON,
 			TestConcurrencySafety,
 			TestForceWriteCache,
@@ -96,6 +97,21 @@ static class Tests
 
 		if ( data != null )
 			Fail( "TestDelete() 1:" + data.Name );
+	}
+
+	/// <summary>
+	/// Ensure that when we receive an object from the database, modifying it doesn't
+	/// also modify the cache.
+	/// </summary>
+	private static void TestReferenceDoesntModifyCache()
+	{
+		Sandbank.Insert<PlayerData>( "players", TestData.TestData1 );
+		var data = Sandbank.SelectOneWithID<PlayerData>( "players", TestData.TestData1.ID );
+		data.Level = 999;
+		data = Sandbank.SelectOneWithID<PlayerData>( "players", TestData.TestData1.ID );
+
+		if ( data.Level == 999 )
+			Fail( "TestReferenceDoesntModifyCache()" );
 	}
 
 	private static void TestDeleteWithID()

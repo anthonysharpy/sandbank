@@ -49,7 +49,7 @@ static class Sandbank
 		foreach ( var pair in relevantCollection.CachedDocuments )
 		{
 			if ( selector.Invoke( (T)pair.Value.Data ) )
-				return (T)pair.Value.Data;
+				return Serialisation.CloneObject((T)pair.Value.Data);
 		}
 
 		return null;
@@ -63,7 +63,7 @@ static class Sandbank
 		var relevantCollection = Cache.GetCollectionByName<T>( collection );
 		relevantCollection.CachedDocuments.TryGetValue(id, out Document document);
 
-		return document == null ? null : document.Data as T;
+		return document == null ? null : Serialisation.CloneObject((T)document.Data);
 	}
 
 	/// <summary>
@@ -77,7 +77,7 @@ static class Sandbank
 		foreach ( var pair in relevantCollection.CachedDocuments )
 		{
 			if ( selector.Invoke( (T)pair.Value.Data ) )
-				output.Add( (T)pair.Value.Data );
+				output.Add( Serialisation.CloneObject((T)pair.Value.Data) );
 		}
 
 		return output;

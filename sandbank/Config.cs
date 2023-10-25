@@ -26,7 +26,7 @@ static class Config
 	/// <summary>
 	/// Enables logging for helping to diagnose issues.
 	/// </summary>
-	public const bool ENABLE_LOGGING = true;
+	public const bool ENABLE_LOGGING = false;
 	/// <summary>
 	/// If this is enabled then you can run risky parts of the API like functions that can
 	/// wipe the database. This is off by default to stop people shooting themselves in
