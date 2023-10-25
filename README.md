@@ -59,20 +59,22 @@ public void SaveData()
 
 ### CPU
 
-Sandbank is designed to be threadsafe so you can squeeze a lot out of it. In fact, since there is no network overhead, it is probably faster than a conventional database, unless you're talking about an efficiently-indexed table with millions of records. Here are some benchmarks using the above PlayerData class on a Ryzen 5 5500 with 12 logical processors:
+Sandbank is designed to be threadsafe so you can squeeze more out of it. In fact, since there is no network overhead, it is probably faster than a conventional database, unless you're talking about an efficiently-indexed table with hundreds of thousands of records. Here are some benchmarks using the above PlayerData class on a Ryzen 5 5500 with 12 logical processors:
 
-| Operation                                                                         | Total Time    | Time Per Query   |
+| Operation                                                                         | Total Time    | Speed   |
 |-----------------------------------------------------------------------------------|---------------|------------------|
-| 100,000 inserts (one thread)                                                      | 0.69 seconds  | 0.0000069 seconds/insert |
-| 100,000 inserts (24 threads)                                                      | 0.172 seconds | 0.00000172 seconds/insert |
-| 5,000 selects [x => x.Health >= 90] on a 5,000 document collection (one thread)   | 0.884 seconds | 0.0001768 seconds/query |
-| 5,000 selects [x => x.Health >= 90] on a 5,000 document collection (24 threads)   | 0.206 seconds | 0.0000412 seconds/query |
+| 100,800 inserts (one thread)                                                      | 0.70 seconds  | 144,000 documents inserted/second |
+| 100,800 inserts (24 threads)                                                      | 0.18 seconds  | 560,000 documents inserted/second |
+| Search 100,800 documents [x => x.Health >= 90] (once on one thread)               | 0.07 seconds  | 1,439,999 documents searched/second |
+| Search 100,800 documents [x => x.Health >= 90] (24 times on 24 threads)           | 0.54 seconds  | 4,480,000 documents searched/second |
+| Search 100,800 documents by ID (100,000 times on one thread)                      | 0.26 seconds  | 38,769,230,769 documents searched/second |
+| Search 100,800 documents by ID (100,000 times on 24 threads)                      | 1.94 seconds  | 124,701,030,921 documents searched/second |
 
-The above figures represent the time it took to write/read the data to/from the cache only (not to disk).
+The above figures represent the time it took to write/read the data to/from the cache only (not to disk). As you can see, searching by ID is basically instant, inserts are crazy-quick, and regular searches are relatively quick. The speed of regular searches will depend heavily on the size of your collection and the complexity of your queries however.
 
 ### Memory
 
-The database stores all data in memory in a cache. You may think that'd be bad for memory consumption but actually it's not. For example, 100,000 of those PlayerData classes take up about 20mb memory. Unless you're handling millions of documents, or your documents are very big, you don't really need to worry.
+The database stores all data in memory in a cache. You may think that'd be bad for memory consumption but actually even 100,000 of those PlayerData classes only take up about 20mb memory. Unless you're handling millions of documents, or your documents are very big, you don't really need to worry.
 
 ### Disk
 
