@@ -2,6 +2,7 @@
 using Sandbox;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
@@ -22,6 +23,8 @@ static class Benchmark
 			BenchmarkInsertThreaded,
 			BenchmarkSelect,
 			BenchmarkSelectThreaded,
+			BenchmarkSelectOneWithID,
+			BenchmarkSelectOneWithIDThreaded,
 		};
 
 		foreach ( var benchmark in benchmarks )
@@ -124,7 +127,7 @@ static class Benchmark
 
 		var startTime = DateTime.Now;
 
-		var results = Sandbank.Select<PlayerData>( "players", x => x.Health >= 90 );
+		Sandbank.Select<PlayerData>( "players", x => x.Health >= 90 );
 
 		double totalTime = DateTime.Now.Subtract( startTime ).TotalSeconds;
 
@@ -165,5 +168,90 @@ static class Benchmark
 		double totalTime = DateTime.Now.Subtract( startTime ).TotalSeconds;
 
 		Log.Info( $"[multi-threaded] Select() - {collectionSize} documents searched {threads} times in {totalTime} seconds" );
+	}
+
+	private static Task BenchmarkSelectOneWithID()
+	{
+		int collectionSize = 100800;
+		string id = "";
+		int repeats = 100000;
+
+		for ( int i = 0; i < collectionSize; i++ )
+		{
+			var data = new PlayerData()
+			{
+				Health = Game.Random.Next( 101 ),
+				Name = "TestPlayer1",
+				Level = 10,
+				LastPlayTime = DateTime.Now,
+				Items = new() { "gun", "frog", "banana" }
+			};
+
+			Sandbank.Insert( "players", data );
+
+			if (i == collectionSize / 2)
+				id = data.ID;
+		}
+
+		var watch = new Stopwatch();
+
+		watch.Start();
+
+		for ( int i = 0; i < repeats; i++ )
+		{
+			Sandbank.SelectOneWithID<PlayerData>( "players", id );
+		}
+
+		watch.Stop();
+
+		Log.Info( $"SelectOneWithID() - {collectionSize} documents searched {repeats} times in {watch.Elapsed.TotalSeconds} seconds" );
+		return Task.CompletedTask;
+	}
+
+	private static async Task BenchmarkSelectOneWithIDThreaded()
+	{
+		int collectionSize = 100800;
+		int repeats = 100000;
+		int threads = 24;
+		string id = "";
+
+		for ( int i = 0; i < collectionSize; i++ )
+		{
+			var data = new PlayerData()
+			{
+				Health = Game.Random.Next( 101 ),
+				Name = "TestPlayer1",
+				Level = 10,
+				LastPlayTime = DateTime.Now,
+				Items = new() { "gun", "frog", "banana" }
+			};
+
+			Sandbank.Insert( "players", data );
+
+			if ( i == collectionSize / 2 )
+				id = data.ID;
+		}
+
+		List<Task> tasks = new();
+
+		var watch = new Stopwatch();
+		watch.Start();
+
+		for ( int t = 0; t < threads; t++ )
+		{
+			tasks.Add( GameTask.RunInThreadAsync( async () =>
+			{
+				for (int i = 0; i < repeats; i++ )
+				{
+					Sandbank.SelectOneWithID<PlayerData>( "players", id );
+				}
+			} ) );
+		}
+
+		await GameTask.WhenAll( tasks );
+
+		watch.Stop();
+
+		Log.Info( $"[multi-threaded] SelectOneWithID() - {collectionSize} documents searched {repeats} times in {watch.Elapsed.TotalSeconds} seconds" );
 	}
 }
