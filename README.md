@@ -8,12 +8,12 @@ Simply download the repository and drag the `sandbank` folder into your codebase
 
 ## Usage
 
-The database uses the document model. This means that all your data is saved to disk as JSON files and that you don't have to create SQL queries or do joins or anything like that. This makes a lot of sense for game development since most things in games are self-contained objects, not abstract relationships. Each document belongs to a collection, and most databases will have multiple collections. This isn't strictly enforced, but 99% of the time you will want a separate collection for each document class type. 
+The database uses the document model. This means that data is saved to disk as JSON files and that there is no need to create SQL queries or do joins or anything like that. Each document belongs to a collection, and most databases will have multiple collections. This isn't strictly enforced, but 98% of the time you will want a separate collection for each class type. 
 
-Your data files will be saved in s&box's data folder - e.g. `C:\Program Files (x86)\Steam\steamapps\common\sbox\data\my_organisation\my_project\sandbank`.
+Data files are saved in s&box's data folder - e.g. `C:\Program Files (x86)\Steam\steamapps\common\sbox\data\my_organisation\my_project\sandbank`.
 
 Some things to bear in mind:
-- Every document you insert _**must**_ have a public property called "ID" with a _**non-null default value**_. This is the unique primary ID of the document and is also used as the document's file name. You can set this to be whatever you want - for example, you might want it to be the player's Steam ID. Alternatively, you can leave it empty, and the database will automatically populate the ID for you as a random GUID.
+- Due partially to some quirks of s&box, every document you insert _**must**_ have a public property called "ID" with a _**non-null default value**_. This is the unique primary ID of the document and is also used as the document's file name. You can set this to be whatever you want - for example, you might want it to be the player's Steam ID. Alternatively, you can leave it empty, and the database will automatically populate the ID for you as a random GUID.
 - Your data must be in a class. A struct won't work.
 - Any data you want saved must be a public property.
 - Most types are supported - even custom ones.
@@ -59,7 +59,7 @@ public void SaveData()
 
 ### CPU
 
-Sandbank is designed to be threadsafe so you can squeeze a lot out of it. In fact, since there is no network overhead, it is probably faster than a conventional database, unless you're talking about efficiently-indexed tables with millions of records. Here are some benchmarks using the above PlayerData class on a Ryzen 5 5500 with 12 logical processors:
+Sandbank is designed to be threadsafe so you can squeeze a lot out of it. In fact, since there is no network overhead, it is probably faster than a conventional database, unless you're talking about an efficiently-indexed table with millions of records. Here are some benchmarks using the above PlayerData class on a Ryzen 5 5500 with 12 logical processors:
 
 | Operation                                                                         | Total Time    | Time Per Query   |
 |-----------------------------------------------------------------------------------|---------------|------------------|
@@ -76,11 +76,11 @@ The database stores all data in memory in a cache. You may think that'd be bad f
 
 ### Disk
 
-The disk space used is less than the amount of memory used. Changes to the cache are written slowly to the disk over time in a background thread. Under extreme loads (i.e. thousands of documents being written to disk per second) this may throttle your hard-drive a little, but it shouldn't impact performance too much. Using a HDD though is not recommended.
+The disk space used is less than the amount of memory used. Changes to the cache are written slowly to the disk over time in a background thread. Under extreme loads (i.e. hundreds/thousands of documents being written to disk per second) this may throttle your hard-drive a little, but it shouldn't impact performance too much. Using a HDD though is not recommended.
 
 ## Consistency and Safety
 
-Data is written to disk slowly over time. The frequency at which this is done is configurable in `Config.cs`, although I'd recommend leaving that alone unless you understand what you're doing. Any data that is not written to disk is lost on a crash or server restart, so it is recommended you call `ForceWriteCache()` on server shutdown to force-write all data to disk. But if you're fine with potentially losing the last few seconds of changes then you don't have to.
+Data is written to disk slowly over time. The frequency at which this is done is configurable in `Config.cs`, although I'd recommend leaving that alone unless you understand what you're doing. Any data that is not written to disk is lost on a crash or server restart, but you can call `ForceWriteCache()` before an anticipated server shutdown to force-write all data to disk. However, if you're fine with potentially losing the last few seconds of changes, then you don't have to.
 
 Transactions are not currently supported but if this is something that you would find useful then please make an issue or let me know :-)
 
