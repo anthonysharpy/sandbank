@@ -74,7 +74,7 @@ The above figures represent the time it took to write/read the data to/from the 
 
 ### Memory
 
-The database stores all data in memory in a cache. You may think that'd be quite bad for memory consumption, but actually, even 100,000 of the above PlayerData classes only take up about 30mb memory (a gross-oversimplification, but it'll do). Unless you're handling millions of documents, or your documents are very big, you don't really need to worry.
+The database stores all data in memory in a cache. You may think that'd be quite bad for memory consumption, but actually, even 100,000 of the above PlayerData classes only take up about 30mb memory (a gross oversimplification, but you get the point). Unless you're handling millions of documents, or your documents are very big, you don't really need to worry.
 
 ### Disk
 
