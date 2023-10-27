@@ -7,12 +7,6 @@ using System.Threading.Tasks;
 static class Sandbank
 {
 	/// <summary>
-	/// You should not rely on the database until this is true. If this is false,
-	/// you may not find any data, or any data you write might be thrown away.
-	/// </summary>
-	public static bool IsInitialised => Initialisation.IsInitialised;
-
-	/// <summary>
 	/// Insert a document into the database. The document will have its ID set
 	/// if it is empty.
 	/// </summary>
