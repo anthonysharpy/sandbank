@@ -8,6 +8,9 @@ namespace NSSandbank;
 
 static internal class Cache
 {
+	/// <summary>
+	/// Indicates that a full or partial write to disk is in progress.
+	/// </summary>
 	public static object WriteInProgressLock = new();
 
 	private static ConcurrentDictionary<string, Collection> _collections = new();

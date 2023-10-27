@@ -11,6 +11,11 @@ internal class Serialisation
 		WriteIndented = Config.INDENT_JSON
 	};
 
+	/// <summary>
+	/// Re-build the JSON options object (we need to do this after
+	/// programatically changing any of the config options that control
+	/// JSON serialisation).
+	/// </summary>
 	public static void UpdateJSONOptions()
 	{
 		_jsonOptions = new()
