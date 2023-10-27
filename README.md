@@ -1,6 +1,6 @@
 # Sandbank
 
-Sandbank is the easy-to-use no-SQL database for s&amp;box. Installation is click-and-drag, with zero setup required.
+Sandbank is the fast, easy-to-use no-SQL database for s&amp;box. Installation is click-and-drag, with zero setup required.
 
 ## Installation
 
@@ -8,14 +8,14 @@ Simply download the repository and drag the `sandbank` folder into your codebase
 
 ## Usage
 
-The database uses the document model. This means that data is saved to disk as JSON files and that there is no need to create SQL queries or do joins or anything like that. Each document belongs to a collection, and most databases will have multiple collections. This isn't strictly enforced, but 98% of the time you will want a separate collection for each class type. 
+The database uses the document model. This means that data is saved to disk as JSON files and that there is no need to create SQL queries or do joins or anything like that. Each document belongs to a collection, and most databases will have multiple collections. This isn't strictly enforced, but 98% of the time you will want a separate collection for each data type. For example, you might have a "players" collection for player data, and a "highscores" collection for highscores, etc.
 
 Data files are saved in s&box's data folder - e.g. `C:\Program Files (x86)\Steam\steamapps\common\sbox\data\my_organisation\my_project\sandbank`.
 
 Some things to bear in mind:
-- Due partially to some quirks of s&box, every document you insert _**must**_ have a public property called "ID" with a _**non-null default value**_. This is the unique primary ID of the document and is also used as the document's file name. You can set this to be whatever you want - for example, you might want it to be the player's Steam ID. Alternatively, you can leave it empty, and the database will automatically populate the ID for you as a random GUID.
+- Every document you insert _**must**_ have a public property called "ID" with a _**non-null default value**_. This is the _**unique**_ primary ID of the document and is also used as the document's file name. You can set this to be whatever you want - for example, you might want it to be a player's Steam ID. Alternatively, you can leave it empty, and the database will automatically populate the ID for you as a random GUID.
 - Your data must be in a class. A struct won't work.
-- Any data you want saved must be a public property.
+- Any data you want saved must be a public property. Hide any properties you don't want saved with the `[JsonIgnore]` attribute.
 - Most types are supported - even custom ones.
 
 An example:
@@ -59,7 +59,7 @@ public void SaveData()
 
 ### CPU
 
-Sandbank is designed to be threadsafe so you can squeeze more out of it. In fact, since there is no network overhead, it is probably faster than a conventional database, unless you're talking about an efficiently-indexed table with hundreds of thousands of records. Here are some benchmarks using the above PlayerData class on a Ryzen 5 5500 with 12 logical processors:
+Sandbank is designed to be thread-safe so that you can squeeze more out of it. In fact, since there is no network overhead, it is probably faster than a conventional database, unless you're talking about an efficiently-indexed table with hundreds of thousands of records. Here are some benchmarks using the above PlayerData class on a Ryzen 5 5500 with 12 logical processors:
 
 | Operation                                                                         | Total Time    | Speed   |
 |-----------------------------------------------------------------------------------|---------------|------------------|
@@ -74,11 +74,11 @@ The above figures represent the time it took to write/read the data to/from the 
 
 ### Memory
 
-The database stores all data in memory in a cache. You may think that'd be bad for memory consumption but actually even 100,000 of those PlayerData classes only take up about 20mb memory. Unless you're handling millions of documents, or your documents are very big, you don't really need to worry.
+The database stores all data in memory in a cache. You may think that'd be quite bad for memory consumption, but actually, even 100,000 of the above PlayerData classes only take up about 30mb memory (a gross oversimplification, but you get the point). Unless you're handling millions of documents, or your documents are very big, you don't really need to worry.
 
 ### Disk
 
-The disk space used is less than the amount of memory used. Changes to the cache are written slowly to the disk over time in a background thread. Under extreme loads (i.e. hundreds/thousands of documents being written to disk per second) this may throttle your hard-drive a little, but it shouldn't impact performance too much. Using a HDD though is not recommended.
+The disk space used is less than the amount of memory used. Changes to the cache are written slowly to the disk over time in a background thread. Under extreme loads (i.e. thousands of documents being inserted per second) this may throttle your hard-drive a little, but it shouldn't impact performance too much. Using a HDD though is not recommended.
 
 ## Consistency and Safety
 
