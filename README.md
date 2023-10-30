@@ -61,16 +61,24 @@ public void SaveData()
 
 Sandbank is designed to be thread-safe so that you can squeeze more out of it. In fact, since there is no network overhead, it is probably faster than a conventional database, unless you're talking about an efficiently-indexed table with hundreds of thousands of records. Here are some benchmarks using the above PlayerData class on a Ryzen 5 5500 with 12 logical processors:
 
-| Operation                                                                         | Total Time    | Speed   |
-|-----------------------------------------------------------------------------------|---------------|------------------|
-| 100,800 inserts (one thread)                                                      | 0.70 seconds  | 144,000 documents inserted/second |
-| 100,800 inserts (24 threads)                                                      | 0.18 seconds  | 560,000 documents inserted/second |
-| Search 100,800 documents [x => x.Health >= 90] (once on one thread)               | 0.07 seconds  | 1,439,999 documents searched/second |
-| Search 100,800 documents [x => x.Health >= 90] (24 times on 24 threads)           | 0.54 seconds  | 4,480,000 documents searched/second |
-| Search 100,800 documents by ID (100,000 times on one thread)                      | 0.26 seconds  | 38,769,230,769 documents searched/second |
-| Search 100,800 documents by ID (100,000 times on 24 threads)                      | 1.94 seconds  | 124,701,030,921 documents searched/second |
+| Operation                                                                                  | Total Time    | Speed   |
+|--------------------------------------------------------------------------------------------|---------------|------------------|
+| 100,800 inserts (one thread)                                                               | 0.70 seconds  | 144,000 documents inserted/second |
+| 100,800 inserts (24 threads)                                                               | 0.18 seconds  | 560,000 documents inserted/second |
+| Search 100,800 documents [x => x.Health >= 90] (once on one thread)                        | 0.07 seconds  | 1,439,999 documents searched/second |
+| Search 100,800 documents [x => x.Health >= 90] (24 times on 24 threads)                    | 0.54 seconds  | 4,480,000 documents searched/second |
+| Search 100,800 documents [x => x.Health >= 90] (once on one thread, unsafe references)     | 0.015 seconds | 6,720,000 documents searched/second |
+| Search 100,800 documents [x => x.Health >= 90] (24 times on 24 threads, unsafe references) | 0.06 seconds  | 40,320,000 documents searched/second |
+| Search 100,800 documents by ID (100,000 times on one thread)                               | 0.26 seconds  | 38,769,230,769 documents searched/second |
+| Search 100,800 documents by ID (100,000 times on 24 threads)                               | 1.94 seconds  | 124,701,030,921 documents searched/second |
 
-The above figures represent the time it took to write/read the data to/from the cache only (not to disk). As you can see, searching by ID is basically instant, inserts are crazy-quick, and regular searches are relatively quick. The speed of regular searches will depend heavily on the size of your collection, the complexity of your query, and the number of documents returned.
+
+The above figures represent the time it took to write/read the data to/from the cache only (not to disk). As you can see, searching by ID is basically instant, inserts are very quick, and regular searches are relatively quick.
+
+The speed of regular searches will depend heavily on:
+- The size of your collection/documents
+- The complexity of your query
+- The number of documents returned (unless you're using unsafe references mode, in which case it won't matter that much).
 
 ### Memory
 
@@ -87,3 +95,9 @@ Data is written to disk slowly over time. The frequency at which this is done is
 Transactions are not currently supported but if this is something that you would find useful then please make an issue or let me know :-)
 
 With all the concurrency support this got quite complicated so please raise an issue if you encounter any bugs. Contributions are welcome too.
+
+### Unsafe References Mode
+
+The `Select` query has an unsafe counterpart `SelectUnsafeReferences`. The primary difference between the two is that the second one is about 9x faster. However, there is a crucial difference that you _**MUST**_ be aware of if you use `SelectUnsafeReferences`, or _**YOU RISK CORRUPTING YOUR DATA**_. `Select` copies the data from the cache into new objects and then gives those new objects to you. That means that any changes you make to these objects don't affect anything else - you're free to do what you want with them. The downside to this is that there is an overhead invovled in creating all those new objects. `SelectUnsafeReferences` on the other hand will give you the exact copy of the data that is stored in the cache. This is faster because it means no new copy has to be made. However, because it's giving you a class, this is a reference type. This means that _**ANY CHANGES YOU MAKE TO THIS RETURNED VALUE WILL BE REFLECTED IN THE CACHE, AND THEREFORE MAY CHANGE THE VALUES IN THE DATABASE UNEXEPECTEDLY!!!**_. You are guaranteed however that the cache will not change the object after you have requested it (because all inserts are new objects). To summarise, if you don't fully understand what I've just said, then stick with `Select`, as it is still quite fast. 
+
+
