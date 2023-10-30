@@ -30,9 +30,9 @@ class PlayerData
 	public DateTime LastPlayTime { get; set; }
 	public List<string> Items { get; set; } = new();
 }
+```
 
-...
-
+```
 private PlayerData _myPlayerData = new();
 
 public void SaveData()
