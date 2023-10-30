@@ -8,7 +8,7 @@ Simply download the repository and drag the `sandbank` folder into your codebase
 
 ## Usage
 
-The database uses the document model. This means that data is saved as JSON files and that there is no need to create SQL queries or do joins or anything like that. Each document belongs to a collection, and most databases will have multiple collections. This isn't strictly enforced, but 98% of the time you will want a separate collection for each data type. For example, you might have a "players" collection for player data, and a "highscores" collection for highscores, etc.
+The database uses the document model. This means that data is saved as JSON files and that there is no need to create SQL queries or do joins or anything like that. Each document belongs to a collection. Most databases will have multiple collections. This isn't strictly enforced, but 98% of the time you will want a separate collection for each data type. For example, you might have a "players" collection for player data, and a "highscores" collection for highscores, etc.
 
 Data files are saved in s&box's data folder - e.g. `C:\Program Files (x86)\Steam\steamapps\common\sbox\data\my_organisation\my_project\sandbank`.
 
