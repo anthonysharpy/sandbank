@@ -21,8 +21,6 @@ Some things to bear in mind:
 An example:
 
 ```
-// In reality you would probably make this a BaseNetworkable or something, assuming
-// you wanted to network it.
 class PlayerData
 {
 	public string ID { get; set; } = ""; // Note the use of "" - a non-null value is required.
