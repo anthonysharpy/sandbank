@@ -76,7 +76,7 @@ The above figures represent the time it took to write/read the data to/from the 
 The speed of regular searches will depend heavily on:
 - The size of your collection/documents
 - The complexity of your query
-- The number of documents returned (unless you're using unsafe references mode, in which case it won't matter that much).
+- The number of documents returned (unless you're using unsafe references mode, in which case it won't matter that much)
 
 ### Memory
 
