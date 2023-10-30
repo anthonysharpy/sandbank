@@ -80,11 +80,11 @@ The speed of regular searches will depend heavily on:
 
 ### Memory
 
-The database stores all data in memory in a cache. You may think that'd be quite bad for memory consumption, but actually, even 100,000 of the above PlayerData classes only take up about 30mb memory (a gross oversimplification, but you get the point). Unless you're handling millions of documents, or your documents are very big, you don't really need to worry.
+The database stores all data in memory in a cache. 100,000 of the above PlayerData classes only take up around 30mb memory. Unless you're handling millions of documents, or your documents are very big, you don't really need to worry about memory.
 
 ### Disk
 
-The disk space used is less than the amount of memory used. Changes to the cache are written slowly to the disk over time in a background thread. Under extreme loads (i.e. thousands of documents being inserted per second) this may throttle your hard-drive a little, but it shouldn't impact performance too much. Using a HDD though is not recommended.
+The disk space used is less than the amount of memory used. Changes to the cache are written slowly to the disk over time in a background thread. Under extreme loads (i.e. thousands of documents being inserted per second) this may throttle your hard-drive a little, but it shouldn't impact performance too much.
 
 ## Consistency and Safety
 
