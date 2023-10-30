@@ -23,6 +23,8 @@ static class Benchmark
 			BenchmarkInsertThreaded,
 			BenchmarkSelect,
 			BenchmarkSelectThreaded,
+			BenchmarkSelectUnsafeReferences,
+			BenchmarkSelectUnsafeReferencesThreaded,
 			BenchmarkSelectOneWithID,
 			BenchmarkSelectOneWithIDThreaded,
 		};
@@ -168,6 +170,67 @@ static class Benchmark
 		double totalTime = DateTime.Now.Subtract( startTime ).TotalSeconds;
 
 		Log.Info( $"[multi-threaded] Select() - {collectionSize} documents searched {threads} times in {totalTime} seconds" );
+	}
+
+	private static Task BenchmarkSelectUnsafeReferences()
+	{
+		int collectionSize = 100800;
+
+		for ( int i = 0; i < collectionSize; i++ )
+		{
+			Sandbank.Insert( "players", new PlayerData()
+			{
+				Health = Game.Random.Next( 101 ),
+				Name = "TestPlayer1",
+				Level = 10,
+				LastPlayTime = DateTime.Now,
+				Items = new() { "gun", "frog", "banana" }
+			} );
+		}
+
+		var startTime = DateTime.Now;
+
+		Sandbank.SelectUnsafeReferences<PlayerData>( "players", x => x.Health >= 90 );
+
+		double totalTime = DateTime.Now.Subtract( startTime ).TotalSeconds;
+
+		Log.Info( $"SelectUnsafeReferences() - {collectionSize} documents searched in {totalTime} seconds" );
+		return Task.CompletedTask;
+	}
+
+	private static async Task BenchmarkSelectUnsafeReferencesThreaded()
+	{
+		int collectionSize = 100800;
+		int threads = 24;
+
+		for ( int i = 0; i < collectionSize; i++ )
+		{
+			Sandbank.Insert<PlayerData>( "players", new PlayerData()
+			{
+				Health = Game.Random.Next( 101 ),
+				Name = "TestPlayer1",
+				Level = 10,
+				LastPlayTime = DateTime.Now,
+				Items = new() { "gun", "frog", "banana" }
+			} );
+		}
+
+		List<Task> tasks = new();
+		var startTime = DateTime.Now;
+
+		for ( int t = 0; t < threads; t++ )
+		{
+			tasks.Add( GameTask.RunInThreadAsync( async () =>
+			{
+				Sandbank.SelectUnsafeReferences<PlayerData>( "players", x => x.Health >= 90 );
+			} ) );
+		}
+
+		await GameTask.WhenAll( tasks );
+
+		double totalTime = DateTime.Now.Subtract( startTime ).TotalSeconds;
+
+		Log.Info( $"[multi-threaded] SelectUnsafeReferences() - {collectionSize} documents searched {threads} times in {totalTime} seconds" );
 	}
 
 	private static Task BenchmarkSelectOneWithID()

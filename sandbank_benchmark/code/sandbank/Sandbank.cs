@@ -88,6 +88,45 @@ static class Sandbank
 	}
 
 	/// <summary>
+	/// DO NOT USE THIS FUNCTION UNLESS YOU FULLY UNDERSTAND THE BELOW, AS THERE IS
+	/// A RISK YOU COULD CORRUPT YOUR DATA. <br/>
+	/// <br/>
+	/// This does the exact same thing as Select, except it is about 9x faster.
+	/// They work differently, however. <br/>
+	/// <br/>
+	/// Select copies the data from the cache into new objects and then gives those
+	/// new objects to you. That means that any changes you make to those new objects
+	/// don't affect anything else - you're free to do what you want with them. The
+	/// downside to this is that there is an overhead invovled in creating all those
+	/// new objects. <br/>
+	/// <br/>
+	/// SelectUnsafeReferences on the other hand will give you a reference to the data
+	/// that is stored in the cache. This is faster because it means no new copy has to
+	/// be made. However, because it's giving you a reference, this means that ANY CHANGES
+	/// YOU MAKE TO THE RETURNED OBJECTS WILL BE REFLECTED IN THE CACHE, AND THEREFORE MAY
+	/// CHANGE THE VALUES IN THE DATABASE UNEXEPECTEDLY!!! You should therefore not modify
+	/// the returned objects in any way, only read them. You are guaranteed however that the
+	/// cache will not change the object after you have requested it (because all inserts
+	/// are new objects).
+	/// </summary>
+	public static List<T> SelectUnsafeReferences<T>( string collection, Func<T, bool> selector ) where T : class
+	{
+		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
+		List<T> output = new();
+
+		if ( relevantCollection == null )
+			return output;
+
+		foreach ( var pair in relevantCollection.CachedDocuments )
+		{
+			if ( selector.Invoke( (T)pair.Value.Data ) )
+				output.Add( (T)pair.Value.Data );
+		}
+
+		return output;
+	}
+
+	/// <summary>
 	/// Delete all documents from the database where selector evaluates to true.
 	/// </summary>
 	public static void Delete<T>( string collection, Predicate<T> selector ) where T : class
