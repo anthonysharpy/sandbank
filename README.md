@@ -70,7 +70,7 @@ Sandbank is designed to be thread-safe so that you can squeeze more out of it. I
 | Search 100,800 documents by ID (100,000 times on one thread)                      | 0.26 seconds  | 38,769,230,769 documents searched/second |
 | Search 100,800 documents by ID (100,000 times on 24 threads)                      | 1.94 seconds  | 124,701,030,921 documents searched/second |
 
-The above figures represent the time it took to write/read the data to/from the cache only (not to disk). As you can see, searching by ID is basically instant, inserts are crazy-quick, and regular searches are relatively quick. The speed of regular searches will depend heavily on the size of your collection and the complexity of your query however.
+The above figures represent the time it took to write/read the data to/from the cache only (not to disk). As you can see, searching by ID is basically instant, inserts are crazy-quick, and regular searches are relatively quick. The speed of regular searches will depend heavily on the size of your collection, the complexity of your query, and the number of documents returned.
 
 ### Memory
 
