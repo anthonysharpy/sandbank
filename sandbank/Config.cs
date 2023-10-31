@@ -6,7 +6,7 @@ static class Config
 	/// This controls whether the written JSON files are indented or not.
 	/// Indentation makes them more human-readable, but probably makes processing
 	/// a little bit slower. You can edit this here or disable it by calling
-	/// EnableIndentJSON().
+	/// DisableIndentJSON().
 	/// </summary>
 	public static bool INDENT_JSON = true;
 	/// <summary>
