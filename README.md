@@ -91,7 +91,7 @@ The disk space used is less than the amount of memory used. Changes to the cache
 
 ## Consistency and Safety
 
-Data is written to disk slowly over time. The frequency at which this is done is configurable in `Config.cs`, although I'd recommend leaving that alone unless you understand what you're doing. By default, all inserted data is written after 10 seconds (at most). Any data that is not written to disk is lost on a crash or server restart, but you can call `ForceWriteCache()` before an anticipated server shutdown to force-write all data to disk. However, if you're fine with potentially losing the last few seconds of changes, then you don't have to.
+Data is written to disk slowly over time. The frequency at which this is done is configurable in `Config.cs`, although I'd recommend leaving that alone unless you understand what you're doing. By default, the database aims to write a change to disk in under 10 seconds. Any data that is not written to disk is lost on a crash or server restart, but you can call `ForceWriteCache()` before an anticipated server shutdown to force-write all data to disk. However, if you're fine with potentially losing the last few seconds of changes, then you don't have to.
 
 Transactions are not currently supported but if this is something that you would find useful then please make an issue or let me know :-)
 
