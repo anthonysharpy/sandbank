@@ -8,12 +8,12 @@ Simply download the repository and drag the `sandbank` folder into your codebase
 
 ## Usage
 
-The database uses the document model. This means that data is saved as JSON files and that there is no need to create SQL queries or do joins or anything like that. Each document belongs to a collection. Most databases will have multiple collections. This isn't strictly enforced, but 98% of the time you will want a separate collection for each data type. For example, you might have a "players" collection for player data, and a "highscores" collection for highscores, etc.
+The database uses the document model. This means that data is saved as JSON files and that there is no need to create SQL queries or do joins or anything like that. Each document belongs to a collection. Most databases will have multiple collections. This isn't strictly enforced, but 98% of the time you will have a separate collection for each data type. For example, you might have a "players" collection for player data, and a "highscores" collection for highscores, etc.
 
 Data files are saved in s&box's data folder - e.g. `C:\Program Files (x86)\Steam\steamapps\common\sbox\data\my_organisation\my_project\sandbank`.
 
 Some things to bear in mind:
-- Every document you insert _**must**_ have a public property called "ID" with a _**non-null default value**_. This is the _**unique**_ primary ID of the document and is also used as the document's file name. You can set this to be whatever you want - for example, you might want it to be a player's Steam ID. Alternatively, you can leave it empty, and the database will automatically populate the ID for you as a random GUID.
+- Every document you insert _**must**_ have a public string property called "ID" with a _**non-null default value**_. This is the _**unique**_ primary ID of the document and is also used as the document's file name. You can set this to be whatever you want - for example, you might want it to be a player's Steam ID. Alternatively, you can leave it empty, and the database will automatically populate the ID for you as a random GUID.
 - Your data must be in a class. A struct won't work.
 - Any data you want saved must be a public property. Hide any properties you don't want saved with the `[JsonIgnore]` attribute.
 - Most types are supported - even custom ones.
