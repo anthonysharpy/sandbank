@@ -24,8 +24,8 @@ An example:
 class PlayerData
 {
 	public string ID { get; set; } = ""; // Note the use of "" - a non-null value is required.
-	public float Health { get; set; } = 100;
-	public string Name { get; set; } = "Bob";
+	public float Health { get; set; }
+	public string Name { get; set; }
 	public int Level { get; set; }
 	public DateTime LastPlayTime { get; set; }
 	public List<string> Items { get; set; } = new();
@@ -38,6 +38,9 @@ private PlayerData _myPlayerData = new();
 public void SaveData()
 {
 	Log.Info($"My ID is empty: {_myPlayerData.ID}");
+
+	_myPlayerData.Health = 100;
+	_myPlayerData.Name = "Bob";
 
 	// Insert the player. Their ID is populated from within the function because the
 	// class is passed by reference.
