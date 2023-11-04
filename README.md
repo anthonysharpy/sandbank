@@ -94,7 +94,7 @@ The database stores all data in memory in a cache. 100,000 of the above PlayerDa
 
 The disk space used is less than the amount of memory used. Changes to the cache are written slowly to the disk over time in a background thread. Under extreme loads (thousands of documents being inserted per second) this may throttle your hard-drive a little, but it shouldn't impact performance too much.
 
-## Consistency and Safety
+## Data Consistency
 
 Data is written to disk slowly over time. The frequency at which this is done, as well as a number of other things, is configurable in `Config.cs`. By default, the database aims to write any change to disk in under 10 seconds.
 
