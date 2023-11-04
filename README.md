@@ -2,11 +2,11 @@
 
 Sandbank is the fast, easy-to-use no-SQL database for s&amp;box. Installation is click-and-drag, with zero setup required.
 
-## Installation
+# Installation
 
 Simply download the repository and drag the `sandbank` folder into your codebase. `sandbank_benchmark` contains tests - you don't want this.
 
-## Usage
+# Usage
 
 The database uses the document model. This means that data is saved as JSON files. It also means that there is no need to create SQL queries or do joins or anything like that. Each document belongs to a "collection". Each collection can contain many documents. Most databases will have multiple collections. Each collection represents a separate data type. For example, you might have a "players" collection for player data, and a "houses" collection for players' houses, etc.
 
@@ -59,7 +59,7 @@ public void SaveData()
 }
 ```
 
-## Performance
+# Performance
 
 ### CPU
 
@@ -94,7 +94,7 @@ The database stores all data in memory in a cache. 100,000 of the above PlayerDa
 
 The disk space used is less than the amount of memory used. Changes to the cache are written slowly to the disk over time in a background thread. Under extreme loads (thousands of documents being inserted per second) this may throttle your hard-drive a little, but it shouldn't impact performance too much.
 
-## Data Consistency
+# Data Consistency
 
 Data is written to disk slowly over time. The frequency at which this is done, as well as a number of other things, is configurable in `Config.cs`. By default, the database aims to write any change to disk in under 10 seconds.
 
