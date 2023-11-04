@@ -96,14 +96,19 @@ static class FileIO
 				data = FileSystem.Data.ReadAllText( $"{Config.DATABASE_NAME}/{collectionName}/definition.txt" );
 			}
 
+			if ( data == null )
+				return (null, $"no definition.txt for collection \"{collectionName}\" found - see RepairGuide.txt");
+
 			var collection = Serialisation.DeserialiseClass<Collection>( data );
+
+			if ( collection.CollectionName != collectionName )
+				return (null, $"failed to load definition.txt for collection \"{collectionName}\" - the CollectionName in the definition.txt differed from the name of the directory ({collectionName} vs {collection.CollectionName}) - see RepairGuide.txt");
 
 			collection.DocumentClassType = GlobalGameNamespace.TypeLibrary
 				.GetType( collection.DocumentClassTypeSerialized )
 				.TargetType;
 
 			return (collection, null);
-
 		}
 		catch (Exception e)
 		{
@@ -128,20 +133,29 @@ static class FileIO
 
 				foreach ( var file in files )
 				{
-					string contents;
+					var contents = FileSystem.Data.ReadAllText( $"{Config.DATABASE_NAME}/{collection.CollectionName}/{file}" );
 
-					contents = FileSystem.Data.ReadAllText( $"{Config.DATABASE_NAME}/{collection.CollectionName}/{file}" );
+					try
+					{
+						var document = new Document( Serialisation.DeserialiseClass( contents, collection.DocumentClassType ), null, false );
+						
+						if ( file != document.ID )
+							return ( null, $"failed loading document \"{file}\": the filename does not match the ID ({file} vs {document.ID}) - see RepairGuide.txt");
 
-					var document = new Document( Serialisation.DeserialiseClass( contents, collection.DocumentClassType ), null, false );
-					output.Add( document );
+						output.Add( document );
+					}
+					catch ( Exception e )
+					{
+						return ( null, $"failed loading document \"{file}\" - your JSON is probably invalid: " + e.Message );
+					}
 				}
 			}
 
-			return (output, null);
+			return ( output, null );
 		}
 		catch (Exception e)
 		{
-			return (null, e.Message);
+			return ( null, e.Message );
 		}
 	}
 

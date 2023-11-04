@@ -1,5 +1,6 @@
 ﻿using Sandbox;
-using System.Security.Cryptography;
+using System;
+using System.Collections.Generic;
 
 namespace NSSandbank;
 
@@ -7,37 +8,48 @@ static class Initialisation
 {
 	public static bool IsInitialised { get; private set; }
 
+	private static bool _initialisationAttempted = false;
+
 	private static void Initialise()
 	{
 		Log.Info( "==================================" );
 		Log.Info( "Initialising Sandbank..." );
 
-		// Sometimes this doesn't get cleared between games somehow so we wipe
-		// it manually.
-		Cache.WipeCollectionsCache();
+		try
+		{
+			// Sometimes this doesn't get cleared between games somehow so we wipe
+			// it manually.
+			Cache.WipeCollectionsCache();
 
-		EnsureFilesystemSetup();
-		LoadCollections();
-
-		Log.Info( "Sandbank initialisation finished" );
-		Log.Info( "==================================" );
+			EnsureFilesystemSetup();
+			LoadCollections();
+			IsInitialised = true;
+		}
+		catch (Exception e)
+		{
+			Logging.Error( $"failed to initialise database - the database will now not start: {e.Message}" );
+		}
+		finally
+		{
+			Log.Info( "Sandbank initialisation finished" );
+			Log.Info( "==================================" );
+		}
 	}
 
 	private static void EnsureFilesystemSetup()
 	{
 		int attempt = 0;
+		string error = "";
 
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				Logging.Throw( "failed to load collections after 10 tries - are the files in use by something else?" );
+				throw new Exception( "failed to ensure filesystem is setup after 10 tries: " + error );
 
-			var error = FileIO.EnsureFileSystemSetup();
+			error = FileIO.EnsureFileSystemSetup();
 
 			if (error == null)
 				return;
-
-			Logging.Log( $"failed to ensure filesystem setup: {error}" );
 
 			GameTask.Delay( 50 );
 		}
@@ -46,69 +58,65 @@ static class Initialisation
 	private static void LoadCollections()
 	{
 		int attempt = 0;
+		string error = "";
+		List<string> collectionNames;
 
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				Logging.Throw( "failed to load collections after 10 tries - are the files in use by something else?" );
+				throw new Exception( "failed to load collection list after 10 tries: " + error );
 
-			var (collectionNames, error) = FileIO.ListCollectionNames();
+			(collectionNames, error) = FileIO.ListCollectionNames();
 
-			if (error != null)
-			{
-				Logging.Log( $"failed to load collections: {error}" );
-				goto retry;
-			}
+			if (error == null)
+				break;
 
-			foreach ( var collectionName in collectionNames )
-			{
-				Logging.Log( $"attempting to load collection \"{collectionName}\"" );
-
-				if ( !LoadCollection( collectionName ) )
-					goto retry;
-			}
-
-			break;
-
-			retry:
 			GameTask.Delay( 50 );
+		}
+
+		foreach ( var collectionName in collectionNames )
+		{
+			Logging.Log( $"attempting to load collection \"{collectionName}\"" );
+
+			while ( true )
+			{
+				if ( attempt++ >= 10 )
+					throw new Exception( $"failed to load collection {collectionName} after 10 tries: " + error );
+
+				error = LoadCollection( collectionName );
+
+				if ( error == null )
+					break;
+
+				GameTask.Delay( 50 );
+			}
 		}
 	}
 
 	/// <summary>
-	/// Returns true on success or if the collection failed to load because of a missing
-	/// definition file.
+	/// Returns null on success or the error message on failure.
 	/// </summary>
-	private static bool LoadCollection(string name)
+	private static string LoadCollection(string name)
 	{
 		var (definition, error) = FileIO.LoadCollectionDefinition( name );
 
-		if ( error != null)
-		{
-			Logging.Log( $"failed loading collection definition for \"{name}\": {error}" );
-			return false;
-		}
+		if ( error != null )
+			return $"failed loading collection definition for collection \"{name}\": {error}";
 
 		if (definition == null)
-		{
-			Log.Warning( $"Found a folder for collection {name} but the definition.txt was missing in that folder or failed to load, skipping..." );
-			return true;
-		}
+			return $"found a folder for collection {name} but the definition.txt was missing in that folder or failed to load";
 
 		(var documents, error) = FileIO.LoadAllCollectionsDocuments( definition );
 
 		if ( error != null )
-		{
-			Logging.Log( $"failed loading collection documents for \"{name}\": {error}" );
-			return false;
-		}
+			return $"failed loading documents for collection \"{name}\": {error}";
 
 		Cache.CreateCollection( name, definition.DocumentClassType );
 		Cache.InsertDocumentsIntoCollection( name, documents );
 
 		Log.Info( $"Loaded collection {name} with {documents.Count} documents" );
 
-		return true;
+		return null;
 	}
 
 	[GameEvent.Tick.Server]
@@ -116,9 +124,9 @@ static class Initialisation
 	{
 		// I don't like this but it looks like s&box doesn't have an
 		// on-server-start event yet so it'll have to do for now.
-		if (!IsInitialised )
+		if ( !IsInitialised && !_initialisationAttempted )
 		{
-			IsInitialised = true;
+			_initialisationAttempted = true;
 			Initialise();
 		}
 	}

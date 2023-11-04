@@ -19,7 +19,7 @@ class Document
 		object id = GlobalGameNamespace.TypeLibrary.GetPropertyValue( data, "ID" );
 
 		if ( id is null || id is not string )
-			Logging.Throw( "cannot handle a document that has no valid \"ID\" property - make sure your data class has a public property called ID, and that it is initialised to a non-null value, like this: \"public string ID {get; set;} = \"\";\"" );
+			throw new Exception( "cannot handle a document that has no valid \"ID\" property - make sure your data class has a public property called ID, and that it is initialised to a non-null value, like this: \"public string ID {get; set;} = \"\";\"" );
 
 		if ( ((string)id).Length > 0 )
 		{

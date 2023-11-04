@@ -2,16 +2,23 @@
 using Sandbox;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 static class Sandbank
 {
+	public static bool IsInitialised => Initialisation.IsInitialised;
+
 	/// <summary>
 	/// Insert a document into the database. The document will have its ID set
 	/// if it is empty.
 	/// </summary>
 	public static void Insert<T>( string collection, T document ) where T : class
 	{
+		if ( !IsInitialised )
+		{
+			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
+			return;
+		}
+
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, true );
 
 		Document newDocument = new( document, typeof(T), true );
@@ -24,6 +31,12 @@ static class Sandbank
 	/// </summary>
 	public static void InsertMany<T>( string collection, IEnumerable<T> documents ) where T : class
 	{
+		if ( !IsInitialised )
+		{
+			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
+			return;
+		}
+
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, true );
 
 		foreach (var document in documents)
@@ -38,6 +51,12 @@ static class Sandbank
 	/// </summary>
 	public static T SelectOne<T>( string collection, Func<T, bool> selector ) where T : class
 	{
+		if ( !IsInitialised )
+		{
+			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
+			return null;
+		}
+
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -57,6 +76,12 @@ static class Sandbank
 	/// </summary>
 	public static T SelectOneWithID<T>( string collection, string id ) where T : class
 	{
+		if ( !IsInitialised )
+		{
+			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
+			return null;
+		}
+
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -72,6 +97,12 @@ static class Sandbank
 	/// </summary>
 	public static List<T> Select<T>( string collection, Func<T, bool> selector ) where T : class
 	{
+		if ( !IsInitialised )
+		{
+			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
+			return new List<T>();
+		}
+
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 		List<T> output = new();
 
@@ -111,6 +142,12 @@ static class Sandbank
 	/// </summary>
 	public static List<T> SelectUnsafeReferences<T>( string collection, Func<T, bool> selector ) where T : class
 	{
+		if ( !IsInitialised )
+		{
+			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
+			return new List<T>();
+		}
+
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 		List<T> output = new();
 
@@ -131,6 +168,12 @@ static class Sandbank
 	/// </summary>
 	public static void Delete<T>( string collection, Predicate<T> selector ) where T : class
 	{
+		if ( !IsInitialised )
+		{
+			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
+			return;
+		}
+
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -153,7 +196,7 @@ static class Sandbank
 			while ( true )
 			{
 				if ( attempt++ >= 10 )
-					Logging.Throw( $"failed to delete document from collection \"{collection}\" after 10 tries - is the file in use by something else?" );
+					throw new Exception( $"failed to delete document from collection \"{collection}\" after 10 tries - is the file in use by something else?" );
 
 				if ( FileIO.DeleteDocument( collection, id ) == null )
 					break;
@@ -168,6 +211,12 @@ static class Sandbank
 	/// </summary>
 	public static void DeleteWithID<T>( string collection, string id) where T : class
 	{
+		if ( !IsInitialised )
+		{
+			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
+			return;
+		}
+
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -180,7 +229,7 @@ static class Sandbank
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				Logging.Throw( $"failed to delete document from collection \"{collection}\" after 10 tries - is the file in use by something else?" );
+				throw new Exception( $"failed to delete document from collection \"{collection}\" after 10 tries - is the file in use by something else?" );
 
 			if ( FileIO.DeleteDocument( collection, id ) == null )
 				break;
@@ -195,6 +244,12 @@ static class Sandbank
 	/// </summary>
 	public static bool Any<T>( string collection, Func<T, bool> selector ) where T : class
 	{
+		if ( !IsInitialised )
+		{
+			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
+			return false;
+		}
+
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 				
 		if ( relevantCollection == null )
@@ -214,6 +269,12 @@ static class Sandbank
 	/// </summary>
 	public static bool AnyWithID<T>( string collection, string id )
 	{
+		if ( !IsInitialised )
+		{
+			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
+			return false;
+		}
+
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -227,7 +288,13 @@ static class Sandbank
 	/// </summary>
 	public static void WipeAllData()
 	{
-		if (!Config.UNSAFE_MODE)
+		if ( !IsInitialised )
+		{
+			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
+			return;
+		}
+
+		if ( !Config.UNSAFE_MODE)
 		{
 			Log.Warning( "must enable unsafe mode to call WipeAllData() - see Config.cs" );
 			return;
@@ -240,7 +307,7 @@ static class Sandbank
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				Logging.Throw( "failed to load collections after 10 tries - are the files in use by something else?" );
+				throw new Exception( "failed to load collections after 10 tries - are the files in use by something else?" );
 
 			if ( FileIO.WipeFilesystem() == null )
 				return;
@@ -297,6 +364,12 @@ static class Sandbank
 	/// </summary>
 	public static void ForceWriteCache()
 	{
+		if ( !IsInitialised )
+		{
+			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
+			return;
+		}
+
 		Cache.ForceFullWrite();
 	}
 }

@@ -12,13 +12,13 @@ static class Logging
 		Sandbox.Internal.GlobalGameNamespace.Log.Info( $"Sandbank: {message}" );
 	}
 
-	/// <summary>
-	/// Throws an exception and outputs to s&box's error output (just to be safe).
-	/// </summary>
-	public static void Throw( string errorMessage )
+	public static void Warn( string message )
 	{
-		Sandbox.Internal.GlobalGameNamespace.Log.Error( errorMessage );
-		throw new Exception( errorMessage );
+		Sandbox.Internal.GlobalGameNamespace.Log.Warning( $"Sandbank: {message}" );
 	}
 
+	public static void Error( string message )
+	{
+		Sandbox.Internal.GlobalGameNamespace.Log.Error( $"Sandbank: {message}" );
+	}
 }

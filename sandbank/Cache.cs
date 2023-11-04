@@ -83,7 +83,7 @@ static internal class Cache
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				Logging.Throw( $"failed to save \"{name}\" collection definition after 10 tries - is the file in use by something else?" );
+				throw new Exception( $"failed to save \"{name}\" collection definition after 10 tries - is the file in use by something else?" );
 
 			if ( FileIO.SaveCollectionDefinition( newCollection ) == null )
 				break;
@@ -101,6 +101,9 @@ static internal class Cache
 	[GameEvent.Tick.Server]
 	private static void Tick()
 	{
+		if ( !Initialisation.IsInitialised )
+			return;
+
 		if ( GetTimeSinceLastFullWrite() >= Config.PERSIST_EVERY_N_SECONDS )
 		{
 			// Do this immediately otherwise when the server is stuttering it can spam
@@ -177,7 +180,7 @@ static internal class Cache
 		}
 		catch ( Exception e )
 		{
-			Logging.Throw( "partial write failed: " + e.Message );
+			throw new Exception( "partial write failed: " + e.Message );
 		}
 	}
 
@@ -199,7 +202,7 @@ static internal class Cache
 		}
 		catch (Exception e)
 		{
-			Logging.Throw( "full write failed: "+e.Message );
+			throw new Exception( "full write failed: "+e.Message );
 		}
 	}
 
@@ -263,7 +266,7 @@ static internal class Cache
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				Logging.Throw( $"failed to persist document from collection \"{collectionName}\" to disk after 10 tries - is the file in use by something else?" );
+				throw new Exception( $"failed to persist document from collection \"{collectionName}\" to disk after 10 tries - is the file in use by something else?" );
 
 			if ( FileIO.SaveDocument( collectionName, document, collectionType ) == null )
 				break;
