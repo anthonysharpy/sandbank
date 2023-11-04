@@ -60,19 +60,19 @@ public void SaveData()
 
 ### CPU
 
-Sandbank is designed to be thread-safe so that you can squeeze more out of it. In fact, since it resides in memory, it is probably faster than a conventional database, unless you're talking about an efficiently-indexed table with hundreds of thousands of records. Here are some benchmarks using the above PlayerData class on a Ryzen 5 5500 with 12 logical processors:
+Sandbank is designed to be thread-safe so that you can squeeze more out of it. In fact, since it resides in memory, for most use-cases it is probably faster than a conventional database, unless your use-case involves an efficiently-indexed table with hundreds of thousands of records. Here are some benchmarks using the above PlayerData class on a Ryzen 5 5500 with 12 logical processors:
 
-| Operation                                                                                  | Total Time    | Speed   |
-|--------------------------------------------------------------------------------------------|---------------|------------------|
-| 100,800 inserts (one thread)                                                               | 0.70 seconds  | 144,000 documents inserted/second |
-| 100,800 inserts (24 threads)                                                               | 0.18 seconds  | 560,000 documents inserted/second |
-| Search 100,800 documents [x => x.Health >= 90] (once on one thread)                        | 0.07 seconds  | 1,439,999 documents searched/second |
-| Search 100,800 documents [x => x.Health >= 90] (24 times on 24 threads)                    | 0.54 seconds  | 4,480,000 documents searched/second |
-| Search 100,800 documents [x => x.Health >= 90] (once on one thread, unsafe references)     | 0.015 seconds | 6,720,000 documents searched/second |
-| Search 100,800 documents [x => x.Health >= 90] (24 times on 24 threads, unsafe references) | 0.06 seconds  | 40,320,000 documents searched/second |
-| Search 100,800 documents by ID (100,000 times on one thread)                               | 0.26 seconds  | 38,769,230,769 documents searched/second |
-| Search 100,800 documents by ID (100,000 times on 24 threads)                               | 1.94 seconds  | 124,701,030,921 documents searched/second |
-
+| Operation                                                                                  | Total Time    | Speed                             | Notes                  |
+|--------------------------------------------------------------------------------------------|---------------|-----------------------------------|------------------------|
+| 100,800 inserts (one thread)                                                               | 0.6896 seconds  | 146,000 documents inserted/second |                    |
+| 100,800 inserts (24 threads)                                                               | 0.1662 seconds  | 606,000 documents inserted/second |                    |
+| Search 100,800 documents [x => x.Health >= 90] (once on one thread)                        | 0.0598 seconds  | 1,686,000 documents searched/second |                     |
+| Search 100,800 documents [x => x.Health >= 90] (24 times on 24 threads)                    | 0.5473 seconds  | 4,420,000 documents searched/second | ~10,080 records being returned here. |
+| Search 100,800 documents [x => x.Health == 100] (24 times on 24 threads)                    | 0.1125 seconds  | 21,504,000 documents searched/second | ~1,008 records being returned here, hence much faster due to less memory copying. |
+| Search 100,800 documents [x => x.Health >= 90] (once on one thread, unsafe references)     | 0.0148 seconds | 6,811,000 documents searched/second |                    |
+| Search 100,800 documents [x => x.Health >= 90] (24 times on 24 threads, unsafe references) | 0.0587 seconds  | 41,213,000 documents searched/second |                    |
+| Search 100,800 documents by ID (100,000 times on one thread)                               | 0.3013 seconds  | 33,455,028,000 documents searched/second |                    |
+| Search 100,800 documents by ID (100,000 times on 24 threads)                               | 1.9953 seconds  | 121,244,926,000 documents searched/second |                    |
 
 The above figures represent the time it took to write/read the data to/from the cache only (not to disk). As you can see, searching by ID is basically instant, inserts are very quick, and regular searches are relatively quick.
 
