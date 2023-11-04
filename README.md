@@ -68,7 +68,7 @@ Sandbank is designed to be thread-safe so that you can squeeze more out of it. I
 
 | Operation                                                                                  | Total Time    | Speed                             | Notes                  |
 |--------------------------------------------------------------------------------------------|---------------|-----------------------------------|------------------------|
-| 100,800 inserts (one thread)                                                               | 0.6896 seconds  | 146,000 documents inserted/second | In reality this is probably faster than your hard-drive could keep up with.                   |
+| 100,800 inserts (one thread)                                                               | 0.6896 seconds  | 146,000 documents inserted/second | In reality this is probably faster than your disk could keep up with anyway.                   |
 | 100,800 inserts (24 threads)                                                               | 0.1662 seconds  | 606,000 documents inserted/second |                    |
 | Search 100,800 documents [x => x.Health >= 90] (once on one thread)                        | 0.0598 seconds  | 1,686,000 documents searched/second |                     |
 | Search 100,800 documents [x => x.Health >= 90] (24 times on 24 threads)                    | 0.5473 seconds  | 4,420,000 documents searched/second | ~10,080 records being returned here. |
