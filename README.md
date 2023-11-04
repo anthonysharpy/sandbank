@@ -60,7 +60,7 @@ public void SaveData()
 
 ### CPU
 
-Sandbank is designed to be thread-safe so that you can squeeze more out of it. In fact, since it resides in memory, for most use-cases it is probably faster than a conventional database, unless you're talking about an efficiently-indexed table with hundreds of thousands of records. Here are some benchmarks using the above PlayerData class on a Ryzen 5 5500 with 12 logical processors:
+Sandbank is designed to be thread-safe so that you can squeeze more out of it. In fact, since it resides in memory, for most use-cases it is probably faster than a conventional database, unless your use-case involves an efficiently-indexed table with hundreds of thousands of records. Here are some benchmarks using the above PlayerData class on a Ryzen 5 5500 with 12 logical processors:
 
 | Operation                                                                                  | Total Time    | Speed                             | Notes                  |
 |--------------------------------------------------------------------------------------------|---------------|-----------------------------------|------------------------|
