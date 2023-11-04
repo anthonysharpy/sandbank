@@ -30,7 +30,7 @@ static class FileIO
 		{
 			lock ( _collectionWriteLocks[collection] ) 
 			{
-				FileSystem.Data.DeleteFile( $"sandbank/{collection}/{documentID}" );
+				FileSystem.Data.DeleteFile( $"{Config.DATABASE_NAME}/{collection}/{documentID}" );
 			}
 
 			return null;
@@ -52,7 +52,7 @@ static class FileIO
 
 			lock ( _collectionWriteLocks[collection] )
 			{
-				FileSystem.Data.WriteAllText( $"sandbank/{collection}/{document.ID}", data );
+				FileSystem.Data.WriteAllText( $"{Config.DATABASE_NAME}/{collection}/{document.ID}", data );
 			}
 
 			return null;
@@ -71,7 +71,7 @@ static class FileIO
 	{
 		try
 		{
-			return ( FileSystem.Data.FindDirectory( "sandbank" ).ToList(), null );
+			return ( FileSystem.Data.FindDirectory( Config.DATABASE_NAME ).ToList(), null );
 		}
 		catch (Exception e)
 		{
@@ -93,7 +93,7 @@ static class FileIO
 
 			lock ( _collectionWriteLocks[collectionName] )
 			{
-				data = FileSystem.Data.ReadAllText( $"sandbank/{collectionName}/definition.txt" );
+				data = FileSystem.Data.ReadAllText( $"{Config.DATABASE_NAME}/{collectionName}/definition.txt" );
 			}
 
 			var collection = Serialisation.DeserialiseClass<Collection>( data );
@@ -122,7 +122,7 @@ static class FileIO
 
 			lock ( _collectionWriteLocks[collection.CollectionName] )
 			{
-				var files = FileSystem.Data.FindFile( $"sandbank/{collection.CollectionName}/" )
+				var files = FileSystem.Data.FindFile( $"{Config.DATABASE_NAME}/{collection.CollectionName}/" )
 					.Where( x => x != "definition.txt" )
 					.ToList();
 
@@ -130,7 +130,7 @@ static class FileIO
 				{
 					string contents;
 
-					contents = FileSystem.Data.ReadAllText( $"sandbank/{collection.CollectionName}/{file}" );
+					contents = FileSystem.Data.ReadAllText( $"{Config.DATABASE_NAME}/{collection.CollectionName}/{file}" );
 
 					var document = new Document( Serialisation.DeserialiseClass( contents, collection.DocumentClassType ), null, false );
 					output.Add( document );
@@ -156,10 +156,10 @@ static class FileIO
 
 			lock ( _collectionWriteLocks[collection.CollectionName] )
 			{
-				if ( !FileSystem.Data.DirectoryExists( $"sandbank/{collection.CollectionName}" ) )
-					FileSystem.Data.CreateDirectory( $"sandbank/{collection.CollectionName}" );
+				if ( !FileSystem.Data.DirectoryExists( $"{Config.DATABASE_NAME}/{collection.CollectionName}" ) )
+					FileSystem.Data.CreateDirectory( $"{Config.DATABASE_NAME}/{collection.CollectionName}" );
 
-				FileSystem.Data.WriteAllText( $"sandbank/{collection.CollectionName}/definition.txt", data );
+				FileSystem.Data.WriteAllText( $"{Config.DATABASE_NAME}/{collection.CollectionName}/definition.txt", data );
 			}
 
 			return null;
@@ -179,7 +179,7 @@ static class FileIO
 		{
 			lock ( _collectionWriteLocks[name] )
 			{
-				FileSystem.Data.DeleteDirectory( $"sandbank/{name}", true );
+				FileSystem.Data.DeleteDirectory( $"{Config.DATABASE_NAME}/{name}", true );
 			}
 
 			return null;
@@ -236,8 +236,8 @@ static class FileIO
 	{
 		try
 		{
-			if ( !FileSystem.Data.DirectoryExists( "sandbank" ) )
-				FileSystem.Data.CreateDirectory( "sandbank" );
+			if ( !FileSystem.Data.DirectoryExists( Config.DATABASE_NAME ) )
+				FileSystem.Data.CreateDirectory( Config.DATABASE_NAME );
 
 			return null;
 		}

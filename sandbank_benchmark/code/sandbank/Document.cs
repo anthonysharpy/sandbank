@@ -19,7 +19,7 @@ class Document
 		object id = GlobalGameNamespace.TypeLibrary.GetPropertyValue( data, "ID" );
 
 		if ( id is null || id is not string )
-			throw new Exception( "cannot handle a document that has no valid \"ID\" property - make sure your data class has a public property called ID, and that it is initialised to a non-null value, like this: \"public string ID {get; set;} = \"\";\"" );
+			Logging.Throw( "cannot handle a document that has no valid \"ID\" property - make sure your data class has a public property called ID, and that it is initialised to a non-null value, like this: \"public string ID {get; set;} = \"\";\"" );
 
 		if ( ((string)id).Length > 0 )
 		{
@@ -40,23 +40,5 @@ class Document
 
 		Data = data;
 		Stale = true;
-	}
-
-	public void PersistToDisk(string collectionName, Type collectionType)
-	{
-		int attempt = 0;
-
-		while ( true )
-		{
-			if ( attempt++ >= 10 )
-				throw new Exception( $"failed to persist document from collection \"{collectionName}\" to disk after 10 tries - is the file in use by something else?" );
-
-			if ( FileIO.SaveDocument( collectionName, this, collectionType ) == null )
-				break;
-
-			GameTask.Delay( 50 );
-		}
-
-		Stale = false;
 	}
 }

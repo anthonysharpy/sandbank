@@ -13,8 +13,7 @@ static class Logging
 	}
 
 	/// <summary>
-	/// Throws an exception and outputs to s&box's error output (because sometimes errors
-	/// get lost in background tasks).
+	/// Throws an exception and outputs to s&box's error output (just to be safe).
 	/// </summary>
 	public static void Throw( string errorMessage )
 	{

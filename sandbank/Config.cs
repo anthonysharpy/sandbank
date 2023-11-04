@@ -6,7 +6,7 @@ static class Config
 	/// This controls whether the written JSON files are indented or not.
 	/// Indentation makes them more human-readable, but probably makes processing
 	/// a little bit slower. You can edit this here or disable it by calling
-	/// DisableIndentJSON().
+	/// EnableIndentJSON().
 	/// </summary>
 	public static bool INDENT_JSON = true;
 	/// <summary>
@@ -33,4 +33,11 @@ static class Config
 	/// the foot. You can edit this here or you can call EnableUnsafeMode() to enable it.
 	/// </summary>
 	public static bool UNSAFE_MODE = false;
+	/// <summary>
+	/// This is the name of the folder where your files are kept (e.g. "sandbank/my_collection").
+	/// There's no reason to change it, but you're more than welcome to. If you're
+	/// renaming an existing database, make sure to copy your files across to the new
+	/// folder.
+	/// </summary>
+	public const string DATABASE_NAME = "sandbank";
 }

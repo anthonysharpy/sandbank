@@ -83,7 +83,7 @@ static internal class Cache
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				throw new Exception( $"failed to save \"{name}\" collection definition after 10 tries - is the file in use by something else?" );
+				Logging.Throw( $"failed to save \"{name}\" collection definition after 10 tries - is the file in use by something else?" );
 
 			if ( FileIO.SaveCollectionDefinition( newCollection ) == null )
 				break;
@@ -193,9 +193,9 @@ static internal class Cache
 
 			// Persist any remaining items first.
 			PersistStaleDocuments();
-			ReevaluateStaleDocuments();
-
 			_staleDocumentsWrittenSinceLastFullWrite = 0;
+
+			ReevaluateStaleDocuments();
 		}
 		catch (Exception e)
 		{
@@ -207,15 +207,15 @@ static internal class Cache
 	/// Persist some of the stale documents to disk. We generally don't want to persist
 	/// them all at once, as this can cause lag spikes.
 	/// </summary>
-	private static void PersistStaleDocuments(int number = int.MaxValue)
+	private static void PersistStaleDocuments(int numberToWrite = int.MaxValue)
 	{
-		if (number == int.MaxValue)
+		if ( numberToWrite == int.MaxValue)
 			Logging.Log( $"persisting {_staleDocumentsFoundAfterLastFullWrite-_staleDocumentsWrittenSinceLastFullWrite} stale documents..." );
 		else
-			Logging.Log( $"persisting {number} stale documents..." );
+			Logging.Log( $"persisting {numberToWrite} stale documents..." );
 
-		if ( number != int.MaxValue )
-			_staleDocumentsWrittenSinceLastFullWrite += number;
+		if ( numberToWrite != int.MaxValue )
+			_staleDocumentsWrittenSinceLastFullWrite += numberToWrite;
 		else
 			_staleDocumentsWrittenSinceLastFullWrite = _staleDocumentsFoundAfterLastFullWrite;
 
@@ -224,25 +224,54 @@ static internal class Cache
 			if ( _staleDocumentsToWrite.Count <= 0 )
 				return;
 
-			var staleCollectionDocuments = _staleDocumentsToWrite.First();
+			var staleCollection = _staleDocumentsToWrite.First();
 
-			while ( staleCollectionDocuments.Value.Count > 0)
+			while ( staleCollection.Value.Count > 0 )
 			{
-				var document = staleCollectionDocuments.Value.First();
+				var document = staleCollection.Value.First();
 
-				document.PersistToDisk( staleCollectionDocuments.Key.CollectionName,
-					staleCollectionDocuments.Key.DocumentClassType );
+				PersistDocumentToDisk( document,
+					staleCollection.Key.DocumentClassType,
+					staleCollection.Key.CollectionName );
 
-				staleCollectionDocuments.Value.Remove( document );
+				staleCollection.Value.Remove( document );
 
-				number--;
+				numberToWrite--;
 
-				if ( number <= 0 )
+				// We've written all that we wanted to write, but not necessarily
+				// the whole collection.
+				if ( numberToWrite <= 0 )
+				{
+					// There's a small chance this just became empty, in which case, we
+					// need to remove it, since otherwise the above call to .First() can fail
+					// later.
+					if ( staleCollection.Value.Count <= 0 )
+						_staleDocumentsToWrite.Remove( staleCollection.Key );
+
 					return;
+				}
 			}
 
-			_staleDocumentsToWrite.Remove( staleCollectionDocuments.Key );
+			_staleDocumentsToWrite.Remove( staleCollection.Key );
 		}
+	}
+
+	private static void PersistDocumentToDisk(Document document, Type collectionType, string collectionName)
+	{
+		int attempt = 0;
+
+		while ( true )
+		{
+			if ( attempt++ >= 10 )
+				Logging.Throw( $"failed to persist document from collection \"{collectionName}\" to disk after 10 tries - is the file in use by something else?" );
+
+			if ( FileIO.SaveDocument( collectionName, document, collectionType ) == null )
+				break;
+
+			GameTask.Delay( 50 );
+		}
+
+		document.Stale = false;
 	}
 
 	/// <summary>
@@ -252,10 +281,13 @@ static internal class Cache
 	private static void ReevaluateStaleDocuments()
 	{
 		_staleDocumentsFoundAfterLastFullWrite = 0;
+		_staleDocumentsToWrite.Clear();
 
-		foreach (var collectionPair in _collections)
+		List<Document> staleDocuments = new();
+
+		foreach ( var collectionPair in _collections)
 		{
-			List<Document> staleDocuments = new();
+			staleDocuments.Clear();
 
 			foreach (var documentPair in collectionPair.Value.CachedDocuments)
 			{

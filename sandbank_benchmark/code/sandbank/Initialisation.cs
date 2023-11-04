@@ -30,7 +30,7 @@ static class Initialisation
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				throw new System.Exception( "failed to load collections after 10 tries - are the files in use by something else?" );
+				Logging.Throw( "failed to load collections after 10 tries - are the files in use by something else?" );
 
 			var error = FileIO.EnsureFileSystemSetup();
 
@@ -50,7 +50,7 @@ static class Initialisation
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				throw new System.Exception( "failed to load collections after 10 tries - are the files in use by something else?" );
+				Logging.Throw( "failed to load collections after 10 tries - are the files in use by something else?" );
 
 			var (collectionNames, error) = FileIO.ListCollectionNames();
 

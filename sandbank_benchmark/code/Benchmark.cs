@@ -1,9 +1,7 @@
-﻿using NSSandbank;
-using Sandbox;
+﻿using Sandbox;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace SandbankBenchmark;
@@ -18,28 +16,46 @@ static class Benchmark
 		Sandbank.WipeAllData();
 		Sandbank.DisableIndentJSON();
 
-		List<Func<Task>> benchmarks = new()	{
-			BenchmarkInsert,
-			BenchmarkInsertThreaded,
-			BenchmarkSelect,
-			BenchmarkSelectThreaded,
-			BenchmarkSelectUnsafeReferences,
-			BenchmarkSelectUnsafeReferencesThreaded,
-			BenchmarkSelectOneWithID,
-			BenchmarkSelectOneWithIDThreaded,
+		Dictionary<Func<Task<double>>, Tuple<string, double>> benchmarks = new()	{
+			{ BenchmarkInsert, new("BenchmarkInsert", 0 ) },
+			{ BenchmarkInsertThreaded, new("BenchmarkInsertThreaded", 0 ) },
+			{ BenchmarkSelect, new("BenchmarkSelect", 0 ) },
+			{ BenchmarkSelectThreaded, new("BenchmarkSelectThreaded", 0 ) },
+			{ BenchmarkSelectThreadedFewerRecords, new("BenchmarkSelectThreadedFewerRecords", 0 ) },
+			{ BenchmarkSelectUnsafeReferences, new("BenchmarkSelectUnsafeReferences", 0 ) },
+			{ BenchmarkSelectUnsafeReferencesThreaded, new("BenchmarkSelectUnsafeReferencesThreaded", 0 ) },
+			{ BenchmarkSelectOneWithID, new("BenchmarkSelectOneWithID", 0 ) },
+			{ BenchmarkSelectOneWithIDThreaded, new("BenchmarkSelectOneWithIDThreaded", 0 ) },
 		};
 
+		int repeats = 6;
+
+		for (int i = 0; i < repeats; i++)
+		{
+			foreach ( var benchmark in benchmarks )
+			{
+				var secondsTaken = await benchmark.Key.Invoke();
+
+				benchmarks[benchmark.Key] = new Tuple<string, double>(
+					benchmarks[benchmark.Key].Item1,
+					benchmarks[benchmark.Key].Item2 + secondsTaken
+				);
+
+				Sandbank.WipeAllData();
+
+				// We want a delay to let the PC cool-off.
+				await GameTask.DelaySeconds( 2 );
+			}
+		}
+
+		Log.Info( "======== Benchmark Results ========" );
 		foreach ( var benchmark in benchmarks )
 		{
-			await benchmark.Invoke();
-			Sandbank.WipeAllData();
-
-			// We want a delay to let the PC cool-off.
-			await GameTask.DelaySeconds( 2 );
+			Log.Info( $"{benchmark.Value.Item1}: {benchmark.Value.Item2/repeats}" );
 		}
 	}
 
-	private static Task BenchmarkInsert()
+	private static async Task<double> BenchmarkInsert()
 	{
 		int documents = 100800;
 
@@ -67,10 +83,10 @@ static class Benchmark
 		double totalTime = DateTime.Now.Subtract( startTime ).TotalSeconds;
 
 		Log.Info( $"Insert() - {documents} documents inserted in {totalTime} seconds" );
-		return Task.CompletedTask;
+		return totalTime;
 	}
 
-	private static async Task BenchmarkInsertThreaded()
+	private static async Task<double> BenchmarkInsertThreaded()
 	{
 		int documents = 100800;
 		int threads = 24;
@@ -109,9 +125,10 @@ static class Benchmark
 		double totalTime = DateTime.Now.Subtract( startTime ).TotalSeconds;
 
 		Log.Info( $"[multi-threaded] Insert() - {documents} documents inserted in {totalTime} seconds" );
+		return totalTime;
 	}
 
-	private static Task BenchmarkSelect()
+	private static async Task<double> BenchmarkSelect()
 	{
 		int collectionSize = 100800;
 
@@ -134,10 +151,10 @@ static class Benchmark
 		double totalTime = DateTime.Now.Subtract( startTime ).TotalSeconds;
 
 		Log.Info( $"Select() - {collectionSize} documents searched in {totalTime} seconds" );
-		return Task.CompletedTask;
+		return totalTime;
 	}
 
-	private static async Task BenchmarkSelectThreaded()
+	private static async Task<double> BenchmarkSelectThreaded()
 	{
 		int collectionSize = 100800;
 		int threads = 24;
@@ -169,10 +186,49 @@ static class Benchmark
 
 		double totalTime = DateTime.Now.Subtract( startTime ).TotalSeconds;
 
-		Log.Info( $"[multi-threaded] Select() - {collectionSize} documents searched {threads} times in {totalTime} seconds" );
+		Log.Info( $"[multi-threaded] Select() - {collectionSize} documents searched {threads} times in {totalTime} seconds (~10,008 records returned)" );
+		return totalTime;
 	}
 
-	private static Task BenchmarkSelectUnsafeReferences()
+	// Same as BenchmarkSelectThreaded except with fewer returned records, making
+	// it a bit more realistic.
+	private static async Task<double> BenchmarkSelectThreadedFewerRecords()
+	{
+		int collectionSize = 100800;
+		int threads = 24;
+
+		for ( int i = 0; i < collectionSize; i++ )
+		{
+			Sandbank.Insert<PlayerData>( "players", new PlayerData()
+			{
+				Health = Game.Random.Next( 101 ),
+				Name = "TestPlayer1",
+				Level = 10,
+				LastPlayTime = DateTime.Now,
+				Items = new() { "gun", "frog", "banana" }
+			} );
+		}
+
+		List<Task> tasks = new();
+		var startTime = DateTime.Now;
+
+		for ( int t = 0; t < threads; t++ )
+		{
+			tasks.Add( GameTask.RunInThreadAsync( async () =>
+			{
+				Sandbank.Select<PlayerData>( "players", x => x.Health == 100 );
+			} ) );
+		}
+
+		await GameTask.WhenAll( tasks );
+
+		double totalTime = DateTime.Now.Subtract( startTime ).TotalSeconds;
+
+		Log.Info( $"[multi-threaded] Select() - {collectionSize} documents searched {threads} times in {totalTime} seconds (~1,008 records returned)" );
+		return totalTime;
+	}
+
+	private static async Task<double> BenchmarkSelectUnsafeReferences()
 	{
 		int collectionSize = 100800;
 
@@ -194,11 +250,11 @@ static class Benchmark
 
 		double totalTime = DateTime.Now.Subtract( startTime ).TotalSeconds;
 
-		Log.Info( $"SelectUnsafeReferences() - {collectionSize} documents searched in {totalTime} seconds" );
-		return Task.CompletedTask;
+		Log.Info( $"SelectUnsafeReferences() - {collectionSize} documents searched in {totalTime} seconds (~10,008 records returned)" );
+		return totalTime;
 	}
 
-	private static async Task BenchmarkSelectUnsafeReferencesThreaded()
+	private static async Task<double> BenchmarkSelectUnsafeReferencesThreaded()
 	{
 		int collectionSize = 100800;
 		int threads = 24;
@@ -230,10 +286,11 @@ static class Benchmark
 
 		double totalTime = DateTime.Now.Subtract( startTime ).TotalSeconds;
 
-		Log.Info( $"[multi-threaded] SelectUnsafeReferences() - {collectionSize} documents searched {threads} times in {totalTime} seconds" );
+		Log.Info( $"[multi-threaded] SelectUnsafeReferences() - {collectionSize} documents searched {threads} times in {totalTime} seconds (~10,008 records returned)" );
+		return totalTime;
 	}
 
-	private static Task BenchmarkSelectOneWithID()
+	private static async Task<double> BenchmarkSelectOneWithID()
 	{
 		int collectionSize = 100800;
 		string id = "";
@@ -268,10 +325,10 @@ static class Benchmark
 		watch.Stop();
 
 		Log.Info( $"SelectOneWithID() - {collectionSize} documents searched {repeats} times in {watch.Elapsed.TotalSeconds} seconds" );
-		return Task.CompletedTask;
+		return watch.Elapsed.TotalSeconds;
 	}
 
-	private static async Task BenchmarkSelectOneWithIDThreaded()
+	private static async Task<double> BenchmarkSelectOneWithIDThreaded()
 	{
 		int collectionSize = 100800;
 		int repeats = 100000;
@@ -316,5 +373,6 @@ static class Benchmark
 		watch.Stop();
 
 		Log.Info( $"[multi-threaded] SelectOneWithID() - {collectionSize} documents searched {repeats} times in {watch.Elapsed.TotalSeconds} seconds" );
+		return watch.Elapsed.TotalSeconds;
 	}
 }

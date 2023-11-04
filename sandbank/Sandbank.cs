@@ -2,7 +2,7 @@
 using Sandbox;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Linq;
 
 static class Sandbank
 {
@@ -19,10 +19,10 @@ static class Sandbank
 	}
 
 	/// <summary>
-	/// Insert a List of documents into the database. The documents will have their IDs
-	/// set, unless they are empty.
+	/// Insert multiple documents into the database. The documents will have their IDs
+	/// set if they are empty.
 	/// </summary>
-	public static void InsertMany<T>( string collection, List<T> documents ) where T : class
+	public static void InsertMany<T>( string collection, IEnumerable<T> documents ) where T : class
 	{
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, true );
 
@@ -55,7 +55,7 @@ static class Sandbank
 	/// <summary>
 	/// The same as SelectOne except slightly faster since we can look it up by ID.
 	/// </summary>
-	public static T? SelectOneWithID<T>( string collection, string id ) where T : class
+	public static T SelectOneWithID<T>( string collection, string id ) where T : class
 	{
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
@@ -81,7 +81,7 @@ static class Sandbank
 		foreach ( var pair in relevantCollection.CachedDocuments )
 		{
 			if ( selector.Invoke( (T)pair.Value.Data ) )
-				output.Add( Serialisation.CloneObject( (T)pair.Value.Data) );
+				output.Add( Serialisation.CloneObject( (T)pair.Value.Data ) );
 		}
 
 		return output;
@@ -153,7 +153,7 @@ static class Sandbank
 			while ( true )
 			{
 				if ( attempt++ >= 10 )
-					throw new Exception( $"failed to delete document from collection \"{collection}\" after 10 tries - is the file in use by something else?" );
+					Logging.Throw( $"failed to delete document from collection \"{collection}\" after 10 tries - is the file in use by something else?" );
 
 				if ( FileIO.DeleteDocument( collection, id ) == null )
 					break;
@@ -180,7 +180,7 @@ static class Sandbank
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				throw new Exception( $"failed to delete document from collection \"{collection}\" after 10 tries - is the file in use by something else?" );
+				Logging.Throw( $"failed to delete document from collection \"{collection}\" after 10 tries - is the file in use by something else?" );
 
 			if ( FileIO.DeleteDocument( collection, id ) == null )
 				break;
@@ -240,7 +240,7 @@ static class Sandbank
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				throw new System.Exception( "failed to load collections after 10 tries - are the files in use by something else?" );
+				Logging.Throw( "failed to load collections after 10 tries - are the files in use by something else?" );
 
 			if ( FileIO.WipeFilesystem() == null )
 				return;
@@ -291,10 +291,9 @@ static class Sandbank
 	/// when your server is shutting down to avoid data loss, if that's important to
 	/// you. <br/>
 	/// <br/>
-	/// If anything is being inserted into or deleted from the database when this is
-	/// called, then what happens to that data is undefined behaviour; this does not
-	/// guarantee any ongoing inserts or deletions will be saved. If that matters to
-	/// you, then don't make inserts or deletions while shutting down the server.
+	/// Any inserts or deletions ongoing at the time ForceWriteCache is called are not
+	/// guaranteed to be written to disk by ForceWriteCache. If that matters to you,
+	/// then don't make inserts or deletions while calling this.
 	/// </summary>
 	public static void ForceWriteCache()
 	{

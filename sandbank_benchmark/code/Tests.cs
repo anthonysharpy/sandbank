@@ -27,6 +27,7 @@ static class Tests
 			TestReferenceDoesntModifyCache,
 			TestEnableIndentJSON,
 			TestConcurrencySafety,
+			TestConcurrencySafety2,
 			TestForceWriteCache,
 			TestDisableUnsafeMode,
 		};
@@ -211,7 +212,7 @@ static class Tests
 					Items = new() { "gun", "frog", "banana" }
 				};
 
-				Sandbank.InsertMany<PlayerData>( "players", new() { data, data, data, data } );
+				Sandbank.InsertMany<PlayerData>( "players", new PlayerData[] { data, data, data, data } );
 				Sandbank.Insert<PlayerData>( "players", data );
 				var results = Sandbank.Select<PlayerData>( "players", x => x.Health > 90 );
 
@@ -224,6 +225,87 @@ static class Tests
 				Sandbank.Delete<PlayerData>( "players", x => x.Health <= 20 );
 				Sandbank.Any<PlayerData>( "players", x => x.Name == "Tim" );
 			} ));
+		}
+
+		GameTask.WaitAll( tasks.ToArray() );
+	}
+
+	private static void TestConcurrencySafety2()
+	{
+		List<Task> tasks = new();
+
+		List<PlayerData> loadsOfData = new();
+
+		for (int i = 0; i < 10000; i++ )
+		{
+			loadsOfData.Add( new PlayerData()
+			{
+				ID = "",
+				Health = 100,
+				Name = "TestPlayer",
+				Level = Game.Random.Next(10),
+				LastPlayTime = DateTime.Now,
+				Items = new() { "gun", "frog", "banana" }
+			} );
+		}
+
+		for ( int i = 0; i < 10; i++ )
+		{
+			tasks.Add( GameTask.RunInThreadAsync( async () =>
+			{
+				Sandbank.EnableIndentJSON();
+				Sandbank.DisableIndentJSON();
+				Sandbank.EnableIndentJSON();
+				Sandbank.DisableIndentJSON();
+				Sandbank.EnableIndentJSON();
+				Sandbank.DisableIndentJSON();
+				Sandbank.EnableIndentJSON();
+				Sandbank.DisableIndentJSON();
+				Sandbank.EnableIndentJSON();
+				Sandbank.DisableIndentJSON();
+			} ));
+
+			tasks.Add( GameTask.RunInThreadAsync( async () =>
+			{
+				for ( int i = 0; i < 10000; i++ )
+				{
+					var data = new PlayerData()
+					{
+						ID = "",
+						Health = 100,
+						Name = "TestPlayer",
+						Level = 10,
+						LastPlayTime = DateTime.Now,
+						Items = new() { "gun", "frog", "banana" }
+					};
+
+					Sandbank.Insert<PlayerData>( "players", data );
+					Sandbank.Insert<PlayerData>( "players_two", data );
+				}
+			} ));
+
+			tasks.Add( GameTask.RunInThreadAsync( async () =>
+			{
+				Sandbank.ForceWriteCache();
+			} ) );
+
+			tasks.Add( GameTask.RunInThreadAsync( async () =>
+			{
+				Sandbank.InsertMany<PlayerData>( "players", loadsOfData );
+				Sandbank.InsertMany<PlayerData>( "players_two", loadsOfData );
+			} ));
+
+			tasks.Add( GameTask.RunInThreadAsync( async () =>
+			{
+				Sandbank.Select<PlayerData>( "players", x => x.Health == 100 );
+				Sandbank.Select<PlayerData>( "players_two", x => x.Name == "TestPlayer" );
+			} ) );
+
+			tasks.Add( GameTask.RunInThreadAsync( async () =>
+			{
+				Sandbank.Delete<PlayerData>( "players", x => x.Level == 5 || x.Level == 2 );
+				Sandbank.Delete<PlayerData>( "players_two", x => x.Level == 5 || x.Level == 2 );
+			} ) );
 		}
 
 		GameTask.WaitAll( tasks.ToArray() );
