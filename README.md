@@ -8,7 +8,7 @@ Simply download the repository and drag the `sandbank` folder into your codebase
 
 ## Usage
 
-The database uses the document model. This means that data is saved as JSON files. It also means that there is no need to create SQL queries or do joins or anything like that. Each document belongs to a "collection", which contains many documents. Most databases will have multiple collections. Most of the time, each collection will represent a separate data type. For example, you might have a "players" collection for player data, and a "bases" collection for player bases, etc.
+The database uses the document model. This means that data is saved as JSON files. It also means that there is no need to create SQL queries or do joins or anything like that. Each document belongs to a "collection", which contain many documents. Most databases will have multiple collections. Most of the time, each collection will represent a separate data type. For example, you might have a "players" collection for player data, and a "bases" collection for player bases, etc.
 
 Data files are saved in s&box's data folder. For example:
 
