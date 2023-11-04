@@ -72,7 +72,7 @@ Sandbank is designed to be thread-safe so that you can squeeze more out of it. I
 | 100,800 inserts (24 threads)                                                               | 0.1662 seconds  | 606,000 documents inserted/second |                    |
 | Search 100,800 documents [x => x.Health >= 90] (once on one thread)                        | 0.0598 seconds  | 1,686,000 documents searched/second |                     |
 | Search 100,800 documents [x => x.Health >= 90] (24 times on 24 threads)                    | 0.5473 seconds  | 4,420,000 documents searched/second | ~10,080 records being returned here. |
-| Search 100,800 documents [x => x.Health == 100] (24 times on 24 threads)                    | 0.1125 seconds  | 21,504,000 documents searched/second | ~1,008 records being returned here, hence much faster due to less memory copying. |
+| Search 100,800 documents [x => x.Health == 100] (24 times on 24 threads)                    | 0.1125 seconds  | 21,504,000 documents searched/second | ~1,008 records being returned here, hence much faster due to less memory copying. This is probably the more realistic scenario. |
 | Search 100,800 documents [x => x.Health >= 90] (once on one thread, unsafe references)     | 0.0148 seconds | 6,811,000 documents searched/second |                    |
 | Search 100,800 documents [x => x.Health >= 90] (24 times on 24 threads, unsafe references) | 0.0587 seconds  | 41,213,000 documents searched/second |                    |
 | Search 100,800 documents by ID (100,000 times on one thread)                               | 0.3013 seconds  | 33,455,028,000 documents searched/second |                    |
