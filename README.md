@@ -18,7 +18,7 @@ The basics you need to know:
 - Every document you insert _**must**_ have a public string property called "ID" with a _**non-null default value**_. This is the _**unique**_ primary ID of the document and is also used as the document's file name. You can set this to be whatever you want. For example, you might want it to be the player's Steam ID. Alternatively, you can leave it empty, and the database will automatically populate the ID for you as a random GUID.
 - Your data must be in a class. A struct won't work. Don't insert different class types into the same collection.
 - Any data you want saved must be a public property. Hide any properties you don't want saved with the `[JsonIgnore]` attribute.
-- The database might take some time to initialise when the server starts up. You can see if the database is initialised by checking the `Sandbank.IsInitialised` property. Any commands run before the database is initialised will have no effect.
+- The database might take some time to initialise when the server starts up. You can see if the database is initialised by checking the `Sandbank.IsInitialised` property. Another option is to await the `WaitForInitialisationAsync` function. Any commands run before the database is initialised will have no effect.
 - When your server is switched-off, you can easily edit your data just by editing the files.
 
 An example:
