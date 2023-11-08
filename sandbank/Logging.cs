@@ -17,6 +17,11 @@ static class Logging
 		Sandbox.Internal.GlobalGameNamespace.Log.Warning( $"Sandbank: {message}" );
 	}
 
+	public static string FormatException(Exception e)
+	{
+		return $"{e.Message}\n\n{e.StackTrace}";
+	}
+
 	public static void Error( string message )
 	{
 		Sandbox.Internal.GlobalGameNamespace.Log.Error( $"Sandbank: {message}" );

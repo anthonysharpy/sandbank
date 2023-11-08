@@ -18,7 +18,7 @@ static internal class Cache
 	private static object _timeSinceLastFullWriteLock = new();
 	private static int _staleDocumentsFoundAfterLastFullWrite;
 	private static int _staleDocumentsWrittenSinceLastFullWrite;
-	private static Dictionary<Collection, List<Document>> _staleDocumentsToWrite = new();
+	private static Dictionary<Collection, List<Document>> _staleCollectionsToWrite = new();
 	private static int _partialWriteTickInterval = Game.TickRate / Config.PARTIAL_WRITES_PER_SECOND;
 
 	public static Collection GetCollectionByName<T>( string name, bool createIfDoesntExist )
@@ -202,7 +202,7 @@ static internal class Cache
 		}
 		catch (Exception e)
 		{
-			throw new Exception( "full write failed: "+e.Message );
+			throw new Exception( "full write failed: " + Logging.FormatException(e) );
 		}
 	}
 
@@ -224,10 +224,10 @@ static internal class Cache
 
 		while ( true)
 		{
-			if ( _staleDocumentsToWrite.Count <= 0 )
+			if ( _staleCollectionsToWrite.Count <= 0 )
 				return;
 
-			var staleCollection = _staleDocumentsToWrite.First();
+			var staleCollection = _staleCollectionsToWrite.First();
 
 			while ( staleCollection.Value.Count > 0 )
 			{
@@ -241,34 +241,28 @@ static internal class Cache
 
 				numberToWrite--;
 
-				// We've written all that we wanted to write, but not necessarily
-				// the whole collection.
+				// We've written all that we wanted to write.
 				if ( numberToWrite <= 0 )
-				{
-					// There's a small chance this just became empty, in which case, we
-					// need to remove it, since otherwise the above call to .First() can fail
-					// later.
-					if ( staleCollection.Value.Count <= 0 )
-						_staleDocumentsToWrite.Remove( staleCollection.Key );
-
 					return;
-				}
 			}
 
-			_staleDocumentsToWrite.Remove( staleCollection.Key );
+			_staleCollectionsToWrite.Remove( staleCollection.Key );
 		}
 	}
 
 	private static void PersistDocumentToDisk(Document document, Type collectionType, string collectionName)
 	{
 		int attempt = 0;
+		string error = "";
 
 		while ( true )
 		{
-			if ( attempt++ >= 10 )
-				throw new Exception( $"failed to persist document from collection \"{collectionName}\" to disk after 10 tries - is the file in use by something else?" );
+			if ( attempt++ >= 3 )
+				throw new Exception( $"failed to persist document \"{document.ID}\" from collection \"{collectionName}\" to disk after 3 tries: " + error );
 
-			if ( FileIO.SaveDocument( collectionName, document, collectionType ) == null )
+			error = FileIO.SaveDocument( collectionName, document, collectionType );
+
+			if ( error == null )
 				break;
 
 			GameTask.Delay( 50 );
@@ -284,13 +278,11 @@ static internal class Cache
 	private static void ReevaluateStaleDocuments()
 	{
 		_staleDocumentsFoundAfterLastFullWrite = 0;
-		_staleDocumentsToWrite.Clear();
-
-		List<Document> staleDocuments = new();
+		_staleCollectionsToWrite.Clear();
 
 		foreach ( var collectionPair in _collections)
 		{
-			staleDocuments.Clear();
+			List<Document> staleDocuments = new();
 
 			foreach (var documentPair in collectionPair.Value.CachedDocuments)
 			{
@@ -298,7 +290,7 @@ static internal class Cache
 					staleDocuments.Add( documentPair.Value );
 			}
 
-			_staleDocumentsToWrite.Add( collectionPair.Value, staleDocuments );
+			_staleCollectionsToWrite.Add( collectionPair.Value, staleDocuments );
 			_staleDocumentsFoundAfterLastFullWrite += staleDocuments.Count();
 		}
 

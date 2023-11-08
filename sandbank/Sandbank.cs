@@ -2,39 +2,53 @@
 using Sandbox;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 static class Sandbank
 {
 	public static bool IsInitialised => Initialisation.IsInitialised;
 
 	/// <summary>
+	/// Helper task that completes when the database is initialised. Useful for
+	/// blocking initialisation-related setup tasks.
+	/// </summary>
+	public static async Task WaitForInitialisationAsync()
+	{
+		while ( !IsInitialised )
+			await GameTask.Delay( 50 );
+
+		return;
+	}
+
+	/// <summary>
 	/// Insert a document into the database. The document will have its ID set
 	/// if it is empty.
 	/// </summary>
-	public static void Insert<T>( string collection, T document ) where T : class
+	public static Task Insert<T>( string collection, T document ) where T : class
 	{
 		if ( !IsInitialised )
 		{
 			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return;
+			return Task.CompletedTask;
 		}
 
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, true );
 
 		Document newDocument = new( document, typeof(T), true );
 		relevantCollection.CachedDocuments[newDocument.ID] = newDocument;
+		return Task.CompletedTask;
 	}
 
 	/// <summary>
 	/// Insert multiple documents into the database. The documents will have their IDs
 	/// set if they are empty.
 	/// </summary>
-	public static void InsertMany<T>( string collection, IEnumerable<T> documents ) where T : class
+	public static Task InsertMany<T>( string collection, IEnumerable<T> documents ) where T : class
 	{
 		if ( !IsInitialised )
 		{
 			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return;
+			return Task.CompletedTask;
 		}
 
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, true );
@@ -44,70 +58,74 @@ static class Sandbank
 			Document newDocument = new Document( document, typeof(T), true );
 			relevantCollection.CachedDocuments[newDocument.ID] = newDocument;
 		}
+
+		return Task.CompletedTask;
 	}
 
 	/// <summary>
 	/// Fetch a single document from the database where selector evaluates to true.
 	/// </summary>
-	public static T SelectOne<T>( string collection, Func<T, bool> selector ) where T : class
+	public static Task<T> SelectOne<T>( string collection, Func<T, bool> selector ) where T : class
 	{
 		if ( !IsInitialised )
 		{
 			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return null;
+			return Task.FromResult<T>( null );
 		}
 
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
-			return null;
+			return Task.FromResult<T>( null );
 
 		foreach ( var pair in relevantCollection.CachedDocuments )
 		{
 			if ( selector.Invoke( (T)pair.Value.Data ) )
-				return Serialisation.CloneObject((T)pair.Value.Data);
+				return Task.FromResult( Serialisation.CloneObject( (T)pair.Value.Data ) );
 		}
 
-		return null;
+		return Task.FromResult<T>( null );
 	}
 
 	/// <summary>
 	/// The same as SelectOne except slightly faster since we can look it up by ID.
 	/// </summary>
-	public static T SelectOneWithID<T>( string collection, string id ) where T : class
+	public static Task<T> SelectOneWithID<T>( string collection, string id ) where T : class
 	{
 		if ( !IsInitialised )
 		{
 			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return null;
+			return Task.FromResult<T>( null );
 		}
 
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
-			return null;
+			return Task.FromResult<T>( null );
 
 		relevantCollection.CachedDocuments.TryGetValue(id, out Document document);
 
-		return document == null ? null : Serialisation.CloneObject((T)document.Data);
+		return document == null ? 
+			Task.FromResult<T>( null ) 
+			: Task.FromResult( Serialisation.CloneObject( (T)document.Data ) );
 	}
 
 	/// <summary>
 	/// Select all documents from the database where selector evaluates to true.
 	/// </summary>
-	public static List<T> Select<T>( string collection, Func<T, bool> selector ) where T : class
+	public static Task<List<T>> Select<T>( string collection, Func<T, bool> selector ) where T : class
 	{
 		if ( !IsInitialised )
 		{
 			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return new List<T>();
+			return Task.FromResult( new List<T>() );
 		}
 
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 		List<T> output = new();
 
 		if ( relevantCollection == null )
-			return output;
+			return Task.FromResult( output );
 
 		foreach ( var pair in relevantCollection.CachedDocuments )
 		{
@@ -115,7 +133,7 @@ static class Sandbank
 				output.Add( Serialisation.CloneObject( (T)pair.Value.Data ) );
 		}
 
-		return output;
+		return Task.FromResult( output );
 	}
 
 	/// <summary>
@@ -140,19 +158,19 @@ static class Sandbank
 	/// cache will not change the object after you have requested it (because all inserts
 	/// are new objects).
 	/// </summary>
-	public static List<T> SelectUnsafeReferences<T>( string collection, Func<T, bool> selector ) where T : class
+	public static Task<List<T>> SelectUnsafeReferences<T>( string collection, Func<T, bool> selector ) where T : class
 	{
 		if ( !IsInitialised )
 		{
 			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return new List<T>();
+			return Task.FromResult( new List<T>() );
 		}
 
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 		List<T> output = new();
 
 		if ( relevantCollection == null )
-			return output;
+			return Task.FromResult( output );
 
 		foreach ( var pair in relevantCollection.CachedDocuments )
 		{
@@ -160,24 +178,24 @@ static class Sandbank
 				output.Add( (T)pair.Value.Data );
 		}
 
-		return output;
+		return Task.FromResult( output );
 	}
 
 	/// <summary>
 	/// Delete all documents from the database where selector evaluates to true.
 	/// </summary>
-	public static void Delete<T>( string collection, Predicate<T> selector ) where T : class
+	public static Task Delete<T>( string collection, Predicate<T> selector ) where T : class
 	{
 		if ( !IsInitialised )
 		{
 			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return;
+			return Task.CompletedTask;
 		}
 
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
-			return;
+			return Task.CompletedTask;
 
 		List<string> idsToDelete = new();
 
@@ -204,23 +222,25 @@ static class Sandbank
 				GameTask.Delay( 50 );
 			}
 		}
+
+		return Task.CompletedTask;
 	}
 
 	/// <summary>
 	/// The same as Delete except slightly faster since we can look it up by ID.
 	/// </summary>
-	public static void DeleteWithID<T>( string collection, string id) where T : class
+	public static Task DeleteWithID<T>( string collection, string id) where T : class
 	{
 		if ( !IsInitialised )
 		{
 			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return;
+			return Task.CompletedTask;
 		}
 
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
-			return;
+			return Task.CompletedTask;
 
 		relevantCollection.CachedDocuments.TryRemove( id, out _ );
 
@@ -236,68 +256,70 @@ static class Sandbank
 
 			GameTask.Delay( 50 );
 		}
+
+		return Task.CompletedTask;
 	}
 
 	/// <summary>
 	/// Return whether there are any documents in the datbase where selector evalutes
 	/// to true.
 	/// </summary>
-	public static bool Any<T>( string collection, Func<T, bool> selector ) where T : class
+	public static Task<bool> Any<T>( string collection, Func<T, bool> selector ) where T : class
 	{
 		if ( !IsInitialised )
 		{
 			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return false;
+			return Task.FromResult( false );
 		}
 
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 				
 		if ( relevantCollection == null )
-			return false;
+			return Task.FromResult( false );
 
 		foreach ( var pair in relevantCollection.CachedDocuments )
 		{
 			if ( selector.Invoke( (T)pair.Value.Data ) )
-				return true;
+				return Task.FromResult( true );
 		}
 
-		return false;
+		return Task.FromResult( false );
 	}
 
 	/// <summary>
 	/// The same as Any except slightly faster since we can look it up by ID.
 	/// </summary>
-	public static bool AnyWithID<T>( string collection, string id )
+	public static Task<bool> AnyWithID<T>( string collection, string id )
 	{
 		if ( !IsInitialised )
 		{
 			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return false;
+			return Task.FromResult( false );
 		}
 
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
-			return false;
+			return Task.FromResult( false );
 
-		return relevantCollection.CachedDocuments.ContainsKey( id );
+		return Task.FromResult( relevantCollection.CachedDocuments.ContainsKey( id ) );
 	}
 
 	/// <summary>
 	/// Wipe everything, forever. Requires unsafe mode to be enabled.
 	/// </summary>
-	public static void WipeAllData()
+	public static Task WipeAllData()
 	{
 		if ( !IsInitialised )
 		{
 			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return;
+			return Task.CompletedTask;
 		}
 
 		if ( !Config.UNSAFE_MODE)
 		{
 			Log.Warning( "must enable unsafe mode to call WipeAllData() - see Config.cs" );
-			return;
+			return Task.CompletedTask;
 		}
 
 		Cache.WipeCollectionsCache();
@@ -310,10 +332,12 @@ static class Sandbank
 				throw new Exception( "failed to load collections after 10 tries - are the files in use by something else?" );
 
 			if ( FileIO.WipeFilesystem() == null )
-				return;
+				return Task.CompletedTask;
 
 			GameTask.Delay( 50 );
 		}
+
+		return Task.CompletedTask;
 	}
 
 	/// <summary>
@@ -362,14 +386,15 @@ static class Sandbank
 	/// guaranteed to be written to disk by ForceWriteCache. If that matters to you,
 	/// then don't make inserts or deletions while calling this.
 	/// </summary>
-	public static void ForceWriteCache()
+	public static Task ForceWriteCache()
 	{
 		if ( !IsInitialised )
 		{
 			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return;
+			return Task.CompletedTask;
 		}
 
 		Cache.ForceFullWrite();
+		return Task.CompletedTask;
 	}
 }

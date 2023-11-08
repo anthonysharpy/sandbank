@@ -27,7 +27,7 @@ static class Initialisation
 		}
 		catch (Exception e)
 		{
-			Logging.Error( $"failed to initialise database - the database will now not start: {e.Message}" );
+			Logging.Error( $"failed to initialise database - the database will now not start: {Logging.FormatException( e )}" );
 		}
 		finally
 		{

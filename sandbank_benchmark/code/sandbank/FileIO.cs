@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace NSSandbank;
 
@@ -37,7 +38,7 @@ static class FileIO
 		}
 		catch (Exception e)
 		{
-			return e.Message;
+			return Logging.FormatException( e );
 		}
 	}
 
@@ -59,7 +60,7 @@ static class FileIO
 		}
 		catch (Exception e)
 		{
-			return e.Message;
+			return Logging.FormatException( e );
 		}
 	}
 
@@ -75,7 +76,7 @@ static class FileIO
 		}
 		catch (Exception e)
 		{
-			return (null, e.Message);
+			return (null, Logging.FormatException( e ));
 		}
 	}
 
@@ -99,20 +100,36 @@ static class FileIO
 			if ( data == null )
 				return (null, $"no definition.txt for collection \"{collectionName}\" found - see RepairGuide.txt");
 
-			var collection = Serialisation.DeserialiseClass<Collection>( data );
+			Collection collection;
+
+			try
+			{
+				collection = Serialisation.DeserialiseClass<Collection>( data );
+			}
+			catch (Exception e) 
+			{
+				return (null, $"error thrown when deserialising definition.txt for \"{collectionName}\": " + Logging.FormatException( e ));
+			}
 
 			if ( collection.CollectionName != collectionName )
 				return (null, $"failed to load definition.txt for collection \"{collectionName}\" - the CollectionName in the definition.txt differed from the name of the directory ({collectionName} vs {collection.CollectionName}) - see RepairGuide.txt");
 
-			collection.DocumentClassType = GlobalGameNamespace.TypeLibrary
+			try
+			{
+				collection.DocumentClassType = GlobalGameNamespace.TypeLibrary
 				.GetType( collection.DocumentClassTypeSerialized )
 				.TargetType;
-
+			}
+			catch (Exception e)
+			{
+				return (null, $"couldn't load the type described by the definition.txt for collection \"{collectionName}\" - most probably you renamed or removed your data type - see RepairGuide.txt: " + Logging.FormatException( e ));
+			}
+			
 			return (collection, null);
 		}
 		catch (Exception e)
 		{
-			return (null, e.Message);
+			return (null, Logging.FormatException( e ));
 		}
 	}
 
@@ -155,7 +172,7 @@ static class FileIO
 		}
 		catch (Exception e)
 		{
-			return ( null, e.Message );
+			return ( null, Logging.FormatException( e ) );
 		}
 	}
 
@@ -180,7 +197,7 @@ static class FileIO
 		}
 		catch (Exception e)
 		{
-			return e.Message;
+			return Logging.FormatException( e );
 		}
 	}
 
@@ -200,7 +217,7 @@ static class FileIO
 		}
 		catch (Exception e)
 		{
-			return e.Message;
+			return Logging.FormatException( e );
 		}
 	}
 
@@ -239,7 +256,7 @@ static class FileIO
 		}
 		catch (Exception e)
 		{
-			return e.Message;
+			return Logging.FormatException( e );
 		}
 	}
 
@@ -257,7 +274,7 @@ static class FileIO
 		}
 		catch (Exception e)
 		{
-			return e.Message;
+			return Logging.FormatException( e );
 		}
 	}
 }
