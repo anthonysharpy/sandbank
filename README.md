@@ -1,3 +1,5 @@
+# This was made for the entity system, and this no longer works out-of-the-box with the scene system right now ... I will make an updated version soon !
+
 # Sandbank
 
 Sandbank is the fast, easy-to-use no-SQL database for s&amp;box. Installation is click-and-drag, with zero setup required.
