@@ -4,7 +4,7 @@ You may:
 
 - Use the software personally or commercially, free of charge.
 - Make changes to the software, whether for personal or commercial use.
-- Publish, redistribute or share copies of the software, whether personally commercially use.
+- Publish, redistribute or share copies of the software, whether personally or commercially.
 
 You may not:
 
