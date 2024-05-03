@@ -1,4 +1,4 @@
-You may only use this software if you abide by the terms of the following licence. If you do not agree to abide by the following licence, you are not entitled to use the software and must destroy all copies of the software that you possess.
+You may only use this software (Sandbank Database) if you abide by the terms of the following licence. If you do not agree to abide by the following licence, you are not entitled to use the software and must destroy all copies of the software that you possess.
 
 You may:
 
@@ -9,6 +9,7 @@ You may:
 You may not:
 
 - Use any part of this software to create a competing database-related project or database-related piece of software, whether free of charge or otherwise (for example, you can't change some of the code and upload it to GitHub as "AwesomeS&boxDatabaseV2"). The copyright owner has sole (reasonable) discretion over what constitutes a competing project or piece of software.
+- Change this licence or its terms.
 
 A copy of this licence must be included in all copies of this software. Exceptions to this licence are available on request. This licence is made under the laws of England and Wales.
 
