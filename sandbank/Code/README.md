@@ -114,7 +114,7 @@ GameTask.RunInThreadAsync( () => {
 
 ### CPU
 
-Sandbank is designed to be thread-safe, letting you squeeze more out of it. 
+Sandbank is designed to be thread-safe, letting you squeeze more out of it.
 
 Sandbank creates a copy of itself in program memory, so for most use-cases it is probably faster than a conventional database, unless you have hundreds of thousands of records, and you know how to index them efficiently.
 
