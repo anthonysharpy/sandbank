@@ -34,7 +34,7 @@ The basics you need to know:
 
 - You can't use different class types with the same collection. It's one class per collection.
 
-- Any data you want saved must be a public property with the [Saved] attribute. If you're putting it on something like a class or a List of classes, all public properties in those classes will get saved. If you don't want this, you can add the [JsonIgnore] attribute probably to the properties you don't want saved (I will probably add more control over this later).
+- Any data you want saved must be a public property with the `[Saved]` attribute. If you're putting it on something like a class or a List of classes, all public properties in those classes will get saved. If you don't want this, you can add the `[JsonIgnore]` attribute probably to the properties you don't want saved (I will probably add more control over this later).
 
 - Every document _**must**_ have a _**public string property**_ called "UID" (unique ID) . This is the _**unique**_ primary ID of the document and is also used as the document's file name. You can set this to be whatever you want. For example, you might want it to be a player's Steam ID. Alternatively, you can leave it empty, and the database will automatically populate the ID for you as a random GUID.
 
