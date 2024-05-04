@@ -2,7 +2,7 @@
 
 Sandbank is the fast, easy-to-use no-SQL database for s&box.
 
-Sandbank is a local data store and does not send or save anything over the internet (there are plans for adding something like this eventually though!).
+Sandbank is a local data store and does not send or save anything over the internet (there are plans for adding something like this if/when there is demand for it though!). Let me know if that's something you would be interested in.
 
 # Installation
 
