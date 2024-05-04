@@ -122,15 +122,15 @@ Here are some benchmarks using the above PlayerData class on a Ryzen 5 5500 with
 
 | Operation                                                                                  | Total Time    | Speed                             | Notes                  |
 |--------------------------------------------------------------------------------------------|---------------|-----------------------------------|------------------------|
-| 100,800 inserts (one thread)                                                               | 0.6117 seconds  | 165,000 documents inserted/second | In reality this is probably faster than your disk could keep up with anyway.                   |
-| 100,800 inserts (24 threads)                                                               | 0.1263 seconds  | 798,000 documents inserted/second |                    |
-| Search 100,800 documents [x => x.Health >= 90] (once (one thread))                        | 0.0377 seconds  | 2,674,000 documents searched/second | ~10,080 records being returned here.                    |
-| Search 100,800 documents [x => x.Health >= 90] (24 times (24 threads))                    | 0.1910 seconds  | 12,666,000 documents searched/second | ~10,080 records being returned here per thread. |
-| Search 100,800 documents [x => x.Health == 100] (24 times (24 threads))                    | 0.1097 seconds  | 22,053,000 documents searched/second | ~1,008 records being returned here per thread, hence much faster due to less memory copying. This is probably the more realistic scenario. |
-| Search 100,800 documents [x => x.Health >= 90] (once (one thread), unsafe references)     | 0.0273 seconds | 3,692,000 documents searched/second |  ~10,080 records being returned here.                   |
-| Search 100,800 documents [x => x.Health >= 90] (24 times (24 threads) unsafe references) | 0.0990 seconds  | 24,436,000 documents searched/second |  ~10,080 records being returned here per thread. |
-| Search 100,800 documents by ID (100,000 times (one thread))                               | 0.1170 seconds  | 855,000 lookups/second | 1 document returned.                   |
-| Search 100,800 documents by ID (2,400,000 times (24 threads))                               | 0.5930 seconds  | 4,047,000 lookups/second | 1 document returned.                    |
+| 100,800 inserts (one thread) | 0.6117 seconds | 165,000 documents inserted/second | In reality this is probably faster than your disk could keep up with anyway. |
+| 100,800 inserts (24 threads) | 0.1263 seconds | 798,000 documents inserted/second | |
+| Search 100,800 documents [x => x.Health >= 90] (one thread) | 0.0377 seconds | 2,674,000 documents searched/second | ~10,080 records being returned here. |
+| Search 2,419,200 documents [x => x.Health >= 90] (24 threads) | 0.1910 seconds | 12,666,000 documents searched/second | ~10,080 records being returned here per thread. |
+| Search 2,419,200 documents [x => x.Health == 100] (24 times) | 0.1097 seconds | 22,053,000 documents searched/second | ~1,008 records being returned here per thread, hence much faster due to less memory copying. This is probably the more realistic scenario. |
+| Search 100,800 documents [x => x.Health >= 90] (one thread, unsafe references) | 0.0273 seconds | 3,692,000 documents searched/second |  ~10,080 records being returned here. |
+| Search 2,419,200 documents [x => x.Health >= 90] (24 threads, unsafe references) | 0.0990 seconds | 24,436,000 documents searched/second |  ~10,080 records being returned here per thread. |
+| Search 100,800 documents by ID 100,000 times (one thread) | 0.1170 seconds | 855,000 lookups/second | 1 document returned. |
+| Search 100,800 documents by ID 2,400,000 times (24 threads) | 0.5930 seconds | 4,047,000 lookups/second | 1 document returned. |
 
 The above figures represent the time it took to write/read the data to/from the cache only (not to disk). As you can see, searching by ID is basically instant, inserts are very quick, and regular searches are relatively quick. These benchmarks used an optimal pool size of around 200,000 (about 240mb worth of extra memory).
 
