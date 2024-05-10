@@ -17,7 +17,7 @@ public static class Sandbank
 	/// <br/>
 	/// or
 	/// <br/>
-	/// <strong>Sandbank.InitialiseAsync.GetAwaiter().GetResult()</strong>
+	/// <strong>Sandbank.InitialiseAsync().GetAwaiter().GetResult()</strong>
 	/// </summary>
 	public static async Task InitialiseAsync()
 	{
