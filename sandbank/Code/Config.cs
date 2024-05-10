@@ -3,24 +3,29 @@
 static class Config
 {
 	/// <summary>
+	/// Whether to show the startup and shutdown messages in the console when the database
+	/// stops and starts.
+	/// </summary>
+	public const bool STARTUP_SHUTDOWN_MESSAGES = true;
+	/// <summary>
 	/// If this is true then all warnings are thrown as exceptions. I probably wouldn't
 	/// recommend this but you can enable it if you want. This is used in the unit tests
 	/// to make life easier.
 	/// </summary>
-	public static bool WARNINGS_AS_EXCEPTIONS = false;
+	public const bool WARNINGS_AS_EXCEPTIONS = false;
 	/// <summary>
 	/// Set this to true if you want clients to be able to use the database too. You
 	/// probably don't want this - none of the data will get synced between host and clients
 	/// (that's not what it's designed to do). But there might be some situations where you
 	/// want to store data on the client for some reason.
 	/// </summary>
-	public static bool CLIENTS_CAN_USE = false;
+	public const bool CLIENTS_CAN_USE = false;
 	/// <summary>
 	/// This controls whether the written JSON files are indented or not.
 	/// Indentation makes them more human-readable, but probably makes saving
 	/// to disk a little bit slower.
 	/// </summary>
-	public static bool INDENT_JSON = true;
+	public const bool INDENT_JSON = true;
 	/// <summary>
 	/// The database will try to make sure that all stale data is written to disk
 	/// at most every this many seconds. In the event of a crash, all stale data

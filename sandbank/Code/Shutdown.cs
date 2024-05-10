@@ -21,6 +21,12 @@ internal class Shutdown
 		// if closed quickly enough.
 		lock ( Initialisation.InitialisationLock )
 		{
+			if ( Config.STARTUP_SHUTDOWN_MESSAGES )
+			{
+				Log.Info( "==================================" );
+				Log.Info( "Shutting down Sandbank..." );
+			}
+
 			try
 			{
 				if ( Initialisation.CurrentDatabaseState == DatabaseState.Initialised )
@@ -43,10 +49,13 @@ internal class Shutdown
 			{
 				Initialisation.CurrentDatabaseState = DatabaseState.Uninitialised;
 				Logging.Error( $"failed to shutdown database properly - some data may have been lost: {Logging.ExtractExceptionString( e )}" );
-				return;
 			}
 
-			Logging.Info( "Sandbank shutdown successful" );
+			if ( Config.STARTUP_SHUTDOWN_MESSAGES )
+			{
+				Log.Info( "Shutdown completed" );
+				Log.Info( "==================================" );
+			}
 		}
 	}
 }

@@ -99,7 +99,7 @@ Sandbank.CopySavedData<PlayerData>(ourPlayerData, player.Data);
 
 ### Slow Queries
 
-A well-designed query should return instantly.
+Usually your queries will return instantly.
 
 However, if you're doing something really hardcore, you should consider wrapping the call in its own thread:
 

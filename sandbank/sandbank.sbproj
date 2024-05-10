@@ -1,7 +1,14 @@
 {
-  "Title": "sandbank",
+  "Title": "Sandbank",
   "Type": "library",
-  "Org": "local",
+  "Org": "anthonysharpy",
   "Ident": "sandbank",
-  "Schema": 1
+  "Tags": "database",
+  "Schema": 1,
+  "Resources": null,
+  "PackageReferences": [],
+  "EditorReferences": null,
+  "Metadata": {
+    "CsProjName": ""
+  }
 }

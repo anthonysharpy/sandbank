@@ -19,8 +19,12 @@ static class Initialisation
 			if ( CurrentDatabaseState != DatabaseState.Uninitialised )
 				return; // Probably another thread already did all this.
 
-			Log.Info( "==================================" );
-			Log.Info( "Initialising Sandbank..." );
+
+			if ( Config.STARTUP_SHUTDOWN_MESSAGES )
+			{
+				Log.Info( "==================================" );
+				Log.Info( "Initialising Sandbank..." );
+			}
 
 			try
 			{
@@ -32,15 +36,22 @@ static class Initialisation
 
 				CurrentDatabaseState = DatabaseState.Initialised;
 
-				Log.Info( "Sandbank initialisation finished successfully" );
-				Log.Info( "==================================" );
+
+				if ( Config.STARTUP_SHUTDOWN_MESSAGES )
+				{
+					Log.Info( "Sandbank initialisation finished successfully" );
+					Log.Info( "==================================" );
+				}
 			}
 			catch ( Exception e )
 			{
-				Logging.Error( $"failed to initialise database - the database will now not start: {Logging.ExtractExceptionString( e )}" );
+				Logging.Error( $"failed to initialise database: {Logging.ExtractExceptionString( e )}" );
 
-				Log.Info( "Sandbank initialisation finished unsuccessfully" );
-				Log.Info( "==================================" );
+				if ( Config.STARTUP_SHUTDOWN_MESSAGES )
+				{
+					Log.Info( "Sandbank initialisation finished unsuccessfully" );
+					Log.Info( "==================================" );
+				}
 			}
 		}
 	}
