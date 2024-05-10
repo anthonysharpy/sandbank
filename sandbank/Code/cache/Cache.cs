@@ -35,16 +35,16 @@ static internal class Cache
 
 	public static void WipeStaticFields()
 	{
-		WriteInProgressLock = new();
-		_collections = new();
-		_timeSinceLastFullWrite = 0;
-		_timeSinceLastFullWriteLock = new();
-		_staleDocumentsFoundAfterLastFullWrite = 0;
-		_staleDocumentsWrittenSinceLastFullWrite = 0;
-		StaleDocuments = new();
-		_partialWriteInterval = 1f / Config.PARTIAL_WRITES_PER_SECOND;
-		_timeSinceLastPartialWrite = 0;
-		_collectionCreationLock = new();
+		lock (WriteInProgressLock)
+		{
+			_collections = new();
+			_timeSinceLastFullWrite = 0;
+			_staleDocumentsFoundAfterLastFullWrite = 0;
+			_staleDocumentsWrittenSinceLastFullWrite = 0;
+			StaleDocuments = new();
+			_partialWriteInterval = 1f / Config.PARTIAL_WRITES_PER_SECOND;
+			_timeSinceLastPartialWrite = 0;
+		}
 	}
 
 	public static Collection GetCollectionByName<T>( string name, bool createIfDoesntExist )
@@ -63,14 +63,6 @@ static internal class Cache
 		}
 
 		return _collections[name];
-	}
-
-	public static void WipeCollectionsCache()
-	{
-		lock ( WriteInProgressLock )
-		{
-			_collections.Clear();
-		}
 	}
 
 	private static float GetTimeSinceLastFullWrite()
@@ -116,7 +108,7 @@ static internal class Cache
 			while ( true )
 			{
 				if ( attempt++ >= 10 )
-					throw new Exception( $"failed to save \"{name}\" collection definition after 10 tries - is the file in use by something else?: {error}" );
+					throw new SandbankException( $"failed to save \"{name}\" collection definition after 10 tries - is the file in use by something else?: {error}" );
 
 				error = FileController.SaveCollectionDefinition( newCollection );
 
@@ -134,7 +126,7 @@ static internal class Cache
 
 	public static void Tick()
 	{
-		if ( !Initialisation.IsInitialised )
+		if ( Initialisation.CurrentDatabaseState != DatabaseState.Initialised)
 			return;
 
 		GameTask.RunInThreadAsync( () => 
@@ -157,12 +149,8 @@ static internal class Cache
 			}
 			else if ( _timeSinceLastPartialWrite > _partialWriteInterval )
 			{
+				PartialWrite();
 				_timeSinceLastPartialWrite = 0;
-
-				lock ( WriteInProgressLock )
-				{
-					PartialWrite();
-				}
 			}
 		} );
 	}
@@ -206,18 +194,21 @@ static internal class Cache
 	{
 		try
 		{
-			var numberOfDocumentsToWrite = GetNumberOfDocumentsToWrite();
-
-			if ( numberOfDocumentsToWrite > 0 )
+			lock ( WriteInProgressLock )
 			{
-				Logging.Log( "performing partial write..." );
+				var numberOfDocumentsToWrite = GetNumberOfDocumentsToWrite();
 
-				PersistStaleDocuments( numberOfDocumentsToWrite );
+				if ( numberOfDocumentsToWrite > 0 )
+				{
+					Logging.Log( "performing partial write..." );
+
+					PersistStaleDocuments( numberOfDocumentsToWrite );
+				}
 			}
 		}
 		catch ( Exception e )
 		{
-			throw new Exception( "partial write failed: " + Logging.ExtractExceptionString( e ) );
+			throw new SandbankException( "partial write failed: " + Logging.ExtractExceptionString( e ) );
 		}
 	}
 
@@ -239,7 +230,7 @@ static internal class Cache
 		}
 		catch ( Exception e )
 		{
-			throw new Exception( "full write failed: " + Logging.ExtractExceptionString( e ) );
+			throw new SandbankException( "full write failed: " + Logging.ExtractExceptionString( e ) );
 		}
 	}
 
@@ -251,6 +242,8 @@ static internal class Cache
 	{
 		int remainingDocumentCount = _staleDocumentsFoundAfterLastFullWrite - _staleDocumentsWrittenSinceLastFullWrite;
 
+		Logging.Log( $"remaining documents left to write: {remainingDocumentCount}" );
+
 		if ( numberToWrite > remainingDocumentCount )
 			numberToWrite = remainingDocumentCount;
 
@@ -259,7 +252,7 @@ static internal class Cache
 		if ( numberToWrite > realCount )
 			numberToWrite = realCount;
 
-		Logging.Log( $"persisting {_staleDocumentsFoundAfterLastFullWrite - _staleDocumentsWrittenSinceLastFullWrite} stale documents..." );
+		Logging.Log( $"we are persisting {numberToWrite} documents to disk now" );
 
 		_staleDocumentsWrittenSinceLastFullWrite += numberToWrite;
 

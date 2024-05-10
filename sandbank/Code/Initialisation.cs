@@ -1,60 +1,48 @@
-﻿using Sandbox;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace SandbankDatabase;
 
 static class Initialisation
 {
-	public static bool IsInitialised { get; private set; }
+	public static DatabaseState CurrentDatabaseState;
 
 	/// <summary>
-	/// S&amp;box doesn't automatically wipe static fields yet so we have to do this
-	/// ourselves.
+	/// Only let one thread initialse the database at once.
 	/// </summary>
-	private static void WipeStaticFields()
-	{
-		IsInitialised = false;
-
-		Cache.WipeStaticFields();
-		FileController.WipeStaticFields();
-		ObjectPool.WipeStaticFields();
-		PropertyDescriptionsCache.WipeStaticFields();
-	}
+	public static object InitialisationLock = new();
 
 	public static void Initialise()
 	{
-		Log.Info( "==================================" );
-		Log.Info( "Initialising Sandbank..." );
+		lock ( InitialisationLock )
+		{
+			if ( CurrentDatabaseState != DatabaseState.Uninitialised )
+				return; // Probably another thread already did all this.
 
-		try
-		{
-			ResetState();
-			FileController.Initialise();
-			EnsureFilesystemSetup();
-			LoadCollections();
-			Ticker.Initialise();
-
-			IsInitialised = true;
-		}
-		catch ( Exception e )
-		{
-			Logging.Error( $"failed to initialise database - the database will now not start: {Logging.ExtractExceptionString( e )}" );
-		}
-		finally
-		{
-			Log.Info( "Sandbank initialisation finished" );
 			Log.Info( "==================================" );
-		}
-	}
+			Log.Info( "Initialising Sandbank..." );
 
-	/// <summary>
-	/// Reset the database back to the state it was in before it was initialised.
-	/// </summary>
-	public static void ResetState()
-	{
-		WipeStaticFields();
+			try
+			{
+				Shutdown.WipeStaticFields();
+				FileController.Initialise();
+				EnsureFilesystemSetup();
+				LoadCollections();
+				Ticker.Initialise();
+
+				CurrentDatabaseState = DatabaseState.Initialised;
+
+				Log.Info( "Sandbank initialisation finished successfully" );
+				Log.Info( "==================================" );
+			}
+			catch ( Exception e )
+			{
+				Logging.Error( $"failed to initialise database - the database will now not start: {Logging.ExtractExceptionString( e )}" );
+
+				Log.Info( "Sandbank initialisation finished unsuccessfully" );
+				Log.Info( "==================================" );
+			}
+		}
 	}
 
 	private static void EnsureFilesystemSetup()
@@ -65,7 +53,7 @@ static class Initialisation
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				throw new Exception( "failed to ensure filesystem is setup after 10 tries: " + error );
+				throw new SandbankException( "failed to ensure filesystem is setup after 10 tries: " + error );
 
 			error = FileController.EnsureFileSystemSetup();
 
@@ -77,19 +65,21 @@ static class Initialisation
 	private static void LoadCollections()
 	{
 		int attempt = 0;
-		string error = "";
+		string error = null;
 		List<string> collectionNames;
 
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				throw new Exception( "failed to load collection list after 10 tries: " + error );
+				throw new SandbankException( $"failed to load collection list after 10 tries: {error}" );
 
 			(collectionNames, error) = FileController.ListCollectionNames();
 
 			if (error == null)
 				break;
 		}
+
+		attempt = 0;
 
 		foreach ( var collectionName in collectionNames )
 		{
@@ -98,7 +88,7 @@ static class Initialisation
 			while ( true )
 			{
 				if ( attempt++ >= 10 )
-					throw new Exception( $"failed to load collection {collectionName} after 10 tries: " + error );
+					throw new SandbankException( $"failed to load collection {collectionName} after 10 tries: {error}");
 
 				error = LoadCollection( collectionName );
 
@@ -133,4 +123,10 @@ static class Initialisation
 
 		return null;
 	}
+}
+
+internal enum DatabaseState
+{
+	Uninitialised,
+	Initialised
 }

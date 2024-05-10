@@ -40,15 +40,12 @@ internal static class ObjectPool
 	{
 		if ( !_objectPool.ContainsKey(classTypeName) )
 		{
-			throw new Exception( $"there is no registered instance pool for the type {classTypeName} - " +
+			throw new SandbankException( $"there is no registered instance pool for the type {classTypeName} - " +
 				"are you using the wrong class type for this collection?" );
 		}
 
 		if ( _objectPool[classTypeName].TypePool.TryTake( out var instance ) )
 			return instance;
-
-		if ( Config.ENABLE_LOGGING )
-			Logging.Warn( $"Instance of class {classTypeName} could not be loaded from pool" );
 
 		// If we couldn't get an instance, then we just have to create a new one.
 		return GlobalGameNamespace.TypeLibrary.Create<object>( classType );
@@ -58,9 +55,6 @@ internal static class ObjectPool
 	{
 		if ( _objectPool[classType].TypePool.TryTake( out var instance ) )
 			return (T)instance;
-
-		if ( Config.ENABLE_LOGGING )
-			Logging.Warn( $"Instance of class {classType} could not be loaded from pool" );
 
 		// If we couldn't get an instance, then we just have to create a new one.
 		return new T();

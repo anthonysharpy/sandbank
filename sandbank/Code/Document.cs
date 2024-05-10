@@ -25,7 +25,7 @@ class Document
 	public Document( object data, Type documentType, bool needsCloning, string collectionName )
 	{
 		if ( !PropertyDescriptionsCache.DoesClassHaveUIDProperty( documentType.FullName, data ) )
-			throw new Exception( "cannot handle a document without a \"UID\" property - make sure your data class has a public property called UID, like this: \"[Saved] public string UID { get; set; }\"" );
+			throw new SandbankException( "cannot handle a document without a \"UID\" property - make sure your data class has a public property called UID, like this: \"[Saved] public string UID { get; set; }\"" );
 
 		string id = (string)GlobalGameNamespace.TypeLibrary.GetPropertyValue( data, "UID" );
 

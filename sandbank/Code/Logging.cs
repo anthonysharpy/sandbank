@@ -12,11 +12,18 @@ static class Logging
 
 		Sandbox.Internal.GlobalGameNamespace.Log.Info( $"Sandbank: {message}" );
 	}
+	public static void Info( string message )
+	{
+		if ( !Config.ENABLE_LOGGING )
+			return;
+
+		Sandbox.Internal.GlobalGameNamespace.Log.Info( $"Sandbank: {message}" );
+	}
 
 	public static void Warn( string message )
 	{
 		if ( Config.WARNINGS_AS_EXCEPTIONS )
-			throw new Exception( $"Sandbank: {message}" );
+			throw new SandbankException( $"Sandbank: {message}" );
 
 		Sandbox.Internal.GlobalGameNamespace.Log.Warning( $"Sandbank: {message}" );
 	}
@@ -24,14 +31,9 @@ static class Logging
 	public static void Error( string message )
 	{
 		if (Config.WARNINGS_AS_EXCEPTIONS )
-			throw new Exception( $"Sandbank: {message}" );
+			throw new SandbankException( $"Sandbank: {message}" );
 
 		Sandbox.Internal.GlobalGameNamespace.Log.Error( $"Sandbank: {message}" );
-	}
-	 
-	public static void PrintStatus()
-	{
-		Sandbox.Internal.GlobalGameNamespace.Log.Info( $"Sandbank: documents awaiting write: {Cache.GetDocumentsAwaitingWriteCount()}" );
 	}
 
 	public static string ExtractExceptionString(Exception e)

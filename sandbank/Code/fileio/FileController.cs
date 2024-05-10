@@ -16,15 +16,17 @@ internal static class FileController
 	
 	public static void Initialise()
 	{
-		if ( TestHelpers.IsUnitTests )
-			IOProvider = new MockFileIOProvider();
-		else
-			IOProvider = new FileIOProvider();
-	}
+		// Don't re-create if it already exists. Otherwise in the unit tests we
+		// lose all of the files after initialisation.
+		if ( IOProvider == null )
+		{
+			Logging.Log( "recreating file IO provider..." );
 
-	public static void WipeStaticFields()
-	{
-		_collectionWriteLocks = new();
+			if ( TestHelpers.IsUnitTests )
+				IOProvider = new MockFileIOProvider();
+			else
+				IOProvider = new FileIOProvider();
+		}
 	}
 
 	public static void CreateCollectionLock( string collection )

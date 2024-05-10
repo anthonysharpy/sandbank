@@ -36,7 +36,8 @@ static class Config
 	/// </summary>
 	public const int PARTIAL_WRITES_PER_SECOND = 1;
 	/// <summary>
-	/// Enables logging for helping to diagnose issues.
+	/// Enables logging for helping to diagnose issues. This is mostly for development
+	/// purposes.
 	/// </summary>
 	public const bool ENABLE_LOGGING = false;
 	/// <summary>

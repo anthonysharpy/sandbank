@@ -13,14 +13,18 @@ public partial class SandbankBenchmarksTest
 	[TestCleanup]
 	public void Cleanup()
 	{
-		Initialisation.ResetState();
+		if ( Sandbank.IsInitialised )
+		{
+			Sandbank.DeleteAllData();
+			Sandbank.Shutdown();
+		}
 	}
 
 	[TestInitialize]
 	public void Initialise()
 	{
-		Sandbank.EnableWarningsAsExceptions();
-		Sandbank.Initialise();
+		Config.WARNINGS_AS_EXCEPTIONS = true;
+		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
 		Sandbank.DeleteAllData();
 	}
 

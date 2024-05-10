@@ -1,16 +1,23 @@
 ﻿using Sandbox;
 using System;
 using System.Collections.Generic;
+using System.Reflection.PortableExecutable;
 using System.Threading.Tasks;
 
 namespace SandbankDatabase;
 
 public static class Sandbank
 {
-	public static bool IsInitialised => Initialisation.IsInitialised;
+	public static bool IsInitialised => Initialisation.CurrentDatabaseState == DatabaseState.Initialised;
 
 	/// <summary>
-	/// Initialises the database. You must call this once manually on the host when the game starts.
+	/// Initialises the database. You must call this manually on the host when the game starts:
+	/// <br/><br/>
+	/// <strong>await Sandbank.InitialiseAsync()</strong>
+	/// <br/>
+	/// or
+	/// <br/>
+	/// <strong>Sandbank.InitialiseAsync.GetAwaiter().GetResult()</strong>
 	/// </summary>
 	public static async Task InitialiseAsync()
 	{
@@ -27,20 +34,6 @@ public static class Sandbank
 	}
 
 	/// <summary>
-	/// Initialises the database. You must call this once manually on the host when the game starts.
-	/// </summary>
-	public static void Initialise()
-	{
-		if ( !Networking.IsHost && !Config.CLIENTS_CAN_USE )
-		{
-			Logging.Error( "only the host can initialise the database - set CLIENTS_CAN_USE to true in Config.cs" +
-				" if you want clients to be able to use the database too" );
-		}
-
-		Initialisation.Initialise();
-	}
-
-	/// <summary>
 	/// Copy the saveable data from one class to another. This is useful for when you load
 	/// data from the database and you want to put it in a component or something like that.
 	/// </summary>
@@ -54,12 +47,9 @@ public static class Sandbank
 	/// if it is empty.
 	/// </summary>
 	public static void Insert<T>( string collection, T document ) where T : class
-	{
-		if ( !IsInitialised ) 
-		{
-			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return;
-		}
+	{		
+		if ( !IsInitialised )
+			throw new SandbankException( "Insert failed as the database is not yet initialised - check IsInitialised before making any requests" );
 
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, true );
 
@@ -75,10 +65,7 @@ public static class Sandbank
 	public static void InsertMany<T>( string collection, IEnumerable<T> documents ) where T : class
 	{
 		if ( !IsInitialised )
-		{
-			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return;
-		}
+			throw new SandbankException( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
 
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, true );
 
@@ -97,10 +84,7 @@ public static class Sandbank
 	public static T SelectOne<T>( string collection, Func<T, bool> selector ) where T : class, new()
 	{
 		if ( !IsInitialised )
-		{
-			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return null;
-		}
+			throw new SandbankException( "SelectOne failed as the database is not yet initialised - check IsInitialised before making any requests" );
 
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
@@ -117,16 +101,13 @@ public static class Sandbank
 	}
 
 	/// <summary>
-	/// The same as SelectOne except slightly faster since we can look it up by ID.
+	/// The same as SelectOne except faster since we can look it up by ID.
 	/// </summary>
 	public static T SelectOneWithID<T>( string collection, string uid ) where T : class, new()
 	{
 		if ( !IsInitialised )
-		{
-			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return null;
-		}
-
+			throw new SandbankException( "SelectOneWithID failed as the database is not yet initialised - check IsInitialised before making any requests" );
+	
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -145,11 +126,8 @@ public static class Sandbank
 	public static List<T> Select<T>( string collection, Func<T, bool> selector ) where T : class, new()
 	{
 		if ( !IsInitialised )
-		{
-			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return new List<T>();
-		}
-
+			throw new SandbankException( "Select failed as the database is not yet initialised - check IsInitialised before making any requests" );
+		
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 		List<T> output = new();
 
@@ -191,11 +169,8 @@ public static class Sandbank
 	public static List<T> SelectUnsafeReferences<T>( string collection, Func<T, bool> selector ) where T : class
 	{
 		if ( !IsInitialised )
-		{
-			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return new List<T>();
-		}
-
+			throw new SandbankException( "SelectUnsafeReferences failed as the database is not yet initialised - check IsInitialised before making any requests" );
+		
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 		List<T> output = new();
 
@@ -217,11 +192,8 @@ public static class Sandbank
 	public static void Delete<T>( string collection, Predicate<T> selector ) where T : class
 	{
 		if ( !IsInitialised )
-		{
-			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return;
-		}
-
+			throw new SandbankException( "Delete failed as the database is not yet initialised - check IsInitialised before making any requests" );
+		
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -241,12 +213,16 @@ public static class Sandbank
 
 			int attempt = 0;
 
+			var error = "";
+
 			while ( true )
 			{
 				if ( attempt++ >= 10 )
-					throw new Exception( $"failed to delete document from collection \"{collection}\" after 10 tries - is the file in use by something else?" );
+					throw new SandbankException( $"failed to delete document from collection \"{collection}\" after 10 tries: " + error );
 
-				if ( FileController.DeleteDocument( collection, id ) == null )
+				error = FileController.DeleteDocument( collection, id );
+
+				if ( error == null)
 					break;
 			}
 		}
@@ -255,16 +231,13 @@ public static class Sandbank
 	}
 
 	/// <summary>
-	/// The same as Delete except slightly faster since we can look it up by ID.
+	/// The same as Delete except faster since we can look it up by ID.
 	/// </summary>
 	public static void DeleteWithID<T>( string collection, string id) where T : class
 	{
 		if ( !IsInitialised )
-		{
-			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return;
-		}
-
+			throw new SandbankException( "DeleteWithID failed as the database is not yet initialised - check IsInitialised before making any requests" );
+		
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -277,7 +250,7 @@ public static class Sandbank
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				throw new Exception( $"failed to delete document from collection \"{collection}\" after 10 tries - is the file in use by something else?" );
+				throw new SandbankException( $"failed to delete document from collection \"{collection}\" after 10 tries - is the file in use by something else?" );
 
 			if ( FileController.DeleteDocument( collection, id ) == null )
 				break;
@@ -293,11 +266,8 @@ public static class Sandbank
 	public static bool Any<T>( string collection, Func<T, bool> selector ) where T : class
 	{
 		if ( !IsInitialised )
-		{
-			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return false;
-		}
-
+			throw new SandbankException( "Any failed as the database is not yet initialised - check IsInitialised before making any requests" );
+		
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 				
 		if ( relevantCollection == null )
@@ -313,16 +283,13 @@ public static class Sandbank
 	}
 
 	/// <summary>
-	/// The same as Any except slightly faster since we can look it up by ID.
+	/// The same as Any except faster since we can look it up by ID.
 	/// </summary>
 	public static bool AnyWithID<T>( string collection, string id )
 	{
 		if ( !IsInitialised )
-		{
-			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return false;
-		}
-
+			throw new SandbankException( "AnyWithID failed as the database is not yet initialised - check IsInitialised before making any requests" );
+		
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -337,52 +304,35 @@ public static class Sandbank
 	public static void DeleteAllData()
 	{
 		if ( !IsInitialised )
-		{
-			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return;
-		}
-
-		Cache.WipeCollectionsCache();
+			throw new SandbankException( "DeleteAllData failed as the database is not yet initialised - check IsInitialised before making any requests" );
+		
+		Cache.WipeStaticFields();
 
 		int attempt = 0;
+		string error = null;
 
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				throw new Exception( "failed to load collections after 10 tries - are the files in use by something else?" );
+				throw new SandbankException( $"failed to load collections after 10 tries: {error}" );
 
-			if ( FileController.WipeFilesystem() == null )
+			error = FileController.WipeFilesystem();
+
+			if ( error == null )
 				return;
 		}
 	}
 
 	/// <summary>
-	/// Enables warnings as exceptions. See comments in Config.cs
-	/// for whether this is a good idea for you or not.
+	/// Call this to gracefully shut-down the database. It is recommended to call this
+	/// when your server is shutting down to make sure all recently-changed data is saved,
+	/// if that's important to you. 
+	/// <br/> <br/>
+	/// Any operations ongoing at the time Shutdown is called are not guaranteed to be
+	/// written to disk.
 	/// </summary>
-	public static void EnableWarningsAsExceptions()
+	public static void Shutdown()
 	{
-		Config.WARNINGS_AS_EXCEPTIONS = true;
-	}
-
-	/// <summary>
-	/// Call this to force-write all remaining cache. It is recommended to call this
-	/// when your server is shutting down to avoid data loss, if that's important to
-	/// you. <br/>
-	/// <br/>
-	/// Any inserts or deletions ongoing at the time ForceWriteCache is called are not
-	/// guaranteed to be written to disk by ForceWriteCache. If that matters to you,
-	/// then don't make inserts or deletions while calling this.
-	/// </summary>
-	public static void ForceWriteCache()
-	{
-		if ( !IsInitialised )
-		{
-			Logging.Warn( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
-			return;
-		}
-
-		Cache.ForceFullWrite();
-		return;
+		SandbankDatabase.Shutdown.ShutdownDatabase();
 	}
 }

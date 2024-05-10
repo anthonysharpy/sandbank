@@ -29,7 +29,7 @@ class Collection
 	{
 		if ( document.Data.GetType().ToString() != DocumentClassTypeSerialized )
 		{
-			throw new Exception( $"cannot insert a document of type {document.Data.GetType().FullName} " +
+			throw new SandbankException( $"cannot insert a document of type {document.Data.GetType().FullName} " +
 				$"into a collection which expects type {DocumentClassTypeSerialized}" );
 		}
 

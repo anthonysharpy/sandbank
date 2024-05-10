@@ -28,6 +28,7 @@ Data files are saved in s&box's data folder. For example:
 
 The basics you need to know:
 - To configure the database and change some performance-related settings, you can modify `Config.cs` (the default settings will work very well for 95% of people).
+
 - You need to manually initialise the database when the game starts by calling `Sandbank.Initialise()`. This might take some time if you have lots of data; you can either await `Sandbank.InitialiseAsync()` or you can check `Sandbank.IsInitialised` to see if the database has been initialised yet. Any queries run before the database is initialised will have no effect.
 
 - The data you want to save must be in a _**class**_. Structs are not supported. Structs are supported when used inside a class, though.
@@ -98,7 +99,7 @@ Sandbank.CopySavedData<PlayerData>(ourPlayerData, player.Data);
 
 ### Slow Queries
 
-Usually your queries will return instantly.
+A well-designed query should return instantly.
 
 However, if you're doing something really hardcore, you should consider wrapping the call in its own thread:
 
@@ -151,7 +152,7 @@ The disk space used is less than the amount of memory used. Changes to the cache
 
 Data is written to disk slowly over time. The frequency at which this is done, as well as a number of other things, is configurable in `Config.cs`. By default, the database aims to write any change to disk in under 10 seconds.
 
-Any data that is not written to disk is lost on a crash or server restart, but you can call `ForceWriteCache()` before an anticipated server shutdown to force-write all data to disk. However, if you're fine with potentially losing the last few seconds of changes, then you don't have to.
+Sandbank attempts to shut itself down gracefully in the background when the server stops. However, it is still recommended to call `Shutdown` before an anticipated server shutdown to ensure that the database is terminated properly. If the server crashes or if the server process is suddenly terminated, any data that is not written to disk by that point is lost. 
 
 # Contributions
 
