@@ -299,6 +299,114 @@ public partial class SandbankTest
 	}
 
 	[TestMethod]
+	public void TestChangingTypeDefinition_DoesntLoseData()
+	{
+		Cache.DisableCacheWriting();
+		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
+
+		var document = new ReadmeExample()
+		{
+			UID = "",
+			Health = 100,
+			Name = "TestPlayer1",
+			Level = 10,
+			Items = new() { "gun", "frog", "banana" }
+		};
+
+		Sandbank.Insert<ReadmeExample>( "players", document );
+
+		var playerDocument = Sandbank.SelectOneWithID<ReadmeExample>( "players", document.UID );
+
+		Assert.AreEqual( 100, playerDocument.Health );
+		Assert.AreEqual( "TestPlayer1", playerDocument.Name );
+		Assert.AreEqual( 10, playerDocument.Level );
+		Assert.AreEqual( "gun", playerDocument.Items[0] );
+		Assert.AreEqual( "frog", playerDocument.Items[1] );
+		Assert.AreEqual( "banana", playerDocument.Items[2] );
+
+		// Force write this so we have it saved to file.
+		Cache.ForceFullWrite();
+
+		// Let's wipe the cache to remove any trace of this class, this will stop the data being
+		// written to disk when we shutdown the database in a moment.
+		Cache.WipeCaches();
+
+		// Overwrite with a document with different fields. We are checking that the other
+		// fields are not lost.
+		var smallerDocument = new ReadmeExampleWithFewerFields()
+		{
+			UID = document.UID,
+			Health = 50,
+		};
+
+		var ovewriteDocument = 
+			new Document( smallerDocument, typeof(ReadmeExampleWithFewerFields), false, "players" );
+
+		// Now overwrite the data.
+		FileController.SaveDocument( ovewriteDocument );
+
+		// Shutdown in order to fully clear and re-fetch data and caches.
+		Sandbank.Shutdown();
+		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
+
+		// Now load the data using the original type - all the other data should be there, other
+		// than the changed health which was overwritten.
+		var finalDocument = Sandbank.SelectOneWithID<ReadmeExample>( "players", document.UID );
+
+		Assert.AreEqual( 50, finalDocument.Health );
+		Assert.AreEqual( "TestPlayer1", finalDocument.Name );
+		Assert.AreEqual( 10, finalDocument.Level );
+		Assert.AreEqual( "gun", finalDocument.Items[0] );
+		Assert.AreEqual( "frog", finalDocument.Items[1] );
+		Assert.AreEqual( "banana", finalDocument.Items[2] );
+	}
+
+	[TestMethod]
+	public void TestRestartingDatabase_DoesntCorruptData()
+	{
+		const int documents = 100;
+
+		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
+
+		Sandbank.Insert<ReadmeExample>( "players", new ReadmeExample()
+		{
+			UID = "",
+			Health = 100,
+			Name = "TestPlayer1",
+			Level = 10,
+			LastPlayTime = DateTime.UtcNow,
+			Items = new() { "gun", "frog", "banana" }
+		} );
+
+		// Warm the pool up to avoid console spam about not being able to load objects from the pool.
+		Task.Delay( 4000 ).GetAwaiter().GetResult();
+
+		var data = new List<ReadmeExample>();
+
+		for ( int i = 0; i < documents - 1; i++ )
+		{
+			data.Add( new ReadmeExample()
+			{
+				UID = "",
+				Health = 100,
+				Name = "TestPlayer1",
+				Level = 10,
+				LastPlayTime = DateTime.UtcNow,
+				Items = new() { "gun", "frog", "banana" }
+			} );
+		}
+
+		Sandbank.InsertMany<ReadmeExample>( "players", data );
+
+		Assert.AreEqual( documents, Sandbank.Select<ReadmeExample>( "players", x => x.Health == 100 ).Count() );
+
+		Sandbank.Shutdown();
+		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
+
+		Assert.AreEqual( documents, Sandbank.Select<ReadmeExample>( "players", x => x.Health == 100 ).Count() );
+	}
+
+	[TestMethod]
 	public void TestDeleteWithID()
 	{
 		Sandbank.InitialiseAsync().GetAwaiter().GetResult();

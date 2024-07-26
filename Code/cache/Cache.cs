@@ -27,10 +27,38 @@ static internal class Cache
 	private static float _partialWriteInterval = 1f / Config.PARTIAL_WRITES_PER_SECOND;
 	private static TimeSince _timeSinceLastPartialWrite = 0;
 	private static object _collectionCreationLock = new();
+	private static bool _cacheWriteEnabled = true;
 
 	public static int GetDocumentsAwaitingWriteCount()
 	{
 		return StaleDocuments.Count();
+	}
+
+	/// <summary>
+	/// Used in the tests when we want to invalidate everything in the caches.
+	/// 
+	/// A bit crude and doesn't wipe everything.
+	/// </summary>
+	public static void WipeCaches()
+	{
+		if ( !TestHelpers.IsUnitTests )
+			throw new Exception( "this can only be called during tests" );
+
+		StaleDocuments = new();
+
+		foreach ( var collection in _collections )
+			collection.Value.CachedDocuments = new();
+	}
+
+	/// <summary>
+	/// Used in the tests when we want to do writing to disk manually.
+	/// </summary>
+	public static void DisableCacheWriting()
+	{
+		if ( !TestHelpers.IsUnitTests )
+			throw new Exception( "this can only be called during tests" );
+
+		_cacheWriteEnabled = false;
 	}
 
 	public static void WipeStaticFields()
@@ -126,8 +154,11 @@ static internal class Cache
 
 	public static void Tick()
 	{
-		if ( Initialisation.CurrentDatabaseState != DatabaseState.Initialised)
+		if ( Initialisation.CurrentDatabaseState != DatabaseState.Initialised
+			|| !_cacheWriteEnabled)
+		{
 			return;
+		}
 
 		GameTask.RunInThreadAsync( () => 
 		{

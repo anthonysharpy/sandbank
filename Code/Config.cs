@@ -72,4 +72,18 @@ static class Config
 	/// <strong>200mb * number of collections * CLASS_INSTANCE_POOL_SIZE / 100,000</strong>
 	/// </summary>
 	public const int CLASS_INSTANCE_POOL_SIZE = 2000;
+	/// <summary>
+	/// This should always true unless you know what you are doing.
+	/// <br/><br/>
+	/// If this is true and you rename a field in your data class, the renamed data will remain in
+	/// the file. For example, if you renamed "Name" to "PlayerName", both properties would still be there.
+	/// This is because any existing JSON is "merged" with any updates.
+	/// <br/><br/>
+	/// If this is false and you rename a field, the renamed data is destroyed. The new document simply
+	/// overwrites the file and no merge is done. So if you renamed "Name" to "PlayerName", "Name" is destroyed.
+	/// <br/><br/>
+	/// This is here to protect you, so the only time this should be set to false is if you're ready to remove
+	/// the renamed data.
+	/// </summary>
+	public const bool MERGE_JSON = true;
 }

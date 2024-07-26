@@ -20,6 +20,13 @@ static class Logging
 		Sandbox.Internal.GlobalGameNamespace.Log.Info( $"Sandbank: {message}" );
 	}
 
+	public static void ScaryWarn(string message)
+	{
+		Sandbox.Internal.GlobalGameNamespace.Log.Warning( $"Sandbank: ============= WARNING =============" );
+		Sandbox.Internal.GlobalGameNamespace.Log.Warning( $"Sandbank: {message}" );
+		Sandbox.Internal.GlobalGameNamespace.Log.Warning( $"Sandbank: ===================================" );
+	}
+
 	public static void Warn( string message )
 	{
 		if ( Config.WARNINGS_AS_EXCEPTIONS )
