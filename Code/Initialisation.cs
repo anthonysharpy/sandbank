@@ -38,7 +38,6 @@ static class Initialisation
 
 				CurrentDatabaseState = DatabaseState.Initialised;
 
-
 				if ( Config.STARTUP_SHUTDOWN_MESSAGES )
 				{
 					Log.Info( "Sandbank initialisation finished successfully" );
