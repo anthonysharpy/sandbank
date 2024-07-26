@@ -23,7 +23,6 @@ public partial class SandbankBenchmarksTest
 	[TestInitialize]
 	public void Initialise()
 	{
-		Config.WARNINGS_AS_EXCEPTIONS = true;
 		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
 		Sandbank.DeleteAllData();
 	}

@@ -20,12 +20,6 @@ public partial class SandbankTest
 		Sandbank.Shutdown();
 	}
 
-	[TestInitialize]
-	public void Initialise()
-	{
-		Config.WARNINGS_AS_EXCEPTIONS = true;
-	}
-
 	[TestMethod]
 	public void WarnsIfDatabaseNotInitialised()
 	{
@@ -253,7 +247,6 @@ public partial class SandbankTest
 	[TestMethod]
 	public void TestSpammingShutdownAndInitialise_DoesntCorruptData()
 	{
-		Config.WARNINGS_AS_EXCEPTIONS = false;
 		const int documents = 100;
 
 		Sandbank.InitialiseAsync().GetAwaiter().GetResult();

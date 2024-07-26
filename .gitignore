@@ -1,4 +1,6 @@
 
-sandbank/UnitTests/obj/*
-sandbank/Code/obj/*
+UnitTests/obj/*
+UnitTests/obj/Debug/*
+Code/obj/*
 .vs/*
+Code/.vs/*
