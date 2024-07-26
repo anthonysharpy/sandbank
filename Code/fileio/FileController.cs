@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Text.Json;
 
 namespace SandbankDatabase;
 
@@ -57,17 +58,61 @@ internal static class FileController
 	}
 
 	/// <summary>
+	/// Save the document to file. We use a JSON merge strategy, so that if the current file has
+	/// data that this new document doesn't recognise, it is not lost (the JSON is merged).
+	/// This stops data from being wiped when doing things like renaming fields.
+	/// 
 	/// Returns null on success, or the error message on failure.
 	/// </summary>
 	public static string SaveDocument( Document document )
 	{
 		try
 		{
-			string data = Serialisation.SerialiseClass( document.Data, document.DocumentType );
+			string finalJSONData = "";
+
+			// Load document currently stored on disk, if there is one.
+			string data = Config.MERGE_JSON ?
+				IOProvider.ReadAllText( $"{Config.DATABASE_NAME}/{document.CollectionName}/{document.UID}" )
+				: null;
+
+			if ( Config.MERGE_JSON && data != null )
+			{
+				var currentDocument = JsonDocument.Parse( data );
+
+				// Get data from the new document we want to save.
+				var saveableProperties = PropertyDescriptionsCache.GetPropertyDescriptionsForType( 
+					document.Data.GetType().ToString(), 
+					document.Data 
+				);
+				var propertyValuesMap = new Dictionary<string, object>();
+
+				foreach ( var property in saveableProperties )
+					propertyValuesMap.Add( property.Name, property.GetValue( document.Data ) );
+
+				var jsonData = new Dictionary<string, object>();
+
+				// Add data from the original JSON.
+				// If the new JSON has it too, use that instead.
+				foreach ( JsonProperty property in currentDocument.RootElement.EnumerateObject() )
+				{
+					if ( propertyValuesMap.ContainsKey( property.Name ) )
+						jsonData[property.Name] = propertyValuesMap[property.Name];
+					else
+						jsonData[property.Name] = property.Value;
+				}
+
+				// Serialize the merged data back to a JSON string.
+				finalJSONData = JsonSerializer.Serialize( jsonData );
+			}
+			else
+			{
+				// If no file exists for this record then we can just serialise the class directly.
+				finalJSONData = Serialisation.SerialiseClass( document.Data, document.DocumentType );
+			}
 
 			lock ( _collectionWriteLocks[document.CollectionName] )
 			{
-				IOProvider.WriteAllText( $"{Config.DATABASE_NAME}/{document.CollectionName}/{document.UID}", data );
+				IOProvider.WriteAllText( $"{Config.DATABASE_NAME}/{document.CollectionName}/{document.UID}", finalJSONData );
 			}
 
 			return null;

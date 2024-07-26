@@ -14,11 +14,13 @@ static class Initialisation
 
 	public static void Initialise()
 	{
+		if ( !Config.MERGE_JSON )
+			Logging.ScaryWarn( "Config.MERGE_JSON is set to false - this is dangerous" );
+
 		lock ( InitialisationLock )
 		{
 			if ( CurrentDatabaseState != DatabaseState.Uninitialised )
 				return; // Probably another thread already did all this.
-
 
 			if ( Config.STARTUP_SHUTDOWN_MESSAGES )
 			{

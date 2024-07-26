@@ -95,11 +95,5 @@ public class GenericSavedDataConverter : JsonConverter<object>
 
 		writer.WriteEndObject();
 	}
-
-	public override bool CanConvert( Type typeToConvert )
-	{
-		// Optionally, you can refine this method to return false for types that shouldn't use this converter
-		return true; // As a simple approach, return true to indicate it can convert any object
-	}
 }
 

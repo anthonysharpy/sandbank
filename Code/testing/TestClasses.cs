@@ -53,4 +53,10 @@ internal class TestClasses
 		[Saved] public DateTime LastPlayTime { get; set; }
 		[Saved] public List<string> Items { get; set; } = new();
 	}
+
+	public class ReadmeExampleWithFewerFields
+	{
+		[Saved] public string UID { get; set; }
+		[Saved] public float Health { get; set; }
+	}
 }
