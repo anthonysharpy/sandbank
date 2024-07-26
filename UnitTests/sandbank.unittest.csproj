@@ -47,7 +47,7 @@
   </PropertyGroup>
 
 	<ItemGroup>
-		<Analyzer Include="C:\Program Files (x86)\Steam\steamapps\common\sbox\bin\managed\Sandbox.Generator.dll"/>
+		<Analyzer Include="C:\Program Files (x86)\Steam\steamapps\common\sbox\bin\managed\Sandbox.Generator.dll" />
 		<Reference Include="C:\Program Files (x86)\Steam\steamapps\common\sbox\bin\managed/Sandbox.System.dll" />
 		<Reference Include="C:\Program Files (x86)\Steam\steamapps\common\sbox\bin\managed/Sandbox.Engine.dll" />
 		<Reference Include="C:\Program Files (x86)\Steam\steamapps\common\sbox\bin\managed/Sandbox.Game.dll" />
@@ -57,8 +57,8 @@
 	</ItemGroup>
 
   <ItemGroup>
+		<ProjectReference Include="..\Code\sandbank.csproj" />
 		<ProjectReference Include="C:\Program Files (x86)\Steam\steamapps\common\sbox\addons\tools\Code\Base Editor Library.csproj" />
-		<ProjectReference Include="C:\Users\antho\Documents\s&amp;box projects\sandbox_city\Libraries\sandbank\Code\sandbank.csproj" />
 
   </ItemGroup>
 
