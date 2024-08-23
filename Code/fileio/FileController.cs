@@ -87,7 +87,6 @@ internal static class FileController
 				);
 				var propertyValuesMap = new Dictionary<string, PropertyDescription>();
 
-				// property.GetValue( document.Data )
 				foreach ( var property in saveableProperties )
 					propertyValuesMap.Add( property.Name, property );
 
@@ -99,10 +98,10 @@ internal static class FileController
 				{
 					if ( propertyValuesMap.ContainsKey( oldDocumentProperty.Name ) )
 					{
+						// Prefer values from the newer document.
 						var value = propertyValuesMap[oldDocumentProperty.Name].GetValue( document.Data );
 						var type = propertyValuesMap[oldDocumentProperty.Name].PropertyType;
 
-						// Prefer values from the newer document.
 						jsonObject.Add( oldDocumentProperty.Name, JsonSerializer.SerializeToNode( value, type ) );
 					}
 					else
