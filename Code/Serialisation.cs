@@ -2,6 +2,7 @@
 using System;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace SandbankDatabase;
@@ -23,6 +24,11 @@ internal class Serialisation
 	public static T DeserialiseClass<T>( string data )
 	{
 		return JsonSerializer.Deserialize<T>( data, _jsonOptions );
+	}
+
+	public static string SerialiseJSONObject( JsonObject obj )
+	{
+		return obj.ToJsonString( _jsonOptions );
 	}
 
 	public static string SerialiseClass( object theClass, Type classType )

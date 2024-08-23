@@ -154,11 +154,8 @@ static internal class Cache
 
 	public static void Tick()
 	{
-		if ( Initialisation.CurrentDatabaseState != DatabaseState.Initialised
-			|| !_cacheWriteEnabled)
-		{
+		if ( Initialisation.CurrentDatabaseState != DatabaseState.Initialised || !_cacheWriteEnabled)
 			return;
-		}
 
 		GameTask.RunInThreadAsync( () => 
 		{

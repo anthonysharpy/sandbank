@@ -15,7 +15,7 @@ static class Initialisation
 	public static void Initialise()
 	{
 		if ( !Config.MERGE_JSON )
-			Logging.ScaryWarn( "Config.MERGE_JSON is set to false - this is dangerous" );
+			Logging.ScaryWarn( "Config.MERGE_JSON is set to false - this will delete data if you rename or remove a data field" );
 
 		lock ( InitialisationLock )
 		{

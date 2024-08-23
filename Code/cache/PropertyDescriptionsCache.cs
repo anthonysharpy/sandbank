@@ -29,6 +29,9 @@ internal static class PropertyDescriptionsCache
 			.Any( x => x.Name == "UID" );
 	}
 
+	/// <summary>
+	/// Returns type information for all [Saved] properties on this class instance.
+	/// </summary>
 	public static PropertyDescription[] GetPropertyDescriptionsForType( string classTypeName, object instance )
 	{
 		if ( _propertyDescriptionsCache.TryGetValue( classTypeName, out var properties ) )
