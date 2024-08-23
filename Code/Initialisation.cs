@@ -19,6 +19,8 @@ static class Initialisation
 			if ( CurrentDatabaseState != DatabaseState.Uninitialised )
 				return; // Probably another thread already did all this.
 
+			if ( !Config.MERGE_JSON )
+				Logging.ScaryWarn( "Config.MERGE_JSON is set to false - this will delete data if you rename or remove a data field" );
 
 			if ( Config.STARTUP_SHUTDOWN_MESSAGES )
 			{
@@ -35,7 +37,6 @@ static class Initialisation
 				Ticker.Initialise();
 
 				CurrentDatabaseState = DatabaseState.Initialised;
-
 
 				if ( Config.STARTUP_SHUTDOWN_MESSAGES )
 				{

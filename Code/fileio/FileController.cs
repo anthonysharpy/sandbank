@@ -1,8 +1,11 @@
-﻿using Sandbox.Internal;
+﻿using Sandbox;
+using Sandbox.Internal;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace SandbankDatabase;
 
@@ -57,17 +60,81 @@ internal static class FileController
 	}
 
 	/// <summary>
+	/// Save the document to file. We use a JSON merge strategy, so that if the current file has
+	/// data that this new document doesn't recognise, it is not lost (the JSON is merged).
+	/// This stops data from being wiped when doing things like renaming fields.
+	/// 
 	/// Returns null on success, or the error message on failure.
 	/// </summary>
 	public static string SaveDocument( Document document )
 	{
 		try
 		{
-			string data = Serialisation.SerialiseClass( document.Data, document.DocumentType );
+			string finalJSONData = "";
+
+			// Load document currently stored on disk, if there is one.
+			string data = Config.MERGE_JSON ?
+				IOProvider.ReadAllText( $"{Config.DATABASE_NAME}/{document.CollectionName}/{document.UID}" )
+				: null;
+
+			if ( Config.MERGE_JSON && data != null )
+			{
+				var currentDocument = JsonDocument.Parse( data );
+
+				// Get data from the new document we want to save.
+				var saveableProperties = PropertyDescriptionsCache.GetPropertyDescriptionsForType( 
+					document.Data.GetType().ToString(), document.Data 
+				);
+				var propertyValuesMap = new Dictionary<string, PropertyDescription>();
+
+				foreach ( var property in saveableProperties )
+					propertyValuesMap.Add( property.Name, property );
+
+				// Construct a new JSON object.
+				var jsonObject = new JsonObject();
+				
+				// Add data by iterating over fields of old version.
+				foreach ( var oldDocumentProperty in currentDocument.RootElement.EnumerateObject() )
+				{
+					if ( propertyValuesMap.ContainsKey( oldDocumentProperty.Name ) )
+					{
+						// Prefer values from the newer document.
+						var value = propertyValuesMap[oldDocumentProperty.Name].GetValue( document.Data );
+						var type = propertyValuesMap[oldDocumentProperty.Name].PropertyType;
+
+						jsonObject.Add( oldDocumentProperty.Name, JsonSerializer.SerializeToNode( value, type ) );
+					}
+					else
+					{
+						// If newer document doesn't have this field, use the value from old document.
+						jsonObject.Add( oldDocumentProperty.Name, JsonNode.Parse( oldDocumentProperty.Value.GetRawText() ) );
+					}
+				}
+
+				// Also add any new fields the old version might not have.
+				foreach ( var property in propertyValuesMap )
+				{
+					if ( !jsonObject.ContainsKey( property.Key ) )
+					{
+						var value = propertyValuesMap[property.Key].GetValue( document.Data );
+						var type = propertyValuesMap[property.Key].PropertyType;
+
+						jsonObject.Add( property.Key, JsonSerializer.SerializeToNode( value, type ) );
+					}
+				}
+
+				// Serialize the object we just created.
+				finalJSONData = Serialisation.SerialiseJSONObject( jsonObject );
+			}
+			else
+			{
+				// If no file exists for this record then we can just serialise the class directly.
+				finalJSONData = Serialisation.SerialiseClass( document.Data, document.DocumentType );
+			}
 
 			lock ( _collectionWriteLocks[document.CollectionName] )
 			{
-				IOProvider.WriteAllText( $"{Config.DATABASE_NAME}/{document.CollectionName}/{document.UID}", data );
+				IOProvider.WriteAllText( $"{Config.DATABASE_NAME}/{document.CollectionName}/{document.UID}", finalJSONData );
 			}
 
 			return null;

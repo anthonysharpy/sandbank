@@ -25,6 +25,7 @@ public static class Sandbank
 		{
 			Logging.Error( "only the host can initialise the database - set CLIENTS_CAN_USE to true in Config.cs" +
 				" if you want clients to be able to use the database too" );
+			return;
 		}
 
 		await GameTask.RunInThreadAsync( () =>
