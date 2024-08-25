@@ -11,7 +11,9 @@ public static class Sandbank
 	public static bool IsInitialised => Initialisation.CurrentDatabaseState == DatabaseState.Initialised;
 
 	/// <summary>
-	/// Initialises the database. You must call this manually on the host when the game starts:
+	/// Initialises the database. You don't have to call this manually as the database will do this for you
+	/// when you make your first request. However, you may want to call this manually when the server starts
+	/// if your database is particularly big, to avoid the game freezing when the first request is made. Example:
 	/// <br/><br/>
 	/// <strong>await Sandbank.InitialiseAsync()</strong>
 	/// <br/>
@@ -50,7 +52,7 @@ public static class Sandbank
 	public static void Insert<T>( string collection, T document ) where T : class
 	{		
 		if ( !IsInitialised )
-			throw new SandbankException( "Insert failed as the database is not yet initialised - check IsInitialised before making any requests" );
+			InitialiseAsync().GetAwaiter().GetResult();
 
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, true );
 
@@ -66,7 +68,7 @@ public static class Sandbank
 	public static void InsertMany<T>( string collection, IEnumerable<T> documents ) where T : class
 	{
 		if ( !IsInitialised )
-			throw new SandbankException( "operation failed as the database is not yet initialised - check IsInitialised before making any requests" );
+			InitialiseAsync().GetAwaiter().GetResult();
 
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, true );
 
@@ -85,7 +87,7 @@ public static class Sandbank
 	public static T SelectOne<T>( string collection, Func<T, bool> selector ) where T : class, new()
 	{
 		if ( !IsInitialised )
-			throw new SandbankException( "SelectOne failed as the database is not yet initialised - check IsInitialised before making any requests" );
+			InitialiseAsync().GetAwaiter().GetResult();
 
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
@@ -107,8 +109,8 @@ public static class Sandbank
 	public static T SelectOneWithID<T>( string collection, string uid ) where T : class, new()
 	{
 		if ( !IsInitialised )
-			throw new SandbankException( "SelectOneWithID failed as the database is not yet initialised - check IsInitialised before making any requests" );
-	
+			InitialiseAsync().GetAwaiter().GetResult();
+
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -127,8 +129,8 @@ public static class Sandbank
 	public static List<T> Select<T>( string collection, Func<T, bool> selector ) where T : class, new()
 	{
 		if ( !IsInitialised )
-			throw new SandbankException( "Select failed as the database is not yet initialised - check IsInitialised before making any requests" );
-		
+			InitialiseAsync().GetAwaiter().GetResult();
+
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 		List<T> output = new();
 
@@ -170,8 +172,8 @@ public static class Sandbank
 	public static List<T> SelectUnsafeReferences<T>( string collection, Func<T, bool> selector ) where T : class
 	{
 		if ( !IsInitialised )
-			throw new SandbankException( "SelectUnsafeReferences failed as the database is not yet initialised - check IsInitialised before making any requests" );
-		
+			InitialiseAsync().GetAwaiter().GetResult();
+
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 		List<T> output = new();
 
@@ -193,8 +195,8 @@ public static class Sandbank
 	public static void Delete<T>( string collection, Predicate<T> selector ) where T : class
 	{
 		if ( !IsInitialised )
-			throw new SandbankException( "Delete failed as the database is not yet initialised - check IsInitialised before making any requests" );
-		
+			InitialiseAsync().GetAwaiter().GetResult();
+
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -237,8 +239,8 @@ public static class Sandbank
 	public static void DeleteWithID<T>( string collection, string id) where T : class
 	{
 		if ( !IsInitialised )
-			throw new SandbankException( "DeleteWithID failed as the database is not yet initialised - check IsInitialised before making any requests" );
-		
+			InitialiseAsync().GetAwaiter().GetResult();
+
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -267,8 +269,8 @@ public static class Sandbank
 	public static bool Any<T>( string collection, Func<T, bool> selector ) where T : class
 	{
 		if ( !IsInitialised )
-			throw new SandbankException( "Any failed as the database is not yet initialised - check IsInitialised before making any requests" );
-		
+			InitialiseAsync().GetAwaiter().GetResult();
+
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 				
 		if ( relevantCollection == null )
@@ -289,8 +291,8 @@ public static class Sandbank
 	public static bool AnyWithID<T>( string collection, string id )
 	{
 		if ( !IsInitialised )
-			throw new SandbankException( "AnyWithID failed as the database is not yet initialised - check IsInitialised before making any requests" );
-		
+			InitialiseAsync().GetAwaiter().GetResult();
+
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -305,8 +307,8 @@ public static class Sandbank
 	public static void DeleteAllData()
 	{
 		if ( !IsInitialised )
-			throw new SandbankException( "DeleteAllData failed as the database is not yet initialised - check IsInitialised before making any requests" );
-		
+			InitialiseAsync().GetAwaiter().GetResult();
+
 		Cache.WipeStaticFields();
 
 		int attempt = 0;

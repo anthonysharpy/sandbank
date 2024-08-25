@@ -21,16 +21,6 @@ public partial class SandbankTest
 	}
 
 	[TestMethod]
-	public void WarnsIfDatabaseNotInitialised()
-	{
-		var document = new TestClasses.NullUIDClass();
-
-		var e = Assert.ThrowsException<SandbankException>( () => Sandbank.Insert( "nulluidtest", document ) );
-
-		Assert.AreEqual( "Insert failed as the database is not yet initialised - check IsInitialised before making any requests", e.Message );
-	}
-
-	[TestMethod]
 	public void SelectingUnitialisedCollectionReturnsEmptyList()
 	{
 		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
@@ -134,6 +124,28 @@ public partial class SandbankTest
 		Assert.AreEqual( 32, readmeExample.UID.Length );
 
 		var playerWith100Health = Sandbank.SelectOne<TestClasses.ReadmeExample>( "players", 
+			x => x.Health == 100 );
+
+		Assert.AreEqual( "Bob", playerWith100Health.Name );
+
+		Sandbank.DeleteWithID<TestClasses.ReadmeExample>( "players", playerWith100Health.UID );
+	}
+
+	[TestMethod]
+	public void DatabaseWorksWithoutInitialisation()
+	{
+		var readmeExample = new TestClasses.ReadmeExample();
+
+		Assert.AreEqual( null, readmeExample.UID );
+
+		readmeExample.Health = 100;
+		readmeExample.Name = "Bob";
+
+		Sandbank.Insert( "players", readmeExample );
+
+		Assert.AreEqual( 32, readmeExample.UID.Length );
+
+		var playerWith100Health = Sandbank.SelectOne<TestClasses.ReadmeExample>( "players",
 			x => x.Health == 100 );
 
 		Assert.AreEqual( "Bob", playerWith100Health.Name );
