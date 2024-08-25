@@ -16,6 +16,8 @@ Alternatively you can get the latest version of the source code from https://git
 
 # Usage
 
+### Basic introduction
+
 The database uses the document model. This means that data is saved as JSON files. It also means that there is no need to create SQL queries or do joins or anything like that.
 
 A "document" is just a class containing some data. For example, data for a specific player.
@@ -41,7 +43,7 @@ The basics you need to know:
 
 An example:
 
-### Data
+### Specifying your data
 ```
 // Note how this is also a component. This is the recommended way to do it.
 // If you store your data in a component you can sync it over the network as
@@ -87,7 +89,7 @@ public void SaveData()
 
 ### Using the Data
 
-If you fetch data from the database and want to put it in a component in the scene or something like that, you can either copy each field manually, or use the helper method `CopySavedData`, which will copy all `[Saved]` public properties:
+If you fetch data from the database and want to put it in a component in the scene or something like that, you can either copy each field yourself, or use the helper method `CopySavedData`, which will copy all `[Saved]` public properties:
 
 ```
 var player = GetOurPlayer(); // Get the player in the scene.
@@ -108,6 +110,27 @@ GameTask.RunInThreadAsync( () => {
 	// Do something.
 });
 ```
+
+If you find this doesn't suit your needs then please make an issue.
+
+### Renaming properties
+
+If you rename the properties in your data class, the data is not lost. For example, if you renamed a property called `Name` to `PlayerName`, the `Name` property will still be saved on file, and `PlayerName` will be created alongside it.
+
+This is good because it means you can't accidentally delete all your data. It's also bad because it makes it harder to remove old data from your database.
+
+In order to get around this, first start the database and migrate your data:
+
+```
+playerData.PlayerName = playerData.Name;
+Sandbank.Insert<PlayerData>("players", playerData);
+```
+
+Next, check the changes were applied and _**make a backup of your data**_. Make sure you don't have any other unused fields as they will get deleted next.
+
+Lastly, set `MERGE_JSON` in `Config.cs` to false. Then, start up the database again and wait a few seconds for the changes to take effect. The renamed data should be gone now.
+
+You must then set `MERGE_JSON` back to true, or it will spam warnings at you.
 
 # Performance
 
