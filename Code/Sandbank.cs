@@ -20,6 +20,9 @@ public static class Sandbank
 	/// or
 	/// <br/>
 	/// <strong>Sandbank.InitialiseAsync().GetAwaiter().GetResult()</strong>
+	/// <br/><br/>
+	/// It is perfectly safe to call this function many times from many different places; the database will only
+	/// be initialised once.
 	/// </summary>
 	public static async Task InitialiseAsync()
 	{
