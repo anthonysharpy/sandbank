@@ -3,11 +3,12 @@
   "Type": "library",
   "Org": "anthonysharpy",
   "Ident": "sandbank",
-  "Tags": "database",
   "Schema": 1,
+  "IncludeSourceFiles": false,
   "Resources": null,
   "PackageReferences": [],
   "EditorReferences": null,
+  "IsWhitelistDisabled": false,
   "Metadata": {
     "CsProjName": ""
   }
