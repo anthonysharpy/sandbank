@@ -31,8 +31,6 @@ Data files are saved in s&box's data folder. For example:
 The basics you need to know:
 - To configure the database and change some performance-related settings, you can modify `Config.cs` (the default settings will work very well for 95% of people).
 
-- You need to manually initialise the database when the game starts by calling `Sandbank.InitialiseAsync()`. This might take some time if you have lots of data; you can either use `await Sandbank.InitialiseAsync()` or `Sandbank.InitialiseAsync().GetAwaiter().GetResult()`. You can also check `Sandbank.IsInitialised` to see if the database has been initialised yet.
-
 - The data you want to save must be in a _**class**_. Structs are not supported. Structs are supported when used inside a class, though.
 
 - You can't use different class types with the same collection. It's one class per collection.
@@ -186,4 +184,4 @@ Please note that the project is not entirely open-source and there are some very
 # Learn More
 
 - [Database repair guide](RepairGuide.md)
-- [Advanced optimisation guide (TODO)]()
+- [Advanced optimisation guide](OptimisationGuide.md)
