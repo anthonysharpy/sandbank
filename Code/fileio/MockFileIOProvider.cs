@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace SandbankDatabase;
 
-internal class MockFileIOProvider : IFileIOProvider
+internal sealed class MockFileIOProvider : IFileIOProvider
 {
 	private MockDirectory _fileSystem = new();
 

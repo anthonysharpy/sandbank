@@ -1,5 +1,4 @@
 ﻿using SandbankDatabase;
-using Sandbox;
 using System.Collections.Generic;
 using System;
 
@@ -7,7 +6,7 @@ using System;
 /// We have to define these here because s&amp;box's type library can't recognise
 /// types defined outside the assembly.
 /// </summary>
-internal class TestClasses
+internal static class TestClasses
 {
 	public class NullUIDClass
 	{

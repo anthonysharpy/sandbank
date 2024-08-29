@@ -2,7 +2,7 @@
 
 namespace SandbankDatabase;
 
-internal class Shutdown
+internal static class Shutdown
 {
 	/// <summary>
 	/// S&amp;box doesn't automatically wipe static fields yet so we have to do this

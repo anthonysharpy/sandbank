@@ -2,7 +2,7 @@
 
 namespace SandbankDatabase;
 
-public class SandbankException : Exception
+public sealed class SandbankException : Exception
 {
 	public SandbankException( string message ) : base( message )
 	{

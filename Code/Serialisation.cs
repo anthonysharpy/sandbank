@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 
 namespace SandbankDatabase;
 
-internal class Serialisation
+internal static class Serialisation
 {
 	private static JsonSerializerOptions _jsonOptions = new()
 	{

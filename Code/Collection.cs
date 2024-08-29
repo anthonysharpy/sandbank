@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Threading;
 
 namespace SandbankDatabase;
 
-class Collection
+sealed class Collection
 {
 	/// <summary>
 	/// Due to s&amp;box restrictions we have to save a string of the class type.
