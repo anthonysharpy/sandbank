@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace SandbankDatabase;
 
-internal class FileIOProvider : IFileIOProvider
+internal sealed class FileIOProvider : IFileIOProvider
 {
 	public string ReadAllText( string file )
 	{

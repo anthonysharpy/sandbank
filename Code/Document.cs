@@ -3,7 +3,7 @@ using Sandbox.Internal;
 
 namespace SandbankDatabase;
 
-class Document
+sealed class Document
 {
 	/// <summary>
 	/// This is also stored embedded in the Data object, but we keep it

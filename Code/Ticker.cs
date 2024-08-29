@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace SandbankDatabase;
 
-internal class Ticker
+internal static class Ticker
 {
 	public static void Initialise()
 	{
