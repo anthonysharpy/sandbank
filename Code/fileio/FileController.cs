@@ -338,20 +338,31 @@ internal static class FileController
 	}
 
 	/// <summary>
-	/// Returns null on success, or the error message on failure.
+	/// Creates the directories needed for the database. Returns null on success, or the error message
+	/// on failure.
 	/// </summary>
 	public static string EnsureFileSystemSetup()
 	{
-		try
-		{
-			if ( !IOProvider.DirectoryExists( Config.DATABASE_NAME ) )
-				IOProvider.CreateDirectory( Config.DATABASE_NAME );
+		var attempt = 0;
+		string error = "";
 
-			return null;
-		}
-		catch ( Exception e )
+		while ( true )
 		{
-			return Logging.ExtractExceptionString( e );
+			try
+			{
+				if ( attempt++ >= 10 )
+					return "failed to ensure filesystem is setup after 10 tries: " + error;
+
+				// Create main directory.
+				if ( !IOProvider.DirectoryExists( Config.DATABASE_NAME ) )
+					IOProvider.CreateDirectory( Config.DATABASE_NAME );
+
+				return null;
+			}
+			catch ( Exception e )
+			{
+				error = Logging.ExtractExceptionString( e );
+			}
 		}
 	}
 }

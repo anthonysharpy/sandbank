@@ -32,7 +32,7 @@ static class Initialisation
 			{
 				Shutdown.WipeStaticFields();
 				FileController.Initialise();
-				EnsureFilesystemSetup();
+				FileController.EnsureFileSystemSetup();
 				LoadCollections();
 				Ticker.Initialise();
 
@@ -54,23 +54,6 @@ static class Initialisation
 					Log.Info( "==================================" );
 				}
 			}
-		}
-	}
-
-	private static void EnsureFilesystemSetup()
-	{
-		int attempt = 0;
-		string error = "";
-
-		while ( true )
-		{
-			if ( attempt++ >= 10 )
-				throw new SandbankException( "failed to ensure filesystem is setup after 10 tries: " + error );
-
-			error = FileController.EnsureFileSystemSetup();
-
-			if (error == null)
-				return;
 		}
 	}
 
