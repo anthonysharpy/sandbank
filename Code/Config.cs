@@ -100,5 +100,5 @@ static class Config
 	/// obfuscated. Files are only obfuscated/unobfuscated when they are saved, so changing this will have no impact
 	/// on files until those files are re-saved.
 	/// </summary>
-	public static bool OBFUSCATE_FILES = true;
+	public static bool OBFUSCATE_FILES = false;
 }
