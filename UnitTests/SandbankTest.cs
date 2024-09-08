@@ -1,8 +1,9 @@
-using Sandbox;
+﻿using Sandbox;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static Sandbox.CompileGroup;
 using static TestClasses;
 
 namespace SandbankDatabase;
@@ -18,6 +19,166 @@ public partial class SandbankTest
 
 		Sandbank.DeleteAllData();
 		Sandbank.Shutdown();
+	}
+
+	[TestMethod]
+	public void TextObfuscationWorks()
+	{
+		var text = Obfuscation.ObfuscateFileText( "Wow! I love bacon! 豚肉が美味しい！" );
+		text = Obfuscation.UnobfuscateFileText( text );
+
+		Assert.AreEqual( "Wow! I love bacon! 豚肉が美味しい！", text );
+	}
+
+	[TestMethod]
+	public void TextObfuscationWorks_WithRealisticExample()
+	{
+		var original = @"{
+  ""UID"": ""76561197997412036"",
+  ""Health"": 100,
+  ""BankBalance"": 0,
+  ""Cash"": 10000,
+  ""LastOnline"": ""2024-09-08T02:40:07.3391207\u002B01:00"",
+  ""PlayerName"": ""anthonysharpy"",
+  ""JumpCount"": 0,
+  ""LivingThingsKilledCount"": 0,
+  ""Achievements"": [],
+  ""Hunger"": 100,
+  ""EnduranceSkillLevel"": 0,
+  ""EnduranceSkillLastDeterioratedTime"": 0,
+  ""CompletedQuests"": [],
+  ""StoredItems"": [
+    {
+      ""Rarity"": 1,
+      ""BackgroundColour"": ""0.9071,0.79477,0.33716,0.3"",
+      ""UniqueID"": ""a70f35fa-cbdf-420e-9523-efce79e9c4c1"",
+      ""XPos"": -1,
+      ""YPos"": -1,
+      ""Durability"": 100,
+      ""Price"": 0,
+      ""ItemName"": ""Fists"",
+      ""PickupDisabled"": false,
+      ""AmmoInClip"": 0
+    },
+    {
+      ""Rarity"": 1,
+      ""BackgroundColour"": ""0.61983,0.48797,0.19491,0.3"",
+      ""UniqueID"": ""51becde0-ab0d-4103-b0d0-689eecfc5e00"",
+      ""XPos"": -1,
+      ""YPos"": -1,
+      ""Durability"": 100,
+      ""Price"": 0,
+      ""ItemName"": ""Item Placer"",
+      ""PickupDisabled"": false,
+      ""AmmoInClip"": 0
+    },
+    {
+      ""Rarity"": 3,
+      ""BackgroundColour"": ""0.15048,0.9476,0.72171,0.3"",
+      ""UniqueID"": ""8a73055a-ae58-4759-9172-afeb5d73de61"",
+      ""XPos"": 0,
+      ""YPos"": 0,
+      ""Durability"": 100,
+      ""Price"": 0,
+      ""ItemName"": ""Grenade"",
+      ""PickupDisabled"": false,
+      ""AmmoInClip"": 0
+    },
+    {
+      ""Rarity"": 3,
+      ""BackgroundColour"": ""0.78122,0.13411,0.26792,0.3"",
+      ""UniqueID"": ""f859ae80-e14b-43f9-af88-3887635efc63"",
+      ""XPos"": 1,
+      ""YPos"": 0,
+      ""Durability"": 100,
+      ""Price"": 0,
+      ""ItemName"": ""Grenade"",
+      ""PickupDisabled"": false,
+      ""AmmoInClip"": 0
+    },
+    {
+      ""Rarity"": 3,
+      ""BackgroundColour"": ""0.30573,0.77256,0.48727,0.3"",
+      ""UniqueID"": ""cbe5b32d-7afb-4b09-98c5-0b1eec6688bb"",
+      ""XPos"": 2,
+      ""YPos"": 0,
+      ""Durability"": 100,
+      ""Price"": 0,
+      ""ItemName"": ""MP5"",
+      ""PickupDisabled"": false,
+      ""AmmoInClip"": 0
+    },
+    {
+      ""Rarity"": 3,
+      ""BackgroundColour"": ""0.57136,0.81519,0.96548,0.3"",
+      ""UniqueID"": ""dbe6f248-7eae-4e58-9ce4-800b6e73721b"",
+      ""XPos"": 6,
+      ""YPos"": 0,
+      ""Durability"": 100,
+      ""Price"": 0,
+      ""ItemName"": ""Grenade"",
+      ""PickupDisabled"": false,
+      ""AmmoInClip"": 0
+    },
+    {
+      ""Rarity"": 3,
+      ""BackgroundColour"": ""0.17717,0.17827,0.75903,0.3"",
+      ""UniqueID"": ""e6aa5962-c1bf-4326-b22e-1edee07f2d98"",
+      ""XPos"": 0,
+      ""YPos"": 1,
+      ""Durability"": 100,
+      ""Price"": 0,
+      ""ItemName"": ""Grenade"",
+      ""PickupDisabled"": false,
+      ""AmmoInClip"": 0
+    },
+    {
+      ""Rarity"": 3,
+      ""BackgroundColour"": ""0.97016,0.52173,0.33395,0.3"",
+      ""UniqueID"": ""2531c680-e2c5-49ad-aa88-b86446e518ea"",
+      ""XPos"": 1,
+      ""YPos"": 1,
+      ""Durability"": 100,
+      ""Price"": 0,
+      ""ItemName"": ""Ammo"",
+      ""PickupDisabled"": false,
+      ""AmmoInClip"": 0
+    },
+    {
+      ""Rarity"": 3,
+      ""BackgroundColour"": ""0.87892,0.43858,0.34768,0.3"",
+      ""UniqueID"": ""b2a04888-e0da-4d16-a877-89ca0e201e4d"",
+      ""XPos"": 6,
+      ""YPos"": 1,
+      ""Durability"": 100,
+      ""Price"": 0,
+      ""ItemName"": ""Ammo"",
+      ""PickupDisabled"": false,
+      ""AmmoInClip"": 0
+    },
+    {
+      ""Rarity"": 3,
+      ""BackgroundColour"": ""0.04801,0.02349,0.17021,0.3"",
+      ""UniqueID"": ""4f484a7c-d7b7-4df7-9557-cbce6188d3f9"",
+      ""XPos"": 0,
+      ""YPos"": 2,
+      ""Durability"": 100,
+      ""Price"": 0,
+      ""ItemName"": ""Grenade"",
+      ""PickupDisabled"": false,
+      ""AmmoInClip"": 0
+    }
+  ],
+  ""EquippedItemID"": ""30cf9992-1c8e-4330-b79c-090681fcbeeb"",
+  ""CurrentlyEquippedSlot"": -1,
+  ""CurrentlyEquippedSlotIndex"": 0,
+  ""Stamina"": 100
+}";
+
+		var text = Obfuscation.ObfuscateFileText( original );
+		text = Obfuscation.UnobfuscateFileText( text );
+
+		Assert.AreEqual( original, text );
 	}
 
 	[TestMethod]
@@ -130,6 +291,31 @@ public partial class SandbankTest
 
 		Sandbank.DeleteWithID<TestClasses.ReadmeExample>( "players", playerWith100Health.UID );
 	}
+
+	[TestMethod]
+	public void SavingAndLoadingWorksWithObfuscation()
+	{
+		Config.OBFUSCATE_FILES = true;
+
+		var readmeExample = new TestClasses.ReadmeExample();
+
+		Assert.AreEqual( null, readmeExample.UID );
+
+		readmeExample.Health = 100;
+		readmeExample.Name = "Bob";
+
+		Sandbank.Insert( "players", readmeExample );
+
+		Assert.AreEqual( 32, readmeExample.UID.Length );
+
+		var playerWith100Health = Sandbank.SelectOne<TestClasses.ReadmeExample>( "players",
+			x => x.Health == 100 );
+
+		Assert.AreEqual( "Bob", playerWith100Health.Name );
+
+		Sandbank.DeleteWithID<TestClasses.ReadmeExample>( "players", playerWith100Health.UID );
+	}
+
 
 	[TestMethod]
 	public void DatabaseWorksWithoutInitialisation()

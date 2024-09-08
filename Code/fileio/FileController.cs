@@ -77,6 +77,9 @@ internal static class FileController
 				IOProvider.ReadAllText( $"{Config.DATABASE_NAME}/{document.CollectionName}/{document.UID}" )
 				: null;
 
+			if ( data[0] == 'O' )
+				data = Obfuscation.UnobfuscateFileText( data );
+
 			if ( Config.MERGE_JSON && data != null )
 			{
 				var currentDocument = JsonDocument.Parse( data );
@@ -131,6 +134,9 @@ internal static class FileController
 				// If no file exists for this record then we can just serialise the class directly.
 				finalJSONData = Serialisation.SerialiseClass( document.Data, document.DocumentType );
 			}
+
+			if ( Config.OBFUSCATE_FILES )
+				finalJSONData = Obfuscation.ObfuscateFileText( finalJSONData );
 
 			lock ( _collectionWriteLocks[document.CollectionName] )
 			{
@@ -232,6 +238,9 @@ internal static class FileController
 				foreach ( var file in files )
 				{
 					var contents = IOProvider.ReadAllText( $"{Config.DATABASE_NAME}/{collection.CollectionName}/{file}" );
+
+					if ( contents[0] == 'O' )
+						contents = Obfuscation.UnobfuscateFileText( contents );
 
 					try
 					{

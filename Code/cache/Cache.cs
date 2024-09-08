@@ -64,11 +64,11 @@ static internal class Cache
 	{
 		lock (WriteInProgressLock)
 		{
-			_collections = new();
+			_collections.Clear();
 			_timeSinceLastFullWrite = 0;
 			_staleDocumentsFoundAfterLastFullWrite = 0;
 			_staleDocumentsWrittenSinceLastFullWrite = 0;
-			StaleDocuments = new();
+			StaleDocuments.Clear();
 			_partialWriteInterval = 1f / Config.PARTIAL_WRITES_PER_SECOND;
 			_timeSinceLastPartialWrite = 0;
 		}
