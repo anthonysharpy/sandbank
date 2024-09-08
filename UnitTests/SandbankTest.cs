@@ -317,7 +317,6 @@ public partial class SandbankTest
 		Sandbank.DeleteWithID<TestClasses.ReadmeExample>( "players", playerWith100Health.UID );
 	}
 
-
 	[TestMethod]
 	public void DatabaseWorksWithoutInitialisation()
 	{
