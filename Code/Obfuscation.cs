@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace SandbankDatabase; 
 
 static class Obfuscation
 {
+	[MethodImpl( MethodImplOptions.AggressiveInlining )]
 	private static int[] GenerateShiftMask()
 	{
 		int[] result = new int[32];
@@ -14,6 +16,7 @@ static class Obfuscation
 		return result;
 	}
 
+	[MethodImpl( MethodImplOptions.AggressiveInlining )]
 	public static string ObfuscateFileText( string originalText )
 	{
 		var textArray = originalText.ToCharArray();
@@ -33,6 +36,7 @@ static class Obfuscation
 		return $"OBFS|{string.Join( '-', shiftMask )}|{new string(textArray) }";
 	}
 
+	[MethodImpl( MethodImplOptions.AggressiveInlining )]
 	public static string UnobfuscateFileText( string obfuscatedText )
 	{
 		var maskStart = obfuscatedText.IndexOf( '|' )+1;
