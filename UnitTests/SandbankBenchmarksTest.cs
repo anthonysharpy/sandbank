@@ -1,4 +1,4 @@
-using Sandbox;
+﻿using Sandbox;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -25,6 +25,34 @@ public partial class SandbankBenchmarksTest
 	{
 		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
 		Sandbank.DeleteAllData();
+	}
+
+	[TestMethod]
+	public void BenchmarkObfuscation()
+	{
+		var text = Obfuscation.ObfuscateFileText( "Wow! I love bacon! 豚肉が美味しい！" +
+			 "Wow! I love bacon! 豚肉が美味しい！" +
+			 "Wow! I love bacon! 豚肉が美味しい！" +
+			 "Wow! I love bacon! 豚肉が美味しい！" +
+			 "Wow! I love bacon! 豚肉が美味しい！" +
+			 "Wow! I love bacon! 豚肉が美味しい！" +
+			 "Wow! I love bacon! 豚肉が美味しい！" +
+			 "Wow! I love bacon! 豚肉が美味しい！" +
+			 "Wow! I love bacon! 豚肉が美味しい！" +
+			 "Garry Newman HATES bacon.... LOL!" +
+			 "Wow! I love bacon! 豚肉が美味しい！" +
+			 "Wow! I love bacon! 豚肉が美味しい！" +
+			 "Wow! I love bacon! 豚肉が美味しい！" +
+			 "Wow! I love bacon! 豚肉が美味しい！" +
+			 "Wow! I love bacon! 豚肉が美味しい！" +
+			 "Wow! I love bacon! 豚肉が美味しい！"
+		);
+
+		for (int i = 0; i < 10000; i++ )
+		{
+			text = Obfuscation.ObfuscateFileText( text );
+			text = Obfuscation.UnobfuscateFileText( text );
+		}
 	}
 
 	[TestMethod]
