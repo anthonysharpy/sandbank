@@ -35,11 +35,7 @@ static class Obfuscation
 				maskN = 0;
 		}
 
-		var maskString = "";
-
-		maskString = string.Join('-', shiftMask);
-
-		return $"OBFS|{maskString}|{new string( textArray )}";
+		return $"OBFS|{string.Join( '-', shiftMask )}|{new string( textArray )}";
 	}
 
 	public static string UnobfuscateFileText( string obfuscatedText )

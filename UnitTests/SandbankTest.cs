@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using static Sandbox.CompileGroup;
 using static TestClasses;
 
 namespace SandbankDatabase;
@@ -14,6 +13,8 @@ public partial class SandbankTest
 	[TestCleanup]
 	public void Cleanup()
 	{
+		Config.OBFUSCATE_FILES = false;
+
 		if ( !Sandbank.IsInitialised )
 			Sandbank.InitialiseAsync().GetAwaiter().GetResult();
 
