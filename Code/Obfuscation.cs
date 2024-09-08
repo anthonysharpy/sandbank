@@ -9,9 +9,7 @@ static class Obfuscation
 		int[] result = new int[32];
 
 		for (int i = 0; i < 32; i++)
-		{
 			result[i] = Random.Shared.Next(256);
-		}
 
 		return result;
 	}
@@ -29,13 +27,10 @@ static class Obfuscation
 			if ( textArray[i] > char.MaxValue )
 				textArray[i] = (char)(textArray[i] - char.MaxValue);
 
-			maskN++;
-
-			if ( maskN >= 32 )
-				maskN = 0;
+			maskN = (maskN + 1) % 32;
 		}
 
-		return $"OBFS|{string.Join( '-', shiftMask )}|{new string( textArray )}";
+		return $"OBFS|{string.Join( '-', shiftMask )}|{new string(textArray) }";
 	}
 
 	public static string UnobfuscateFileText( string obfuscatedText )
@@ -50,7 +45,7 @@ static class Obfuscation
 		for ( int i = 0; i < 32; i++ )
 			shiftMask[i] = int.Parse( maskParts[i] );
 
-		var textArray = obfuscatedText.ToCharArray();
+		var textArray = obfuscatedText.ToCharArray().AsSpan();
 		var maskN = 0;
 
 		for ( int c = maskEnd+2; c < textArray.Length; c++ )
@@ -60,12 +55,9 @@ static class Obfuscation
 			if ( textArray[c] < 0 )
 				textArray[c] = (char)(textArray[c] + char.MaxValue);
 
-			maskN++;
-
-			if ( maskN >= 32 )
-				maskN = 0;
+			maskN = ( maskN + 1 ) % 32;
 		}
 
-		return new string( textArray.AsSpan(maskEnd+2) );
+		return new string( textArray.Slice(maskEnd+2) );
 	}
 }

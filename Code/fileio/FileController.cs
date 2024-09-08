@@ -77,7 +77,7 @@ internal static class FileController
 				IOProvider.ReadAllText( $"{Config.DATABASE_NAME}/{document.CollectionName}/{document.UID}" )
 				: null;
 
-			if ( data[0] == 'O' )
+			if ( data != null && data[0] == 'O' )
 				data = Obfuscation.UnobfuscateFileText( data );
 
 			if ( Config.MERGE_JSON && data != null )
