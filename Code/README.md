@@ -87,7 +87,7 @@ public void SaveData()
 }
 ```
 
-### Using the Data
+### Using the data
 
 If you fetch data from the database and want to put it in a component in the scene or something like that, you can either copy each field yourself, or use the helper method `CopySavedData`, which will copy all `[Saved]` public properties:
 
@@ -97,7 +97,7 @@ var ourPlayerData = Sandbank.SelectOneWithID<PlayerData>("players", "123");
 Sandbank.CopySavedData<PlayerData>(ourPlayerData, player.Data);
 ```
 
-### Slow Queries
+### Slow queries
 
 A well-designed query should return instantly.
 
@@ -174,6 +174,11 @@ The disk space used is less than the amount of memory used. Changes to the cache
 Data is written to disk slowly over time. The frequency at which this is done, as well as a number of other things, is configurable in `Config.cs`. By default, the database aims to write any change to disk in under 10 seconds.
 
 Sandbank attempts to shut itself down gracefully in the background when the server stops. However, it is still recommended to call `Shutdown()` before an anticipated server shutdown to ensure that the database is terminated properly. If the server crashes or if the server process is suddenly terminated, any data that is not written to disk by that point is lost.
+
+# Features at a glance
+
+- Ability to store data on the client and/or server.
+- Optional file obfuscation to prevent players tampering with locally-stored files.
 
 # Contributions
 
