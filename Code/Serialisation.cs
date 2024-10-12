@@ -48,7 +48,7 @@ public class GenericSavedDataConverter : JsonConverter<object>
 	{
 		var instance = GlobalGameNamespace.TypeLibrary.Create<object>( typeToConvert );
 		var properties = GlobalGameNamespace.TypeLibrary.GetPropertyDescriptions( instance, true )
-			.Where( prop => prop.Attributes.Any( a => a is Saved ) );
+			.Where( prop => prop.Attributes.Any( a => a is Saved || a is AutoSaved ) );
 
 		if ( reader.TokenType != JsonTokenType.StartObject )
 		{
@@ -91,7 +91,7 @@ public class GenericSavedDataConverter : JsonConverter<object>
 		writer.WriteStartObject();
 
 		var properties = GlobalGameNamespace.TypeLibrary.GetPropertyDescriptions( value )
-			.Where( prop => prop.Attributes.Any( a => a is Saved ) );
+			.Where( prop => prop.Attributes.Any( a => a is Saved || a is AutoSaved ) );
 
 		foreach ( var prop in properties )
 		{

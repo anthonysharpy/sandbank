@@ -25,12 +25,12 @@ internal static class PropertyDescriptionsCache
 			return true;
 
 		return GlobalGameNamespace.TypeLibrary.GetPropertyDescriptions( instance )
-			.Where( prop => prop.Attributes.Any( a => a is Saved ) )
+			.Where( prop => prop.Attributes.Any( a => a is Saved || a is AutoSaved ) )
 			.Any( x => x.Name == "UID" );
 	}
 
 	/// <summary>
-	/// Returns type information for all [Saved] properties on this class instance.
+	/// Returns type information for all [Saved] and [AutoSaved] properties on this class instance.
 	/// </summary>
 	public static PropertyDescription[] GetPropertyDescriptionsForType( string classTypeName, object instance )
 	{
@@ -38,7 +38,7 @@ internal static class PropertyDescriptionsCache
 			return properties;
 
 		properties = GlobalGameNamespace.TypeLibrary.GetPropertyDescriptions( instance )
-			.Where( prop => prop.Attributes.Any( a => a is Saved ) )
+			.Where( prop => prop.Attributes.Any( a => a is Saved || a is AutoSaved ) )
 			.ToArray();
 
 		// Only cache if this is a valid type with a UID property.
