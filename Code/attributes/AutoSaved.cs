@@ -2,13 +2,12 @@
 using Sandbox.Internal;
 using System;
 using System.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SandbankDatabase;
 
 /// <summary>
 /// Add this attribute to a property to allow it to be saved to file. When the property
-/// is modified, the whole class will be saved to file
+/// is modified, the whole class will be saved to file. Nothing will happen if the UID is not set.
 /// 
 /// While this is the most convenient approach, as this will save the document every time data
 /// is changed, this will generally perform worse than [Saved].
