@@ -36,7 +36,6 @@ sealed class Document
 		else
 		{
 			UID = Guid.NewGuid().ToString().Replace( "-", "" );
-			Log.Info( "erm wtf creating " + UID );
 
 			// We DO want to modify the UID of the passed-in reference.
 			GlobalGameNamespace.TypeLibrary.SetProperty( data, "UID", UID );

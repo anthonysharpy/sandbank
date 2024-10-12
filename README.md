@@ -45,7 +45,7 @@ The basics you need to know:
 
 There are two ways to save data with Sandbank.
 
-The first way is the covenient but potentially less performant way. You attach the `[AutoSaved]` attribute to each property you want to save. In the attribute you must specify the name of the collection you want the data to be saved in (e.g. `[AutoSaved("players")]`). Whenever that property is updated, the data is saved to file automatically. The reason this is slower is because if the property is updated often, there can be an excessive amount of inserts. ***Note that `[AutoSaved]` will not do anything if the UID is empty (saving the record will populate the UID automatically, or you can populate it yourself)***.
+The first way is the convenient but potentially less performant way. You attach the `[AutoSaved]` attribute to each property you want to save. In the attribute you must specify the name of the collection you want the class to be saved in (e.g. `[AutoSaved("players")]`). Whenever that property is updated, the data is saved to file automatically. The reason this is slower is because if the property is updated often, there can be an excessive amount of inserts. ***Note that `[AutoSaved]` will not do anything if the UID is empty (saving the record will populate the UID automatically, or you can populate it yourself)***.
 
 The second way is the less convenient but more performant way. You attach the `[Saved]` attribute to your property. You then have to manually insert the data into the database in order to actually save it. You can do this straight away, or if you want to maximise performance, you might save all your data every few seconds in a background loop.
 
