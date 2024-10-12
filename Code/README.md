@@ -184,6 +184,11 @@ Data is written to disk slowly over time. The frequency at which this is done, a
 
 Sandbank attempts to shut itself down gracefully in the background when the server stops. However, it is still recommended to call `Shutdown()` before an anticipated server shutdown to ensure that the database is terminated properly. If the server crashes or if the server process is suddenly terminated, any data that is not written to disk by that point is lost.
 
+# Features at a glance
+
+- Ability to store data on the client and/or server.
+- Optional file obfuscation to prevent players tampering with locally-stored files.
+
 # Contributions
 
 Contributions are more than welcome. Also, feel free to ask questions or raise issues on the GitHub page: https://github.com/anthonysharpy/sandbank. If you do want to contribute something, it's probably a good idea to raise an issue first.
