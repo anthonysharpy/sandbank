@@ -13,6 +13,7 @@ internal static class Shutdown
 		Cache.WipeStaticFields();
 		ObjectPool.WipeStaticFields();
 		PropertyDescriptionsCache.WipeStaticFields();
+		SandbankAutoSavedEventHandler.WipeStaticFields();
 	}
 
 	public static void ShutdownDatabase()

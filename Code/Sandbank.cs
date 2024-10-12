@@ -60,7 +60,22 @@ public static class Sandbank
 
 		Document newDocument = new( document, typeof(T), true, collection );
 		relevantCollection.InsertDocument( newDocument );
-		return;
+	}
+
+	/// <summary>
+	/// Insert a document into the database. The document will have its ID set if it is empty.
+	/// 
+	/// For internal use.
+	/// </summary>
+	internal static void Insert( string collection, object document, Type documentType )
+	{ 
+		if ( !IsInitialised )
+			InitialiseAsync().GetAwaiter().GetResult();
+
+		var relevantCollection = Cache.GetCollectionByName( collection, true, documentType );
+
+		Document newDocument = new( document, documentType, true, collection );
+		relevantCollection.InsertDocument( newDocument );
 	}
 
 	/// <summary>
@@ -79,8 +94,6 @@ public static class Sandbank
 			Document newDocument = new Document( document, typeof(T), true, collection );
 			relevantCollection.InsertDocument( newDocument );
 		}
-
-		return;
 	}
 
 	/// <summary>
@@ -231,8 +244,6 @@ public static class Sandbank
 					break;
 			}
 		}
-
-		return;
 	}
 
 	/// <summary>
@@ -260,8 +271,6 @@ public static class Sandbank
 			if ( FileController.DeleteDocument( collection, id ) == null )
 				break;
 		}
-
-		return;
 	}
 
 	/// <summary>

@@ -35,15 +35,24 @@ The basics you need to know:
 
 - You can't use different class types with the same collection. It's one class per collection.
 
-- Any data you want saved must be a public property with the `[Saved]` attribute. If you're putting it on something like a class or a List of classes, all public properties in those classes will get saved. If you don't want this, you can add the `[JsonIgnore]` attribute probably to the properties you don't want saved (I will probably add more control over this later).
+- Any data you want saved must be a public property with the `[Saved]` or `[AutoSaved]` attribute. If you're putting it on something like a class or a List of classes, all public properties in those classes will get saved. If you don't want this, you can add the `[JsonIgnore]` attribute probably to the properties you don't want saved (I will probably add more control over this later).
 
-- Every document _**must**_ have a _**public string property**_ called "UID" (unique ID) . This is the _**unique**_ primary ID of the document and is also used as the document's file name. You can set this to be whatever you want. For example, you might want it to be a player's Steam ID. Alternatively, you can leave it empty, and the database will automatically populate the ID for you as a random GUID.
+- Every document _**must**_ have a _**public string property**_ called "UID" (unique ID). This is the _**unique**_ primary ID of the document and is also used as the document's file name. You can set this to be whatever you want. For example, you might want it to be a player's Steam ID. Alternatively, you can leave it empty, and the database will automatically populate the ID for you as a random GUID.
 
-- When your server is _**switched-off**_, you can easily edit your data just by editing the files.
+- When your server is ***switched-off***, you can easily edit your data just by editing the files.
 
-An example:
+### Saving your data
 
-### Specifying your data
+There are two ways to save data with Sandbank.
+
+The first way is the convenient but potentially less performant way. You attach the `[AutoSaved]` attribute to each property you want to save. In the attribute you must specify the name of the collection you want the class to be saved in (e.g. `[AutoSaved("players")]`). Whenever that property is updated, the data is saved to file automatically. The reason this is slower is because if the property is updated often, there can be an excessive amount of inserts. ***Note that `[AutoSaved]` will not do anything if the UID is empty (saving the record will populate the UID automatically, or you can populate it yourself)***.
+
+The second way is the less convenient but more performant way. You attach the `[Saved]` attribute to your property. You then have to manually insert the data into the database in order to actually save it. You can do this straight away, or if you want to maximise performance, you might save all your data every few seconds in a background loop.
+
+In practice, unless you are making a game with lots of players or lots of things that need to be saved, `[AutoSaved]` will probably be fine for you.
+
+Here is an example of tagging data using both `[Saved]` and `[AutoSaved]`:
+
 ```
 // Note how this is also a component. This is the recommended way to do it.
 // If you store your data in a component you can sync it over the network as
@@ -53,14 +62,14 @@ class PlayerData : Component
 {
 	[Saved] public string UID { get; set; }
 	[Saved, Sync] public float Health { get; set; }
-	[Saved, Sync] public string Name { get; set; }
+	[AutoSaved("players")], Sync] public string Name { get; set; }
 	[Saved, Sync] public int Level { get; set; }
 	[Saved] public DateTime LastPlayTime { get; set; }
 	[Saved, Sync] public List<string> Items { get; set; } = new();
 }
 ```
 
-### Querying
+### Inserting, querying and deleting
 ```
 using SandbankDatabase;
 
@@ -89,7 +98,7 @@ public void SaveData()
 
 ### Using the data
 
-If you fetch data from the database and want to put it in a component in the scene or something like that, you can either copy each field yourself, or use the helper method `CopySavedData`, which will copy all `[Saved]` public properties:
+If you fetch data from the database and want to put it in a component in the scene or something like that, you can either copy each field yourself, or use the helper method `CopySavedData`, which will copy all `[Saved]` and `[AutoSaved]` public properties:
 
 ```
 var player = GetOurPlayer(); // Get the player in the scene.
@@ -101,7 +110,7 @@ Sandbank.CopySavedData<PlayerData>(ourPlayerData, player.Data);
 
 A well-designed query should return instantly.
 
-However, if you're doing something really hardcore, you should consider wrapping the call in its own thread:
+However, if you're doing something really hardcore, you should consider wrapping the call in its own thread or async task:
 
 ```
 GameTask.RunInThreadAsync( () => {

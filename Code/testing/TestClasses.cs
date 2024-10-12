@@ -43,6 +43,16 @@ internal static class TestClasses
 		[Saved] public int Health { get; set; }
 	}
 
+	public class AutoSavedReadmeExample
+	{
+		[AutoSaved( "example" )] public string UID { get; set; }
+		[AutoSaved( "example" )] public float Health { get; set; }
+		[AutoSaved( "example" )] public string Name { get; set; }
+		[AutoSaved( "example" )] public int Level { get; set; }
+		[AutoSaved( "example" )] public DateTime LastPlayTime { get; set; }
+		[AutoSaved( "example" )] public List<string> Items { get; set; } = new();
+	}
+
 	public class ReadmeExample
 	{
 		[Saved] public string UID { get; set; }

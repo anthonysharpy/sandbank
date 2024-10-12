@@ -76,12 +76,17 @@ static internal class Cache
 
 	public static Collection GetCollectionByName<T>( string name, bool createIfDoesntExist )
 	{
+		return GetCollectionByName( name, createIfDoesntExist, typeof(T ) );
+	}
+
+	public static Collection GetCollectionByName( string name, bool createIfDoesntExist, Type documentType )
+	{
 		if ( !_collections.ContainsKey( name ) )
 		{
 			if ( createIfDoesntExist )
 			{
 				Logging.Log( $"creating new collection \"{name}\"" );
-				CreateCollection( name, typeof( T ) );
+				CreateCollection( name, documentType );
 			}
 			else
 			{

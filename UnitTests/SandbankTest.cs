@@ -253,6 +253,30 @@ public partial class SandbankTest
 	}
 
 	[TestMethod]
+	public void CopySavedData_WorksForAutoSavedProperties()
+	{
+		var document1 = new AutoSavedReadmeExample();
+		document1.Health = 50;
+		document1.Name = "Steve";
+		document1.UID = "blahblah";
+		document1.Items = new List<string>{ "banana", "gun", "shoe" };
+
+		var document2 = new AutoSavedReadmeExample();
+
+		Assert.AreEqual( 0, document2.Health );
+		Assert.AreEqual( null, document2.Name );
+		Assert.AreEqual( null, document2.UID );
+		Assert.AreEqual( 0, document2.Items.Count );
+
+		Sandbank.CopySavedData<AutoSavedReadmeExample>( document1, document2 );
+
+		Assert.AreEqual( 50, document2.Health );
+		Assert.AreEqual( "Steve", document2.Name );
+		Assert.AreEqual( "blahblah", document2.UID );
+		Assert.AreEqual( 3, document2.Items.Count );
+	}
+
+	[TestMethod]
 	public void CantGetDifferentClassTypesFromSameCollection()
 	{
 		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
@@ -291,6 +315,36 @@ public partial class SandbankTest
 		Assert.AreEqual( "Bob", playerWith100Health.Name );
 
 		Sandbank.DeleteWithID<TestClasses.ReadmeExample>( "players", playerWith100Health.UID );
+	}
+
+	[TestMethod]
+	public void AutoSavedWorks()
+	{
+		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
+
+		var data = new AutoSavedReadmeExample();
+		data.Health = 57;
+		data.UID = "91246385";
+
+		// Mock all this since codegen doesn't seem to work during tests.
+		var property = new Sandbox.WrappedPropertySet<float>()
+		{
+			Setter = ( float value ) => data.Health = value,
+			Value = 57,
+			Object = data,
+			PropertyName = "Health",
+			Attributes = new Attribute[]
+			{
+				new AutoSaved("example")
+			}
+		};
+
+		SandbankAutoSavedEventHandler.AutoSave( property );
+
+		var fetchedData = Sandbank.Select<AutoSavedReadmeExample>( "example", x => x.Health == 57 );
+
+		Assert.AreEqual( 1, fetchedData.Count );
+		Assert.AreEqual( 8, fetchedData[0].UID.Length );
 	}
 
 	[TestMethod]
@@ -436,6 +490,75 @@ public partial class SandbankTest
 		data = Sandbank.SelectOneWithID<ReadmeExample>( "players", TestData.TestData1.UID );
 
 		Assert.IsFalse( data.Level == 999 );
+	}
+
+	[TestMethod]
+	public void AutoSavedWorks_MultiThreaded()
+	{
+		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
+
+		var objects = new List<AutoSavedReadmeExample>();
+
+		for (int i = 0; i < 10; i++ )
+		{
+			var data = new AutoSavedReadmeExample();
+			data.Health = 57;
+			data.UID = $"siffhdfdgf{i}";
+			objects.Add( data );
+		}
+
+		var tasks = new List<Task>();
+
+		// Make sure there's at least one auto save of each item.
+		for ( int i = 0; i < 10; i++ )
+		{
+			var item = objects[i];
+
+			tasks.Add( Task.Run( () =>
+			{
+				var property = new Sandbox.WrappedPropertySet<float>()
+				{
+					Setter = ( float value ) => item.Health = value,
+					Value = 57,
+					Object = item,
+					PropertyName = "Health",
+					Attributes = new Attribute[]
+					{
+					new AutoSaved("example")
+					}
+				};
+
+				SandbankAutoSavedEventHandler.AutoSave( property );
+			} ) );
+		}
+
+		for ( int i = 0; i < 1000; i++ )
+		{
+			var item = objects[Random.Shared.Int( 0, 9 )];
+
+			tasks.Add( Task.Run( () =>
+			{
+				var property = new Sandbox.WrappedPropertySet<float>()
+				{
+					Setter = ( float value ) => item.Health = value,
+					Value = 57,
+					Object = item,
+					PropertyName = "Health",
+					Attributes = new Attribute[]
+					{
+						new AutoSaved("example")
+					}
+				};
+
+				SandbankAutoSavedEventHandler.AutoSave( property );
+			} ) );
+		}
+
+		Task.WaitAll( tasks.ToArray() );
+
+		var fetchedData = Sandbank.Select<AutoSavedReadmeExample>( "example", x => x.Health == 57 );
+
+		Assert.AreEqual( 10, fetchedData.Count );
 	}
 
 	/// <summary>
