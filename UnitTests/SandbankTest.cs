@@ -253,6 +253,30 @@ public partial class SandbankTest
 	}
 
 	[TestMethod]
+	public void CopySavedData_WorksForAutoSavedProperties()
+	{
+		var document1 = new AutoSavedReadmeExample();
+		document1.Health = 50;
+		document1.Name = "Steve";
+		document1.UID = "blahblah";
+		document1.Items = new List<string>{ "banana", "gun", "shoe" };
+
+		var document2 = new AutoSavedReadmeExample();
+
+		Assert.AreEqual( 0, document2.Health );
+		Assert.AreEqual( null, document2.Name );
+		Assert.AreEqual( null, document2.UID );
+		Assert.AreEqual( 0, document2.Items.Count );
+
+		Sandbank.CopySavedData<AutoSavedReadmeExample>( document1, document2 );
+
+		Assert.AreEqual( 50, document2.Health );
+		Assert.AreEqual( "Steve", document2.Name );
+		Assert.AreEqual( "blahblah", document2.UID );
+		Assert.AreEqual( 3, document2.Items.Count );
+	}
+
+	[TestMethod]
 	public void CantGetDifferentClassTypesFromSameCollection()
 	{
 		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
@@ -300,6 +324,7 @@ public partial class SandbankTest
 
 		var data = new AutoSavedReadmeExample();
 		data.Health = 57;
+		data.UID = "91246385";
 
 		// Mock all this since codegen doesn't seem to work during tests.
 		var property = new Sandbox.WrappedPropertySet<float>()
@@ -319,7 +344,7 @@ public partial class SandbankTest
 		var fetchedData = Sandbank.Select<AutoSavedReadmeExample>( "example", x => x.Health == 57 );
 
 		Assert.AreEqual( 1, fetchedData.Count );
-		Assert.AreEqual( 32, fetchedData[0].UID.Length );
+		Assert.AreEqual( 8, fetchedData[0].UID.Length );
 	}
 
 	[TestMethod]
@@ -478,6 +503,7 @@ public partial class SandbankTest
 		{
 			var data = new AutoSavedReadmeExample();
 			data.Health = 57;
+			data.UID = $"siffhdfdgf{i}";
 			objects.Add( data );
 		}
 
