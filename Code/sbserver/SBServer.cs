@@ -34,7 +34,7 @@ public static class SBServer
 	/// <br/><br/>
 	/// dataObject is an optional data class for the request that will be serialised into JSON.
 	/// </summary>
-	public static async void CallEndpoint( string endpointName, object dataObject = null )
+	public static async Task CallEndpoint( string endpointName, object dataObject = null )
 	{
 		var json = dataObject != null ? JsonSerializer.Serialize( dataObject ) : null;
 		var requestContent = BuildRequestContent( endpointName, json );
