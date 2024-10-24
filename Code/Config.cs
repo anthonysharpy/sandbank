@@ -101,4 +101,19 @@ static class Config
 	/// on files until those files are re-saved.
 	/// </summary>
 	public static bool OBFUSCATE_FILES = false;
+	/// <summary>
+	/// Your Sandbank Server user ID (if any). If you don't want to hardcode this, then just
+	/// set this value dynamically somehow.
+	/// </summary>
+	public static string SBSERVER_USER_ID = "";
+	/// <summary>
+	/// Your Sandbank Server public key (if any). If you don't want to hardcode this, then just
+	/// set this value dynamically somehow.
+	/// </summary>
+	public static string SBSERVER_PUBLIC_KEY = "";
+	/// <summary>
+	/// When an endpoint fails, it will return null. By default it will also log a warning. You can change
+	/// that here.
+	/// </summary>
+	public static OnEndpointErrorBehaviour ON_ENDPOINT_ERROR_BEHAVIOUR = OnEndpointErrorBehaviour.LogWarning;
 }
