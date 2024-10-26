@@ -1,5 +1,5 @@
 ﻿using Sandbox;
-using System.Collections.Generic;
+using System;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -26,7 +26,7 @@ public static class SBServer
 		var response = await SendRequest( requestContent );
 		HandleResponseType( endpointName, response );
 
-		return await ProcessDataResponse<T>( response );
+		return await ProcessDataResponse<T>( response, endpointName );
 	}
 
 	/// <summary>
@@ -61,14 +61,23 @@ public static class SBServer
 		return new StringContent( message, Encoding.UTF8, "application/json" );
 	}
 
-	private async static Task<T> ProcessDataResponse<T>( HttpResponseMessage response ) where T : class
+	private async static Task<T> ProcessDataResponse<T>( HttpResponseMessage response, string endpointName ) where T : class
 	{
 		if ( !response.IsSuccessStatusCode )
 			return null;
 		
 		var responseData = await response.Content.ReadAsStringAsync();
 
-		return JsonSerializer.Deserialize<T>( responseData, _jsonOptions );			
+		try
+		{
+			return JsonSerializer.Deserialize<T>( responseData, _jsonOptions );
+		}
+		catch (	Exception e )
+		{
+			throw new Exception( $"Sandbank Server: failed deserialising JSON response from server for endpoint " +
+				$"{endpointName} - either your response type is wrong or there is a bug on the server: {e.Message} " +
+				$"... {e.InnerException}");
+		}
 	}
 
 	private static void HandleResponseType( string endpointName, HttpResponseMessage response )
@@ -85,7 +94,7 @@ public static class SBServer
 		else if ( response.StatusCode == System.Net.HttpStatusCode.Forbidden )
 			Logging.Warn( $"failed calling endpoint {endpointName} - forbidden (are your credentials correct?)" );
 		else if ( response.StatusCode == System.Net.HttpStatusCode.BadRequest )
-			Logging.Warn( $"failed calling endpoint {endpointName} - bad request (is your endpoint/data correct?)" );
+			Logging.Warn( $"failed calling endpoint {endpointName} - bad request (is your endpoint/request correct?)" );
 		else
 			Logging.Warn( $"failed calling endpoint {endpointName} - there was an unknown error (response code {response.StatusCode})" );
 	}
