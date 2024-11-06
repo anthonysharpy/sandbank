@@ -14,7 +14,7 @@ In the editor, go to `View -> Library Manager` and find Sandbank Database. You m
 
 Alternatively you can get the latest version of the source code from https://github.com/anthonysharpy/sandbank. This can be put directly in your source code, or wherever else you want to put it.
 
-# Usage
+# Usage and features
 
 ### Basic introduction
 
@@ -141,6 +141,20 @@ Lastly, set `MERGE_JSON` in `Config.cs` to false. Then, start up the database ag
 
 You must then set `MERGE_JSON` back to true, or it will spam warnings at you.
 
+### Saving on the client or the server
+
+Sandbank supports saving data on the client or server (or both). It just depends on where you call the code from. By default, saving on the client is not allowed, but this can be enabled in `Config.cs`.
+
+### File obfuscation
+
+Sandbank supports file obfuscation, which can be enabled in `Config.cs`. This makes the saved data files unreadable and uneditable. This is useful if you are saving data on the client and don't want them to be able to see or change it.
+
+The obfuscation can be reverse-engineered, so it does not prevent data editing. But it makes it so that 99.9% of people will not bother.
+
+You can disable or enable obfuscation at any time and it will still work. Note that once a file is obfuscated, it can only become unobfuscated after it has been saved again.
+
+Obfuscation has a slight impact on performance.
+
 # Performance
 
 ### CPU
@@ -178,22 +192,24 @@ The database stores all data in memory in a cache. 10,000 of the above PlayerDat
 
 The disk space used is less than the amount of memory used. Changes to the cache are written slowly to the disk over time in a background thread. Under extreme loads (thousands of documents being inserted per second) this may throttle your hard-drive a little, but it shouldn't impact performance too much.
 
-# Data Consistency
+# Data consistency
 
 Data is written to disk slowly over time. The frequency at which this is done, as well as a number of other things, is configurable in `Config.cs`. By default, the database aims to write any change to disk in under 10 seconds.
 
 Sandbank attempts to shut itself down gracefully in the background when the server stops. However, it is still recommended to call `Shutdown()` before an anticipated server shutdown to ensure that the database is terminated properly. If the server crashes or if the server process is suddenly terminated, any data that is not written to disk by that point is lost.
 
-# Features at a glance
+# Updating the library
 
-- Ability to store data on the client and/or server.
-- Optional file obfuscation to prevent players tampering with locally-stored files.
+Due to the fact that the library stores your settings in a code file (`Config.cs`), if you update the library from within s&box, any settings you have configured in this file will get wiped. To avoid this, you have the following options:
+
+- Create a backup of `Config.cs` before updating.
+- Clone and update the library via Git, which will allow you to fetch the latest code without conflicts.
 
 # Contributions
 
 Contributions are more than welcome. Also, feel free to ask questions or raise issues on the GitHub page: https://github.com/anthonysharpy/sandbank. If you do want to contribute something, it's probably a good idea to raise an issue first.
 
-Please note that the project is not entirely open-source and there are some very minor restrictions around what you can do (such as creating other versions of the software). Please read the licence if you are unsure.
+Please note that the project is not entirely open-source and there are some very minor restrictions around what you can do (such as creating other versions of the software). Please read the licence or ask if you are unsure.
 
 # Learn More
 
