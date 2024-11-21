@@ -132,3 +132,9 @@ It's a good point. My answer to that:
 - This requires very little maintenance, and costs me very little to host, so there's no real reason to turn it off
 
 If one day it gets to the point where I have lots of people using the service, and it becomes very expensive for me, but no one wants to pay for it, then yes, I would probably turn it off. But I would probably give you six months' notice or something like that.
+
+# Terms of Service
+
+- Absolutely nothing illegal please!
+- Don't use the service to store highly sensitive personal information (e.g. addresses, payment information, things about sexual identity or political views, IP addresses etc) without discussing it first.
+- We own the copyright to all code created by us (even if it was created for you). Usually though we are happy to  give you a copy of your code and you can use it however you want.
