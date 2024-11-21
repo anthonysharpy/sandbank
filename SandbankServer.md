@@ -137,4 +137,4 @@ If one day it gets to the point where I have lots of people using the service, a
 
 - Absolutely nothing illegal please!
 - Don't use the service to store highly sensitive personal information (e.g. addresses, payment information, things about sexual identity or political views, IP addresses etc) without discussing it with us first.
-- We own the copyright to all code created by us (even if it was created for you). Usually though we are happy to  give you a copy of your code and you can use it however you want.
+- We own the copyright to all code created by us (even if it was created for you). Usually though we are happy to give you a copy of your code and you can use it however you want.
