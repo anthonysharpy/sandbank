@@ -156,35 +156,32 @@ static internal class Cache
 			_collections[collection].CachedDocuments[document.UID] = document;
 	}
 
-	public static void Tick()
+	public static async void Tick()
 	{
 		if ( Initialisation.CurrentDatabaseState != DatabaseState.Initialised || !_cacheWriteEnabled)
 			return;
 
-		GameTask.RunInThreadAsync( () => 
+		lock ( _timeSinceLastFullWriteLock )
 		{
-			lock ( _timeSinceLastFullWriteLock )
-			{
-				_timeSinceLastFullWrite += Config.TICK_DELTA;
-			}
+			_timeSinceLastFullWrite += Config.TICK_DELTA;
+		}
 
-			if ( GetTimeSinceLastFullWrite() >= Config.PERSIST_EVERY_N_SECONDS )
-			{
-				// Do this immediately otherwise when the server is stuttering it can spam
-				// full writes.
-				ResetTimeSinceLastFullWrite();
+		if ( GetTimeSinceLastFullWrite() >= Config.PERSIST_EVERY_N_SECONDS )
+		{
+			// Do this immediately otherwise when the server is stuttering it can spam
+			// full writes.
+			ResetTimeSinceLastFullWrite();
 
-				lock ( WriteInProgressLock )
-				{
-					FullWrite();
-				}
-			}
-			else if ( _timeSinceLastPartialWrite > _partialWriteInterval )
+			lock ( WriteInProgressLock )
 			{
-				PartialWrite();
-				_timeSinceLastPartialWrite = 0;
+				FullWrite();
 			}
-		} );
+		}
+		else if ( _timeSinceLastPartialWrite > _partialWriteInterval )
+		{
+			PartialWrite();
+			_timeSinceLastPartialWrite = 0;
+		}
 	}
 
 	/// <summary>

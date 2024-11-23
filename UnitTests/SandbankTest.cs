@@ -608,8 +608,8 @@ public partial class SandbankTest
 
 		for ( int i = 0; i < 100; i++ )
 		{
-			tasks.Add( GameTask.RunInThreadAsync( async () => await Sandbank.InitialiseAsync() ) );
-			tasks.Add( GameTask.RunInThreadAsync( () => Sandbank.Shutdown() ) );
+			tasks.Add( Sandbank.InitialiseAsync() );
+			tasks.Add( Task.Run(Sandbank.Shutdown) );
 		}
 
 		Task.WaitAll( tasks.ToArray() );

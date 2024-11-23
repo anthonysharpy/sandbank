@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SandbankDatabase;
 
@@ -12,12 +13,12 @@ static class Initialisation
 	/// </summary>
 	public static object InitialisationLock = new();
 
-	public static void Initialise()
+	public static Task Initialise()
 	{
 		lock ( InitialisationLock )
 		{
 			if ( CurrentDatabaseState != DatabaseState.Uninitialised )
-				return; // Probably another thread already did all this.
+				return Task.CompletedTask; // Probably another thread already did all this.
 
 			if ( !Config.MERGE_JSON )
 				Logging.ScaryWarn( "Config.MERGE_JSON is set to false - this will delete data if you rename or remove a data field" );
@@ -55,6 +56,8 @@ static class Initialisation
 				}
 			}
 		}
+
+		return Task.CompletedTask;
 	}
 
 	private static void LoadCollections()
