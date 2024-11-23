@@ -87,12 +87,12 @@ internal static class ObjectPool
 		{
 			if ( Config.CLASS_INSTANCE_POOL_SIZE - poolPair.Value.TypePool.Count >= Config.CLASS_INSTANCE_POOL_SIZE / 2)
 			{
-				GameTask.RunInThreadAsync( () => ReplenishPoolType( poolPair.Key, poolPair.Value.ObjectType ) );
+				ReplenishPoolType( poolPair.Key, poolPair.Value.ObjectType );
 			}
 		}
 	}
 
-	private static void ReplenishPoolType(string classTypeName, Type classType )
+	private static async void ReplenishPoolType(string classTypeName, Type classType )
 	{
 		var concurrentList = _objectPool[classTypeName].TypePool;
 		int instancesToCreate = Config.CLASS_INSTANCE_POOL_SIZE - concurrentList.Count;
