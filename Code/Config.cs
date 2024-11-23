@@ -44,7 +44,7 @@ static class Config
 	/// Enables logging for helping to diagnose issues. This is mostly for development
 	/// purposes.
 	/// </summary>
-	public static bool ENABLE_LOGGING = false;
+	public static bool ENABLE_LOGGING = true;
 	/// <summary>
 	/// This is the name of the folder where your files are kept (e.g. "sandbank/my_collection").
 	/// There's no reason to change it, but you're more than welcome to. If you're
@@ -116,4 +116,15 @@ static class Config
 	/// that here.
 	/// </summary>
 	public static OnEndpointErrorBehaviour ON_ENDPOINT_ERROR_BEHAVIOUR = OnEndpointErrorBehaviour.LogWarning;
+	/// <summary>
+	/// Controls how often the database should be backed up.
+	/// </summary>
+	public static BackupFrequency BACKUP_FREQUENCY = BackupFrequency.Daily;
+	/// <summary>
+	/// How many backups should be kept. If the number of backups is greater than this, the oldest backup is deleted.
+	/// <br/><br/>
+	/// Make sure you have enough storage to cover your needs. For example, if your database is 10MB big, and you want 100
+	/// backups, then you need at least 1GB of free disk storage.
+	/// </summary>
+	public static int BACKUPS_TO_KEEP = 10;
 }

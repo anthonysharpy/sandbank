@@ -3,13 +3,33 @@ using System.Threading.Tasks;
 
 namespace SandbankDatabase;
 
+/// <summary>
+/// Polls stuff in the database at short intervals.
+/// </summary>
 internal static class Ticker
 {
-	public static async void Initialise()
+	public static void Initialise()
 	{
-		Logging.Log( "Initialising ticker..." );
+		CacheTicker();
+		BackupTicker();
+	}
 
-		while( Game.IsPlaying || TestHelpers.IsUnitTests )
+	private static async void BackupTicker()
+	{
+		Logging.Log( "Initialising backup ticker..." );
+
+		while ( Game.IsPlaying || TestHelpers.IsUnitTests )
+		{
+			Backups.CheckBackupStatus();
+			await Task.Delay( 1000 * 10 );
+		}
+	}
+
+	private static async void CacheTicker()
+	{
+		Logging.Log( "Initialising cache ticker..." );
+
+		while ( Game.IsPlaying || TestHelpers.IsUnitTests )
 		{
 			Cache.Tick();
 			ObjectPool.TryCheckPool();

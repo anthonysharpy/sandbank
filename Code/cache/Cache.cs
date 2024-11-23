@@ -74,6 +74,11 @@ static internal class Cache
 		}
 	}
 
+	public static List<Collection> GetAllCollections()
+	{
+		return _collections.Values.ToList();
+	}
+
 	public static Collection GetCollectionByName<T>( string name, bool createIfDoesntExist )
 	{
 		return GetCollectionByName( name, createIfDoesntExist, typeof(T ) );

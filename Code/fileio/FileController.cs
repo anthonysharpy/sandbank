@@ -2,7 +2,6 @@
 using Sandbox.Internal;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -347,9 +346,26 @@ internal static class FileController
 	}
 
 	/// <summary>
+	/// Wipes all backups.
+	/// </summary>
+	public static void WipeBackups()
+	{
+		var backupFolders = ListBackupFolders();
+
+		Backups.WithBackupsLock( () =>
+		{
+			foreach ( var folder in backupFolders)
+			{
+				DeleteBackup( folder );
+			}
+		} );
+	}
+
+	/// <summary>
 	/// Creates the directories needed for the database. Returns null on success, or the error message
 	/// on failure.
 	/// </summary>
+	/// 
 	public static string EnsureFileSystemSetup()
 	{
 		var attempt = 0;
@@ -366,6 +382,10 @@ internal static class FileController
 				if ( !IOProvider.DirectoryExists( Config.DATABASE_NAME ) )
 					IOProvider.CreateDirectory( Config.DATABASE_NAME );
 
+				// Create backups directory.
+				if ( !IOProvider.DirectoryExists( $"{Config.DATABASE_NAME}_backups" ) )
+					IOProvider.CreateDirectory( $"{Config.DATABASE_NAME}_backups" );
+
 				return null;
 			}
 			catch ( Exception e )
@@ -373,5 +393,53 @@ internal static class FileController
 				error = Logging.ExtractExceptionString( e );
 			}
 		}
+	}
+
+	public static void SaveBackupCollectionDefinition( string backupFolderName, Collection collection )
+	{
+		var data = Serialisation.SerialiseClass( collection );
+		var path = $"{Config.DATABASE_NAME}_backups/{backupFolderName}/{collection.CollectionName}/definition.txt";
+
+		IOProvider.WriteAllText( path, data );
+	}
+
+	public static void SaveBackupDocument( string backupFolderName, Collection collection, Document document )
+	{
+		string jsonData = Serialisation.SerialiseClass( document.Data, document.DocumentType );
+
+		if (Config.OBFUSCATE_FILES )
+			jsonData = Obfuscation.ObfuscateFileText( jsonData );
+
+		var path = $"{Config.DATABASE_NAME}_backups/{backupFolderName}/{collection.CollectionName}/{document.UID}";
+
+		IOProvider.WriteAllText( path, jsonData );
+	}
+
+	public static List<string> ListFiles( string path )
+	{
+		return IOProvider.FindFile( path ).ToList();
+	}
+
+	public static string ReadFile( string path )
+	{
+		return IOProvider.ReadAllText( path );
+	}
+
+	/// <summary>
+	/// List backup folders.
+	/// </summary>
+	public static List<string> ListBackupFolders()
+	{
+		return IOProvider.FindDirectory( $"{Config.DATABASE_NAME}_backups" ).ToList();
+	}
+
+	public static void CreateBackupCollectionFolder( string backupFolderName, Collection collection )
+	{
+		IOProvider.CreateDirectory( $"{Config.DATABASE_NAME}_backups/{backupFolderName}/{collection.CollectionName}" );
+	}
+
+	public static void DeleteBackup( string backupFolderName )
+	{
+		IOProvider.DeleteDirectory( $"{Config.DATABASE_NAME}_backups/{backupFolderName}" );
 	}
 }

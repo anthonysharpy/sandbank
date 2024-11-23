@@ -309,8 +309,20 @@ public static class Sandbank
 		return relevantCollection.CachedDocuments.ContainsKey( id );
 	}
 
+	public static void DeleteAllBackups()
+	{
+		try
+		{
+			FileController.WipeBackups();
+		}
+		catch ( Exception e )
+		{
+			Logging.Warn( $"failed deleting all backups: {Logging.ExtractExceptionString( e )}" );
+		}
+	}
+
 	/// <summary>
-	/// Deletes everything, forever.
+	/// Deletes everything, forever. Does not delete backups.
 	/// </summary>
 	public static void DeleteAllData()
 	{
@@ -325,7 +337,7 @@ public static class Sandbank
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				throw new SandbankException( $"failed to load collections after 10 tries: {error}" );
+				throw new SandbankException( $"failed to wipe data after 10 tries: {error}" );
 
 			error = FileController.WipeFilesystem();
 
