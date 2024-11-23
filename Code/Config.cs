@@ -53,10 +53,10 @@ static class Config
 	/// </summary>
 	public static string DATABASE_NAME = "sandbank";
 	/// <summary>
-	/// How often the database ticks in milliseconds. I don't recommend changing this as
+	/// How often the database ticks in seconds. I don't recommend changing this as
 	/// you are not necessarily making things any faster.
 	/// </summary>
-	public static int TICK_DELTA = 100;
+	public static float TICK_DELTA = 0.1f;
 	/// <summary>
 	/// The number of instances of each class used by your database that will be cached in RAM for
 	/// faster fetching. Increasing this will improve performance if you are selecting

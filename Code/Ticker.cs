@@ -14,7 +14,7 @@ internal static class Ticker
 			Cache.Tick();
 			ObjectPool.TryCheckPool();
 
-			await Task.Delay( Config.TICK_DELTA );
+			await Task.Delay( (int)(Config.TICK_DELTA * 1000f) );
 		}
 
 		// We also try to "reset" the database when calling Initialise(). However, this doesn't
