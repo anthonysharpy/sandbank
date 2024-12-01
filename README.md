@@ -1,3 +1,5 @@
+Are you using Sandbank in your project? If so, let me know and I'll advertise your project here! 😃
+
 # Sandbank
 
 Sandbank is the fast, easy-to-use no-SQL database for s&box.
