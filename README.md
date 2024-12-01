@@ -1,4 +1,4 @@
-Are you using Sandbank in your project? If so, and if your project has an icon, let me know and I'll advertise your project here! 😃
+Are you using Sandbank in your project? If so, let me know and I'll advertise your project here! 😃
 
 # Sandbank
 
