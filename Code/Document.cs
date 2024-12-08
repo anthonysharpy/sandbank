@@ -50,6 +50,6 @@ sealed class Document
 			data = ObjectPool.CloneObject( data, documentType );
 
 		Data = data;
-		Cache.StaleDocuments.Add( this );
+		Cache.StaleDocuments[collectionName + UID] = this;
 	}
 }
