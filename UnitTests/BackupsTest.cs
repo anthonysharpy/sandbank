@@ -16,7 +16,7 @@ public partial class BackupsTest
 		Config.OBFUSCATE_FILES = false;
 
 		Sandbank.DeleteAllData();
-		Sandbank.Shutdown();
+		Sandbank.Shutdown().GetAwaiter().GetResult();
 		Sandbank.DeleteAllBackups();
 	}
 

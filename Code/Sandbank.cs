@@ -352,13 +352,20 @@ public static class Sandbank
 	/// <summary>
 	/// Call this to gracefully shut-down the database. It is recommended to call this
 	/// when your server is shutting down to make sure all recently-changed data is saved,
-	/// if that's important to you. 
+	/// if that's important to you.
 	/// <br/> <br/>
 	/// Any operations ongoing at the time Shutdown is called are not guaranteed to be
 	/// written to disk.
+	/// <br/> <br/>
+	/// Shutdown takes some time to complete, so you should await this until it's done.
 	/// </summary>
-	public static void Shutdown()
+	public static async Task Shutdown()
 	{
-		SandbankDatabase.Shutdown.ShutdownDatabase();
+		// This will signal to the ticker to kill the background threads and complete the shutdown.
+		Initialisation.CurrentDatabaseState = DatabaseState.ShuttingDown;
+
+		// Wait until the ticker kills itself.
+		while ( Initialisation.CurrentDatabaseState != DatabaseState.Uninitialised )
+			await Task.Delay( 10 );
 	}
 }

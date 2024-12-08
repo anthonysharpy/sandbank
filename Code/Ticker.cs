@@ -1,4 +1,5 @@
 ﻿using Sandbox;
+using System.Threading.Tasks;
 
 namespace SandbankDatabase;
 
@@ -15,17 +16,17 @@ internal static class Ticker
 	{
 		// It's really important that this gets its own thread. Putting it in an async task would block up the
 		// default worker threads, which could cause freezes if it gets in the way of user code.
-		GameTask.RunInThreadAsync( () =>
+		GameTask.RunInThreadAsync( async () =>
 		{
 			BackgroundTicker();
 		} );
 	}
 
-	private static void BackgroundTicker()
+	private static async Task BackgroundTicker()
 	{
 		Logging.Log( "Initialising ticker..." );
 
-		while ( Game.IsPlaying || TestHelpers.IsUnitTests )
+		while ( Initialisation.CurrentDatabaseState == DatabaseState.Initialised )
 		{
 			if (TimeSinceTickedBackups >= 10)
 			{
@@ -42,6 +43,8 @@ internal static class Ticker
 				TimeSinceTickedPool = 0;
 				TickPool();
 			}
+
+			await Task.Delay( 100 );
 		}
 
 		OnBackgroundTickerFinished();
@@ -69,6 +72,9 @@ internal static class Ticker
 		// request before Initialise() is called after playing the game for a second time, it will
 		// think it's initialised when it's actually not. This can lead to subtle errors. So, let's
 		// shutdown the database here.
+		//
+		// Also, going forward, this will probably be the place where shutdown is performed. The ticker
+		// shuts down the database when it gets the signal that the database is no longer initialised.
 		Shutdown.ShutdownDatabase();
 	}
 }
