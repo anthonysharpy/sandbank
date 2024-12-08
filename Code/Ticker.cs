@@ -1,5 +1,4 @@
 ﻿using Sandbox;
-using System.Threading.Tasks;
 
 namespace SandbankDatabase;
 
@@ -8,35 +7,63 @@ namespace SandbankDatabase;
 /// </summary>
 internal static class Ticker
 {
+	private static TimeSince TimeSinceTickedBackups = 0;
+	private static TimeSince TimeSinceTickedCache = 0;
+	private static TimeSince TimeSinceTickedPool = 0;
+
 	public static void Initialise()
 	{
-		CacheTicker();
-		BackupTicker();
+		// It's really important that this gets its own thread. Putting it in an async task would block up the
+		// default worker threads, which could cause freezes if it gets in the way of user code.
+		GameTask.RunInThreadAsync( () =>
+		{
+			BackgroundTicker();
+		} );
 	}
 
-	private static async void BackupTicker()
+	private static void BackgroundTicker()
 	{
-		Logging.Log( "Initialising backup ticker..." );
+		Logging.Log( "Initialising ticker..." );
 
 		while ( Game.IsPlaying || TestHelpers.IsUnitTests )
 		{
-			Backups.CheckBackupStatus();
-			await Task.Delay( 1000 * 10 );
+			if (TimeSinceTickedBackups >= 10)
+			{
+				TimeSinceTickedBackups = 0;
+				TickBackups();
+			}
+			if (TimeSinceTickedCache >= Config.TICK_DELTA)
+			{
+				TimeSinceTickedCache = 0;
+				TickCache();
+			}
+			if ( TimeSinceTickedPool >= 1 )
+			{
+				TimeSinceTickedPool = 0;
+				TickPool();
+			}
 		}
+
+		OnBackgroundTickerFinished();
 	}
 
-	private static async void CacheTicker()
+	private static void TickBackups()
 	{
-		Logging.Log( "Initialising cache ticker..." );
+		Backups.CheckBackupStatus();
+	}
 
-		while ( Game.IsPlaying || TestHelpers.IsUnitTests )
-		{
-			Cache.Tick();
-			ObjectPool.TryCheckPool();
+	private static void TickCache()
+	{
+		Cache.Tick();
+	}
 
-			await Task.Delay( (int)(Config.TICK_DELTA * 1000f) );
-		}
+	private static void TickPool()
+	{
+		ObjectPool.CheckPool();
+	}
 
+	private static void OnBackgroundTickerFinished()
+	{
 		// We also try to "reset" the database when calling Initialise(). However, this doesn't
 		// work right now, because static fields don't wipe on stop/play, so if someone does a 
 		// request before Initialise() is called after playing the game for a second time, it will

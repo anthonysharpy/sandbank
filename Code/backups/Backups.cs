@@ -95,11 +95,11 @@ internal static class Backups
 			case BackupFrequency.Never:
 				return false;
 			case BackupFrequency.Hourly:
-				return DateTime.Now.Subtract( mostRecentBackupTime ).TotalHours >= 1;
+				return DateTime.UtcNow.Subtract( mostRecentBackupTime ).TotalHours >= 1;
 			case BackupFrequency.Daily:
-				return DateTime.Now.Subtract( mostRecentBackupTime ).TotalDays >= 1;
+				return DateTime.UtcNow.Subtract( mostRecentBackupTime ).TotalDays >= 1;
 			case BackupFrequency.Weekly:
-				return DateTime.Now.Subtract( mostRecentBackupTime ).TotalDays >= 7;
+				return DateTime.UtcNow.Subtract( mostRecentBackupTime ).TotalDays >= 7;
 			default:
 				throw new Exception( $"unknown backup frequency {Config.BACKUP_FREQUENCY}" );
 		}
@@ -111,7 +111,7 @@ internal static class Backups
 
 		var stopwatch = Stopwatch.StartNew();
 
-		var backupFolderName = DateTime.Now.Date.AddHours( DateTime.Now.Hour ).ToString( BACKUP_DATE_FORMAT );
+		var backupFolderName = DateTime.UtcNow.Date.AddHours( DateTime.UtcNow.Hour ).ToString( BACKUP_DATE_FORMAT );
 		var collections = Cache.GetAllCollections();
 
 		foreach ( var collection in collections )

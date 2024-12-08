@@ -32,7 +32,10 @@ public static class Sandbank
 			return;
 		}
 
-		await Initialisation.Initialise();
+		await GameTask.RunInThreadAsync( () =>
+		{
+			Initialisation.Initialise();
+		} );
 	}
 
 	/// <summary>
