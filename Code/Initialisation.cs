@@ -9,7 +9,7 @@ static class Initialisation
 	public static DatabaseState CurrentDatabaseState;
 
 	/// <summary>
-	/// Only let one thread initialse the database at once.
+	/// Only let one thread initialise the database at once.
 	/// </summary>
 	public static object InitialisationLock = new();
 
@@ -18,7 +18,7 @@ static class Initialisation
 		lock ( InitialisationLock )
 		{
 			if ( CurrentDatabaseState != DatabaseState.Uninitialised )
-				return Task.CompletedTask; // Probably another thread already did all this.
+				return Task.CompletedTask; // Probably another thread already did all this, or we are in the process of shutting down.
 
 			if ( !Config.MERGE_JSON )
 				Logging.ScaryWarn( "Config.MERGE_JSON is set to false - this will delete data if you rename or remove a data field" );
@@ -35,9 +35,12 @@ static class Initialisation
 				FileController.Initialise();
 				FileController.EnsureFileSystemSetup();
 				LoadCollections();
-				Ticker.Initialise();
 
+				// Must set this before starting the ticker because the ticker kills itself when the database
+				// is no longer initialised.
 				CurrentDatabaseState = DatabaseState.Initialised;
+
+				Ticker.Initialise();
 
 				if ( Config.STARTUP_SHUTDOWN_MESSAGES )
 				{
@@ -126,5 +129,6 @@ static class Initialisation
 internal enum DatabaseState
 {
 	Uninitialised,
-	Initialised
+	Initialised,
+	ShuttingDown
 }

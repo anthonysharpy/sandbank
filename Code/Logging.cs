@@ -1,16 +1,18 @@
-﻿using System;
+﻿using Sandbox;
+using System;
 
 namespace SandbankDatabase;
 
 static class Logging
 {
-	public static void Log(string message)
+	public static async void Log(string message)
 	{
 		if ( !Config.ENABLE_LOGGING )
 			return;
 
 		Sandbox.Internal.GlobalGameNamespace.Log.Info( $"Sandbank: {message}" );
 	}
+
 	public static void Info( string message )
 	{
 		if ( !Config.ENABLE_LOGGING )

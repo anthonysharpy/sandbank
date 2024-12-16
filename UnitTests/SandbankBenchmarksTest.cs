@@ -16,7 +16,7 @@ public partial class SandbankBenchmarksTest
 		if ( Sandbank.IsInitialised )
 		{
 			Sandbank.DeleteAllData();
-			Sandbank.Shutdown();
+			Sandbank.Shutdown().GetAwaiter().GetResult();
 		}
 	}
 

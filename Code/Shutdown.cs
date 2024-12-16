@@ -31,6 +31,9 @@ internal static class Shutdown
 			try
 			{
 				if ( Initialisation.CurrentDatabaseState == DatabaseState.Initialised )
+					Logging.Warn( "invalidly trying to shutdown the database while it is initialised - this is a bug!" );
+
+				if ( Initialisation.CurrentDatabaseState == DatabaseState.ShuttingDown )
 				{
 					// Set this as a matter of priority since if this is wrong on the next start,
 					// it won't be wiped automatically by s&box, and there is a risk the user could
@@ -43,7 +46,7 @@ internal static class Shutdown
 					WipeStaticFields();
 				}
 
-				// Maybe it was in an irrecoverable error state. Let's just set it back.
+				// Maybe we crashed during startup. Let's just set it back.
 				Initialisation.CurrentDatabaseState = DatabaseState.Uninitialised;
 			}
 			catch ( Exception e )

@@ -19,7 +19,7 @@ public partial class SandbankTest
 			Sandbank.InitialiseAsync().GetAwaiter().GetResult();
 
 		Sandbank.DeleteAllData();
-		Sandbank.Shutdown();
+		Sandbank.Shutdown().GetAwaiter().GetResult();
 	}
 
 	[TestMethod]
@@ -667,7 +667,7 @@ public partial class SandbankTest
 		FileController.SaveDocument( ovewriteDocument );
 
 		// Shutdown in order to fully clear and re-fetch data and caches.
-		Sandbank.Shutdown();
+		Sandbank.Shutdown().GetAwaiter().GetResult();
 		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
 
 		// Now load the data using the original type - all the other data should be there, other
@@ -721,7 +721,7 @@ public partial class SandbankTest
 
 		Assert.AreEqual( documents, Sandbank.Select<ReadmeExample>( "players", x => x.Health == 100 ).Count() );
 
-		Sandbank.Shutdown();
+		Sandbank.Shutdown().GetAwaiter().GetResult();
 		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
 
 		Assert.AreEqual( documents, Sandbank.Select<ReadmeExample>( "players", x => x.Health == 100 ).Count() );
@@ -774,7 +774,7 @@ public partial class SandbankTest
 
 		Assert.AreEqual( 1, Cache.GetDocumentsAwaitingWriteCount() );
 
-		Sandbank.Shutdown();
+		Sandbank.Shutdown().GetAwaiter().GetResult();
 
 		Assert.AreEqual( 0, Cache.GetDocumentsAwaitingWriteCount() );
 	}

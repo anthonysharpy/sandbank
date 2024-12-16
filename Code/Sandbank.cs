@@ -32,7 +32,10 @@ public static class Sandbank
 			return;
 		}
 
-		await Initialisation.Initialise();
+		await GameTask.RunInThreadAsync( () =>
+		{
+			Initialisation.Initialise();
+		} );
 	}
 
 	/// <summary>
@@ -309,8 +312,20 @@ public static class Sandbank
 		return relevantCollection.CachedDocuments.ContainsKey( id );
 	}
 
+	public static void DeleteAllBackups()
+	{
+		try
+		{
+			FileController.WipeBackups();
+		}
+		catch ( Exception e )
+		{
+			Logging.Warn( $"failed deleting all backups: {Logging.ExtractExceptionString( e )}" );
+		}
+	}
+
 	/// <summary>
-	/// Deletes everything, forever.
+	/// Deletes everything, forever. Does not delete backups.
 	/// </summary>
 	public static void DeleteAllData()
 	{
@@ -325,7 +340,7 @@ public static class Sandbank
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				throw new SandbankException( $"failed to load collections after 10 tries: {error}" );
+				throw new SandbankException( $"failed to wipe data after 10 tries: {error}" );
 
 			error = FileController.WipeFilesystem();
 
@@ -337,13 +352,20 @@ public static class Sandbank
 	/// <summary>
 	/// Call this to gracefully shut-down the database. It is recommended to call this
 	/// when your server is shutting down to make sure all recently-changed data is saved,
-	/// if that's important to you. 
+	/// if that's important to you.
 	/// <br/> <br/>
 	/// Any operations ongoing at the time Shutdown is called are not guaranteed to be
 	/// written to disk.
+	/// <br/> <br/>
+	/// Shutdown takes some time to complete, so you should await this until it's done.
 	/// </summary>
-	public static void Shutdown()
+	public static async Task Shutdown()
 	{
-		SandbankDatabase.Shutdown.ShutdownDatabase();
+		// This will signal to the ticker to kill the background threads and complete the shutdown.
+		Initialisation.CurrentDatabaseState = DatabaseState.ShuttingDown;
+
+		// Wait until the ticker kills itself.
+		while ( Initialisation.CurrentDatabaseState != DatabaseState.Uninitialised )
+			await Task.Delay( 10 );
 	}
 }
