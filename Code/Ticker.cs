@@ -15,12 +15,14 @@ internal static class Ticker
 
 	public static void Initialise()
 	{
+#pragma warning disable CS1998
 		// It's really important that this gets its own thread. Putting it in an async task would block up the
 		// default worker threads, which could cause freezes if it gets in the way of user code.
 		GameTask.RunInThreadAsync( async () =>
 		{
-			await BackgroundTicker();
+			_ = BackgroundTicker();
 		} );
+#pragma warning restore CS1998
 	}
 
 	private static async Task BackgroundTicker()
