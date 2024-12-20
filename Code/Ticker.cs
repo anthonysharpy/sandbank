@@ -32,7 +32,10 @@ internal static class Ticker
 		while ( InitialisationController.CurrentDatabaseState == DatabaseState.Initialised )
 		{
 			if ( !Game.IsPlaying && !TestHelpers.IsUnitTests )
+			{
+				InitialisationController.CurrentDatabaseState = DatabaseState.ShuttingDown;
 				break;
+			}
 
 			if ( _timeSinceTickedBackups >= 10 )
 			{

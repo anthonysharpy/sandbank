@@ -27,10 +27,6 @@ internal static class ShutdownController
 		// if closed quickly enough.
 		lock ( InitialisationController.InitialisationLock )
 		{
-			if ( InitialisationController.CurrentDatabaseState != DatabaseState.ShuttingDown )
-				Logging.Warn( $"trying to shut down database from state {InitialisationController.CurrentDatabaseState.ToString()} " +
-					"- this is a bug!" );
-
 			if ( Config.STARTUP_SHUTDOWN_MESSAGES )
 			{
 				Log.Info( "==================================" );
