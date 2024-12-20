@@ -294,10 +294,17 @@ public static class Sandbank
 	/// </summary>
 	public static async Task Shutdown()
 	{
-		while ( InitialisationController.CurrentDatabaseState != DatabaseState.Uninitialised )
+		while ( true )
 		{
-			// This will signal to the ticker to kill the background threads and complete the shutdown.
-			InitialisationController.CurrentDatabaseState = DatabaseState.ShuttingDown;
+			lock ( InitialisationController.DatabaseStateLock )
+			{
+				if ( InitialisationController.CurrentDatabaseState == DatabaseState.Uninitialised )
+					break;
+
+				// This will signal to the ticker to kill the background threads and complete the shutdown.
+				InitialisationController.CurrentDatabaseState = DatabaseState.ShuttingDown;
+			}
+
 			await Task.Delay( 10 );
 		}
 	}

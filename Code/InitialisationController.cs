@@ -7,6 +7,7 @@ namespace SandbankDatabase;
 
 sealed class InitialisationController : GameObjectSystem, ISceneStartup
 {
+	public static object DatabaseStateLock = new();
 	public static DatabaseState CurrentDatabaseState;
 
 	/// <summary>
@@ -73,9 +74,12 @@ sealed class InitialisationController : GameObjectSystem, ISceneStartup
 				FileController.EnsureFileSystemSetup();
 				LoadCollections();
 
-				// Must set this before starting the ticker because the ticker kills itself when the database
-				// is no longer initialised.
-				CurrentDatabaseState = DatabaseState.Initialised;
+				lock ( DatabaseStateLock )
+				{
+					// Must set this before starting the ticker because the ticker kills itself when the database
+					// is no longer initialised.
+					CurrentDatabaseState = DatabaseState.Initialised;
+				}
 
 				Ticker.Initialise();
 

@@ -14,7 +14,7 @@ internal static class Backups
 	/// <summary>
 	/// Only allow one backup at once.
 	/// </summary>
-	private static object _backupLock = new();
+	public static object BackupLock = new();
 
 	/// <summary>
 	/// Check if we should do a backup. If we should, do one. Also check if we have too many backups and
@@ -22,7 +22,7 @@ internal static class Backups
 	/// </summary>
 	public static void CheckBackupStatus()
 	{
-		WithBackupsLock( () =>
+		lock ( BackupLock )
 		{
 			try
 			{
@@ -42,17 +42,6 @@ internal static class Backups
 			{
 				Logging.Warn( "checking backups failed: " + Logging.ExtractExceptionString( e ) );
 			}
-		} );
-	}
-
-	/// <summary>
-	/// Do something in the context of the backups lock.
-	/// </summary>
-	public static void WithBackupsLock( Action func )
-	{
-		lock ( _backupLock )
-		{
-			func.Invoke();
 		}
 	}
 

@@ -50,7 +50,10 @@ internal static class ShutdownController
 			}
 			finally
 			{
-				InitialisationController.CurrentDatabaseState = DatabaseState.Uninitialised;
+				lock ( InitialisationController.DatabaseStateLock )
+				{
+					InitialisationController.CurrentDatabaseState = DatabaseState.Uninitialised;
+				}
 			}
 
 			if ( Config.STARTUP_SHUTDOWN_MESSAGES )

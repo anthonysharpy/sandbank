@@ -352,13 +352,13 @@ internal static class FileController
 	{
 		var backupFolders = ListBackupFolders();
 
-		Backups.WithBackupsLock( () =>
+		lock ( Backups.BackupLock )
 		{
-			foreach ( var folder in backupFolders)
+			foreach ( var folder in backupFolders )
 			{
 				DeleteBackup( folder );
 			}
-		} );
+		}
 	}
 
 	/// <summary>
