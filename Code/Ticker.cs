@@ -19,7 +19,7 @@ internal static class Ticker
 		// default worker threads, which could cause freezes if it gets in the way of user code.
 		GameTask.RunInThreadAsync( async () =>
 		{
-			_ = BackgroundTicker();
+			await BackgroundTicker();
 		} );
 	}
 
