@@ -7,37 +7,6 @@ namespace SandbankDatabase;
 
 public static class Sandbank
 {
-	public static bool IsInitialised => Initialisation.CurrentDatabaseState == DatabaseState.Initialised;
-
-	/// <summary>
-	/// Initialises the database. You don't have to call this manually as the database will do this for you
-	/// when you make your first request. However, you may want to call this manually when the server starts
-	/// if your database is particularly big, to avoid the game freezing when the first request is made. Example:
-	/// <br/><br/>
-	/// <strong>await Sandbank.InitialiseAsync()</strong>
-	/// <br/>
-	/// or
-	/// <br/>
-	/// <strong>Sandbank.InitialiseAsync().GetAwaiter().GetResult()</strong>
-	/// <br/><br/>
-	/// It is perfectly safe to call this function many times from many different places; the database will only
-	/// be initialised once.
-	/// </summary>
-	public static async Task InitialiseAsync()
-	{
-		if ( !Networking.IsHost && !Config.CLIENTS_CAN_USE )
-		{
-			Logging.Error( "only the host can initialise the database - set CLIENTS_CAN_USE to true in Config.cs" +
-				" if you want clients to be able to use the database too" );
-			return;
-		}
-
-		await GameTask.RunInThreadAsync( () =>
-		{
-			Initialisation.Initialise();
-		} );
-	}
-
 	/// <summary>
 	/// Copy the saveable data from one class to another. This is useful for when you load
 	/// data from the database and you want to put it in a component or something like that.
@@ -52,10 +21,7 @@ public static class Sandbank
 	/// if it is empty.
 	/// </summary>
 	public static void Insert<T>( string collection, T document ) where T : class
-	{		
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
+	{
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, true );
 
 		Document newDocument = new( document, typeof(T), true, collection );
@@ -68,10 +34,7 @@ public static class Sandbank
 	/// For internal use.
 	/// </summary>
 	internal static void Insert( string collection, object document, Type documentType )
-	{ 
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
+	{
 		var relevantCollection = Cache.GetCollectionByName( collection, true, documentType );
 
 		Document newDocument = new( document, documentType, true, collection );
@@ -84,9 +47,6 @@ public static class Sandbank
 	/// </summary>
 	public static void InsertMany<T>( string collection, IEnumerable<T> documents ) where T : class
 	{
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, true );
 
 		foreach (var document in documents)
@@ -101,9 +61,6 @@ public static class Sandbank
 	/// </summary>
 	public static T SelectOne<T>( string collection, Func<T, bool> selector ) where T : class, new()
 	{
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -123,9 +80,6 @@ public static class Sandbank
 	/// </summary>
 	public static T SelectOneWithID<T>( string collection, string uid ) where T : class, new()
 	{
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -143,9 +97,6 @@ public static class Sandbank
 	/// </summary>
 	public static List<T> Select<T>( string collection, Func<T, bool> selector ) where T : class, new()
 	{
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 		List<T> output = new();
 
@@ -186,9 +137,6 @@ public static class Sandbank
 	/// </summary>
 	public static List<T> SelectUnsafeReferences<T>( string collection, Func<T, bool> selector ) where T : class
 	{
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 		List<T> output = new();
 
@@ -209,9 +157,6 @@ public static class Sandbank
 	/// </summary>
 	public static void Delete<T>( string collection, Predicate<T> selector ) where T : class
 	{
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -251,9 +196,6 @@ public static class Sandbank
 	/// </summary>
 	public static void DeleteWithID<T>( string collection, string id) where T : class
 	{
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -279,9 +221,6 @@ public static class Sandbank
 	/// </summary>
 	public static bool Any<T>( string collection, Func<T, bool> selector ) where T : class
 	{
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 				
 		if ( relevantCollection == null )
@@ -301,9 +240,6 @@ public static class Sandbank
 	/// </summary>
 	public static bool AnyWithID<T>( string collection, string id )
 	{
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -329,9 +265,6 @@ public static class Sandbank
 	/// </summary>
 	public static void DeleteAllData()
 	{
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
 		Cache.WipeStaticFields();
 
 		int attempt = 0;
@@ -361,11 +294,11 @@ public static class Sandbank
 	/// </summary>
 	public static async Task Shutdown()
 	{
-		// This will signal to the ticker to kill the background threads and complete the shutdown.
-		Initialisation.CurrentDatabaseState = DatabaseState.ShuttingDown;
-
-		// Wait until the ticker kills itself.
-		while ( Initialisation.CurrentDatabaseState != DatabaseState.Uninitialised )
+		while ( InitialisationController.CurrentDatabaseState != DatabaseState.Uninitialised )
+		{
+			// This will signal to the ticker to kill the background threads and complete the shutdown.
+			InitialisationController.CurrentDatabaseState = DatabaseState.ShuttingDown;
 			await Task.Delay( 10 );
+		}
 	}
 }

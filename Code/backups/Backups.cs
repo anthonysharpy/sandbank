@@ -85,9 +85,6 @@ internal static class Backups
 
 	private static bool ShouldDoBackup( List<Backup> backups )
 	{
-		if ( !Sandbank.IsInitialised )
-			return false;
-
 		var mostRecentBackupTime = backups.Count > 0 ? backups.Last().BackupTime : DateTime.MinValue;
 
 		switch ( Config.BACKUP_FREQUENCY )

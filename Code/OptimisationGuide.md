@@ -1,5 +1,11 @@
-## When I first use the database, the game freezes temporarily
+# Optimising Performance
 
-This is because the database initialises itself (loads all the data into memory etc) when you make your first request. Usually this is fine since most people's databases are very small.
+The default settings will be very fast for 99% of people. That being said, here are some ways you might be able to squeeze even more performance out of the database:
 
-However, if this is a problem for you, then you can call `Sandbank.InitialiseAsync()` when the game starts to pre-load the data.
+- Use `Saved` instead of `AutoSaved`.
+- Don't save your records every time they are changed. Instead, have a background loop that saves every record every second or so.
+- Disable file obfuscation.
+- Increase `PERSIST_EVERY_N_SECONDS`.
+- Increase `CLASS_INSTANCE_POOL_SIZE`.
+- Use the `UnsafeReferences` methods.
+- Disable `INDENT_JSON`.

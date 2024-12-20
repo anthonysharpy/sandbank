@@ -195,7 +195,13 @@ internal sealed class MockFileIOProvider : IFileIOProvider
 
 		public void CreateFileAt( string path, string contents )
 		{
-			DeleteFileAt( path );
+			var currentFile = GetFile( path );
+			
+			if ( currentFile != null )
+			{
+				currentFile.Contents = contents;
+				return;
+			}
 
 			var parts = path.Split( '/' ).Where( x => x.Count() > 0 ).ToList();
 

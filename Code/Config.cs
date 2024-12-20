@@ -44,7 +44,7 @@ static class Config
 	/// Enables logging for helping to diagnose issues. This is mostly for development
 	/// purposes.
 	/// </summary>
-	public static bool ENABLE_LOGGING = true;
+	public static bool ENABLE_LOGGING = false;
 	/// <summary>
 	/// This is the name of the folder where your files are kept (e.g. "sandbank/my_collection").
 	/// There's no reason to change it, but you're more than welcome to. If you're
@@ -119,7 +119,7 @@ static class Config
 	/// <summary>
 	/// Controls how often the database should be backed up.
 	/// </summary>
-	public static BackupFrequency BACKUP_FREQUENCY = BackupFrequency.Daily;
+	public static BackupFrequency BACKUP_FREQUENCY = BackupFrequency.Hourly;
 	/// <summary>
 	/// How many backups should be kept. If the number of backups is greater than this, the oldest backup is deleted.
 	/// <br/><br/>

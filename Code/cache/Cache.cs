@@ -44,10 +44,10 @@ static internal class Cache
 		if ( !TestHelpers.IsUnitTests )
 			throw new Exception( "this can only be called during tests" );
 
-		StaleDocuments = new();
+		StaleDocuments.Clear();
 
 		foreach ( var collection in _collections )
-			collection.Value.CachedDocuments = new();
+			collection.Value.CachedDocuments.Clear();
 	}
 
 	/// <summary>
@@ -164,7 +164,7 @@ static internal class Cache
 
 	public static void Tick()
 	{
-		if ( Initialisation.CurrentDatabaseState != DatabaseState.Initialised || !_cacheWriteEnabled)
+		if ( InitialisationController.CurrentDatabaseState != DatabaseState.Initialised || !_cacheWriteEnabled)
 			return;
 
 		lock ( _timeSinceLastFullWriteLock )

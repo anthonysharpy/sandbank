@@ -5,7 +5,7 @@ namespace SandbankDatabase;
 
 static class Logging
 {
-	public static async void Log(string message)
+	public static void Log(string message)
 	{
 		if ( !Config.ENABLE_LOGGING )
 			return;

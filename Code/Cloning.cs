@@ -10,7 +10,7 @@ internal static class Cloning
 		var properties = PropertyDescriptionsCache.GetPropertyDescriptionsForType( sourceClass.GetType().FullName,
 			sourceClass );
 
-		PropertyDescription? uidProperty = null;
+		PropertyDescription uidProperty = null;
 
 		foreach ( var property in properties )
 		{
@@ -29,7 +29,7 @@ internal static class Cloning
 	{
 		var properties = PropertyDescriptionsCache.GetPropertyDescriptionsForType( classTypeName, sourceClass );
 
-		PropertyDescription? uidProperty = null;
+		PropertyDescription uidProperty = null;
 
 		foreach ( var property in properties )
 		{

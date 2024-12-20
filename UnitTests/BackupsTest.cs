@@ -20,6 +20,12 @@ public partial class BackupsTest
 		Sandbank.DeleteAllBackups();
 	}
 
+	[TestInitialize]
+	public void Initialise()
+	{
+		InitialisationController.Initialise();
+	}
+
 	[TestMethod]
 	public void TestBackupsGetCreated()
 	{
@@ -133,8 +139,6 @@ public partial class BackupsTest
 	[TestMethod]
 	public void TestBackupContainsCollectionDefinition()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		Sandbank.Insert( "test", new ReadmeExample()
 		{
 			UID = "12345",
@@ -160,8 +164,6 @@ public partial class BackupsTest
 	[TestMethod]
 	public void TestBackupSavesDocumentsCorrectly()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		Sandbank.Insert( "test", new ReadmeExample()
 		{
 			UID = "12345",
@@ -184,7 +186,6 @@ public partial class BackupsTest
 	public void TestBackupWorksWithObfuscation()
 	{
 		Config.OBFUSCATE_FILES = true;
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
 
 		Sandbank.Insert( "test", new ReadmeExample()
 		{
@@ -208,7 +209,6 @@ public partial class BackupsTest
 	public void TestBackupDeletesOldestBackup()
 	{
 		Config.BACKUPS_TO_KEEP = 3;
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
 
 		var collection = new Collection
 		{
@@ -242,8 +242,6 @@ public partial class BackupsTest
 	[TestMethod]
 	public void TestBackupDoesntMakeBackupIfNoData()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		Backups.CheckBackupStatus();
 
 		var backupFolders = FileController.ListBackupFolders();

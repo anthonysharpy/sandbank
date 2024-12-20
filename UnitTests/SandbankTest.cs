@@ -10,13 +10,16 @@ namespace SandbankDatabase;
 [TestClass]
 public partial class SandbankTest
 {
+	[TestInitialize]
+	public void Initialise()
+	{
+		InitialisationController.Initialise();
+	}
+
 	[TestCleanup]
 	public void Cleanup()
 	{
 		Config.OBFUSCATE_FILES = false;
-
-		if ( !Sandbank.IsInitialised )
-			Sandbank.InitialiseAsync().GetAwaiter().GetResult();
 
 		Sandbank.DeleteAllData();
 		Sandbank.Shutdown().GetAwaiter().GetResult();
@@ -185,8 +188,6 @@ public partial class SandbankTest
 	[TestMethod]
 	public void SelectingUnitialisedCollectionReturnsEmptyList()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		var results = Sandbank.Select<TestClasses.ReadmeExample>( "players", x => x.Health == 50 );
 
 		Assert.AreEqual( 0, results.Count );
@@ -195,8 +196,6 @@ public partial class SandbankTest
 	[TestMethod]
 	public void NullUIDWorks()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		var document = new TestClasses.NullUIDClass();
 
 		Sandbank.Insert( "nulluidtest", document );
@@ -207,8 +206,6 @@ public partial class SandbankTest
 	[TestMethod]
 	public void NoUIDThrowsException()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		var document = new TestClasses.NoUIDClass();
 
 		var e = Assert.ThrowsException<SandbankException>( () => Sandbank.Insert( "nouidtest", document ) );
@@ -220,8 +217,6 @@ public partial class SandbankTest
 	[TestMethod]
 	public void CantPutDifferentClassTypesInSameCollection()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		var document1 = new TestClasses.ValidClass1();
 
 		Sandbank.Insert( "test2", document1 );
@@ -279,8 +274,6 @@ public partial class SandbankTest
 	[TestMethod]
 	public void CantGetDifferentClassTypesFromSameCollection()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		var document1 = new TestClasses.ValidClass1();
 		document1.Health = 50;
 
@@ -296,8 +289,6 @@ public partial class SandbankTest
 	[TestMethod]
 	public void ReadmeExampleWorks()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		var readmeExample = new TestClasses.ReadmeExample();
 
 		Assert.AreEqual( null, readmeExample.UID );
@@ -320,8 +311,6 @@ public partial class SandbankTest
 	[TestMethod]
 	public void AutoSavedWorks()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		var data = new AutoSavedReadmeExample();
 		data.Health = 57;
 		data.UID = "91246385";
@@ -396,8 +385,6 @@ public partial class SandbankTest
 	[TestMethod]
 	public void SelectUnsafeReferences_DocumentDoesntChangeAfterNewInsert()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		var document1 = new TestClasses.ValidClass1();
 		document1.Health = 70;
 
@@ -419,8 +406,6 @@ public partial class SandbankTest
 	[TestMethod]
 	public void TestInsertAndSelectOne()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		Sandbank.Insert<ReadmeExample>( "players", TestData.TestData1 );
 
 		Assert.IsFalse( TestData.TestData1.UID.Length <= 10 );
@@ -433,8 +418,6 @@ public partial class SandbankTest
 	[TestMethod]
 	public void TestInsertManyAndSelect()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		var players = new List<ReadmeExample>{ TestData.TestData1, TestData.TestData2 };
 		Sandbank.InsertMany<ReadmeExample>( "players", players );
 
@@ -450,8 +433,6 @@ public partial class SandbankTest
 	[TestMethod]
 	public void TestSelectOneWithID()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		Sandbank.Insert<ReadmeExample>( "players", TestData.TestData1 );
 
 		Assert.IsFalse( TestData.TestData1.UID.Length <= 10 );
@@ -464,8 +445,6 @@ public partial class SandbankTest
 	[TestMethod]
 	public void TestDelete()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		Sandbank.Insert<ReadmeExample>( "players", TestData.TestData1 );
 
 		Sandbank.Delete<ReadmeExample>( "players", x => x.UID == TestData.TestData1.UID );
@@ -482,8 +461,6 @@ public partial class SandbankTest
 	[TestMethod]
 	public void TestReferenceDoesntModifyCache()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		Sandbank.Insert<ReadmeExample>( "players", TestData.TestData1 );
 		var data = Sandbank.SelectOneWithID<ReadmeExample>( "players", TestData.TestData1.UID );
 		data.Level = 999;
@@ -495,8 +472,6 @@ public partial class SandbankTest
 	[TestMethod]
 	public void AutoSavedWorks_MultiThreaded()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		var objects = new List<AutoSavedReadmeExample>();
 
 		for (int i = 0; i < 10; i++ )
@@ -561,16 +536,10 @@ public partial class SandbankTest
 		Assert.AreEqual( 10, fetchedData.Count );
 	}
 
-	/// <summary>
-	/// Ensure that when we receive an object from the database, modifying it doesn't
-	/// also modify the cache.
-	/// </summary>
 	[TestMethod]
 	public void TestSpammingShutdownAndInitialise_DoesntCorruptData()
 	{
 		const int documents = 100;
-
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
 
 		Sandbank.Insert<ReadmeExample>( "players", new ReadmeExample()
 		{
@@ -608,13 +577,13 @@ public partial class SandbankTest
 
 		for ( int i = 0; i < 100; i++ )
 		{
-			tasks.Add( Sandbank.InitialiseAsync() );
-			tasks.Add( Task.Run(Sandbank.Shutdown) );
+			tasks.Add( Task.Run( InitialisationController.Initialise ) );
+			tasks.Add( Task.Run( Sandbank.Shutdown ) );
 		}
 
 		Task.WaitAll( tasks.ToArray() );
 
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
+		InitialisationController.Initialise();
 
 		Assert.AreEqual( documents, Sandbank.Select<ReadmeExample>( "players", x => x.Health == 100 ).Count() );
 	}
@@ -623,7 +592,6 @@ public partial class SandbankTest
 	public void TestChangingTypeDefinition_DoesntLoseData()
 	{
 		Cache.DisableCacheWriting();
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
 
 		var document = new ReadmeExample()
 		{
@@ -668,7 +636,7 @@ public partial class SandbankTest
 
 		// Shutdown in order to fully clear and re-fetch data and caches.
 		Sandbank.Shutdown().GetAwaiter().GetResult();
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
+		InitialisationController.Initialise();
 
 		// Now load the data using the original type - all the other data should be there, other
 		// than the changed health which was overwritten.
@@ -686,8 +654,6 @@ public partial class SandbankTest
 	public void TestRestartingDatabase_DoesntCorruptData()
 	{
 		const int documents = 100;
-
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
 
 		Sandbank.Insert<ReadmeExample>( "players", new ReadmeExample()
 		{
@@ -722,7 +688,7 @@ public partial class SandbankTest
 		Assert.AreEqual( documents, Sandbank.Select<ReadmeExample>( "players", x => x.Health == 100 ).Count() );
 
 		Sandbank.Shutdown().GetAwaiter().GetResult();
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
+		InitialisationController.Initialise();
 
 		Assert.AreEqual( documents, Sandbank.Select<ReadmeExample>( "players", x => x.Health == 100 ).Count() );
 	}
@@ -730,8 +696,6 @@ public partial class SandbankTest
 	[TestMethod]
 	public void TestDeleteWithID()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		Sandbank.Insert<ReadmeExample>( "players", TestData.TestData1 );
 
 		Sandbank.DeleteWithID<ReadmeExample>( "players", TestData.TestData1.UID );
@@ -744,8 +708,6 @@ public partial class SandbankTest
 	[TestMethod]
 	public void TestAny()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		Sandbank.Insert<ReadmeExample>( "players", TestData.TestData1 );
 
 		Assert.IsFalse( !Sandbank.Any<ReadmeExample>( "players", x => x.Level == TestData.TestData1.Level ) );
@@ -754,8 +716,6 @@ public partial class SandbankTest
 	[TestMethod]
 	public void TestAnyWithID()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		Sandbank.Insert<ReadmeExample>( "players", TestData.TestData1 );
 
 		Assert.IsFalse( !Sandbank.AnyWithID<ReadmeExample>( "players", TestData.TestData1.UID ) );
@@ -765,8 +725,6 @@ public partial class SandbankTest
 	[TestMethod]
 	public void TestShutdown()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		TestData.TestData1.UID = "";
 		Sandbank.Insert<ReadmeExample>( "players", TestData.TestData1 );
 
@@ -782,8 +740,6 @@ public partial class SandbankTest
 	[TestMethod]
 	public void TestConcurrencySafety()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		List<Task> tasks = new();
 
 		for ( int i = 0; i < 10; i++ )
@@ -821,8 +777,6 @@ public partial class SandbankTest
 	[TestMethod]
 	public void TestConcurrencySafety2()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		List<Task> tasks = new();
 
 		List<ReadmeExample> loadsOfData = new();
@@ -886,8 +840,6 @@ public partial class SandbankTest
 	[TestMethod]
 	public void TestConcurrencySafety_SpamCollections()
 	{
-		Sandbank.InitialiseAsync().GetAwaiter().GetResult();
-
 		List<Task> tasks = new();
 
 		List<ReadmeExample> loadsOfData = new();
