@@ -1,25 +1,63 @@
-﻿using System;
+﻿using Sandbox;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace SandbankDatabase;
 
-static class Initialisation
+sealed class InitialisationController : GameObjectSystem, ISceneStartup
 {
+	public static object DatabaseStateLock = new();
 	public static DatabaseState CurrentDatabaseState;
 
 	/// <summary>
-	/// Only let one thread initialse the database at once.
+	/// Prevents multiple threads trying to initialise/shut down the database at the same time.
 	/// </summary>
 	public static object InitialisationLock = new();
 
-	public static Task Initialise()
+	public InitialisationController( Scene scene ) : base( scene ) { }
+
+	void ISceneStartup.OnHostInitialize()
 	{
+		LoadHost();
+	}
+
+	void ISceneStartup.OnClientInitialize()
+	{
+		if ( Networking.IsClient && Config.CLIENTS_CAN_USE )
+			LoadClient();
+	}
+
+	private void LoadHost()
+	{
+		ShutdownController.ShutdownHasBegun = false;
+		Initialise();
+	}
+
+	private void LoadClient()
+	{
+		ShutdownController.ShutdownHasBegun = false;
+		Initialise();
+	}
+
+	public static void Initialise()
+	{
+		if ( ShutdownController.ShutdownHasBegun )
+			return;
+
+		// The ticker, which runs in a background thread, is responsible for setting the database back to
+		// an uninitialised state. If it's still shutting down for some reason, we should wait until it's
+		// finished.
+		while ( InitialisationController.CurrentDatabaseState != DatabaseState.Uninitialised )
+		{
+			if ( InitialisationController.CurrentDatabaseState == DatabaseState.Initialised )
+				return;
+
+			Task.Delay( 10 ).GetAwaiter().GetResult();
+		}
+
 		lock ( InitialisationLock )
 		{
-			if ( CurrentDatabaseState != DatabaseState.Uninitialised )
-				return Task.CompletedTask; // Probably another thread already did all this.
-
 			if ( !Config.MERGE_JSON )
 				Logging.ScaryWarn( "Config.MERGE_JSON is set to false - this will delete data if you rename or remove a data field" );
 
@@ -31,13 +69,19 @@ static class Initialisation
 
 			try
 			{
-				Shutdown.WipeStaticFields();
+				ShutdownController.WipeStaticFields();
 				FileController.Initialise();
 				FileController.EnsureFileSystemSetup();
 				LoadCollections();
-				Ticker.Initialise();
 
-				CurrentDatabaseState = DatabaseState.Initialised;
+				lock ( DatabaseStateLock )
+				{
+					// Must set this before starting the ticker because the ticker kills itself when the database
+					// is no longer initialised.
+					CurrentDatabaseState = DatabaseState.Initialised;
+				}
+
+				Ticker.Initialise();
 
 				if ( Config.STARTUP_SHUTDOWN_MESSAGES )
 				{
@@ -56,8 +100,6 @@ static class Initialisation
 				}
 			}
 		}
-
-		return Task.CompletedTask;
 	}
 
 	private static void LoadCollections()
@@ -126,5 +168,6 @@ static class Initialisation
 internal enum DatabaseState
 {
 	Uninitialised,
-	Initialised
+	Initialised,
+	ShuttingDown
 }

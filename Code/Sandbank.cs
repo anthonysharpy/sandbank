@@ -7,34 +7,6 @@ namespace SandbankDatabase;
 
 public static class Sandbank
 {
-	public static bool IsInitialised => Initialisation.CurrentDatabaseState == DatabaseState.Initialised;
-
-	/// <summary>
-	/// Initialises the database. You don't have to call this manually as the database will do this for you
-	/// when you make your first request. However, you may want to call this manually when the server starts
-	/// if your database is particularly big, to avoid the game freezing when the first request is made. Example:
-	/// <br/><br/>
-	/// <strong>await Sandbank.InitialiseAsync()</strong>
-	/// <br/>
-	/// or
-	/// <br/>
-	/// <strong>Sandbank.InitialiseAsync().GetAwaiter().GetResult()</strong>
-	/// <br/><br/>
-	/// It is perfectly safe to call this function many times from many different places; the database will only
-	/// be initialised once.
-	/// </summary>
-	public static async Task InitialiseAsync()
-	{
-		if ( !Networking.IsHost && !Config.CLIENTS_CAN_USE )
-		{
-			Logging.Error( "only the host can initialise the database - set CLIENTS_CAN_USE to true in Config.cs" +
-				" if you want clients to be able to use the database too" );
-			return;
-		}
-
-		await Initialisation.Initialise();
-	}
-
 	/// <summary>
 	/// Copy the saveable data from one class to another. This is useful for when you load
 	/// data from the database and you want to put it in a component or something like that.
@@ -49,10 +21,7 @@ public static class Sandbank
 	/// if it is empty.
 	/// </summary>
 	public static void Insert<T>( string collection, T document ) where T : class
-	{		
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
+	{
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, true );
 
 		Document newDocument = new( document, typeof(T), true, collection );
@@ -65,10 +34,7 @@ public static class Sandbank
 	/// For internal use.
 	/// </summary>
 	internal static void Insert( string collection, object document, Type documentType )
-	{ 
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
+	{
 		var relevantCollection = Cache.GetCollectionByName( collection, true, documentType );
 
 		Document newDocument = new( document, documentType, true, collection );
@@ -81,9 +47,6 @@ public static class Sandbank
 	/// </summary>
 	public static void InsertMany<T>( string collection, IEnumerable<T> documents ) where T : class
 	{
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, true );
 
 		foreach (var document in documents)
@@ -98,9 +61,6 @@ public static class Sandbank
 	/// </summary>
 	public static T SelectOne<T>( string collection, Func<T, bool> selector ) where T : class, new()
 	{
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -120,9 +80,6 @@ public static class Sandbank
 	/// </summary>
 	public static T SelectOneWithID<T>( string collection, string uid ) where T : class, new()
 	{
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -140,9 +97,6 @@ public static class Sandbank
 	/// </summary>
 	public static List<T> Select<T>( string collection, Func<T, bool> selector ) where T : class, new()
 	{
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 		List<T> output = new();
 
@@ -183,9 +137,6 @@ public static class Sandbank
 	/// </summary>
 	public static List<T> SelectUnsafeReferences<T>( string collection, Func<T, bool> selector ) where T : class
 	{
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 		List<T> output = new();
 
@@ -206,9 +157,6 @@ public static class Sandbank
 	/// </summary>
 	public static void Delete<T>( string collection, Predicate<T> selector ) where T : class
 	{
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -248,9 +196,6 @@ public static class Sandbank
 	/// </summary>
 	public static void DeleteWithID<T>( string collection, string id) where T : class
 	{
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -276,9 +221,6 @@ public static class Sandbank
 	/// </summary>
 	public static bool Any<T>( string collection, Func<T, bool> selector ) where T : class
 	{
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 				
 		if ( relevantCollection == null )
@@ -298,9 +240,6 @@ public static class Sandbank
 	/// </summary>
 	public static bool AnyWithID<T>( string collection, string id )
 	{
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
 		var relevantCollection = Cache.GetCollectionByName<T>( collection, false );
 
 		if ( relevantCollection == null )
@@ -309,14 +248,23 @@ public static class Sandbank
 		return relevantCollection.CachedDocuments.ContainsKey( id );
 	}
 
+	public static void DeleteAllBackups()
+	{
+		try
+		{
+			FileController.WipeBackups();
+		}
+		catch ( Exception e )
+		{
+			Logging.Warn( $"failed deleting all backups: {Logging.ExtractExceptionString( e )}" );
+		}
+	}
+
 	/// <summary>
-	/// Deletes everything, forever.
+	/// Deletes everything, forever. Does not delete backups.
 	/// </summary>
 	public static void DeleteAllData()
 	{
-		if ( !IsInitialised )
-			InitialiseAsync().GetAwaiter().GetResult();
-
 		Cache.WipeStaticFields();
 
 		int attempt = 0;
@@ -325,7 +273,7 @@ public static class Sandbank
 		while ( true )
 		{
 			if ( attempt++ >= 10 )
-				throw new SandbankException( $"failed to load collections after 10 tries: {error}" );
+				throw new SandbankException( $"failed to wipe data after 10 tries: {error}" );
 
 			error = FileController.WipeFilesystem();
 
@@ -337,13 +285,27 @@ public static class Sandbank
 	/// <summary>
 	/// Call this to gracefully shut-down the database. It is recommended to call this
 	/// when your server is shutting down to make sure all recently-changed data is saved,
-	/// if that's important to you. 
+	/// if that's important to you.
 	/// <br/> <br/>
 	/// Any operations ongoing at the time Shutdown is called are not guaranteed to be
 	/// written to disk.
+	/// <br/> <br/>
+	/// Shutdown takes some time to complete, so you should await this until it's done.
 	/// </summary>
-	public static void Shutdown()
+	public static async Task Shutdown()
 	{
-		SandbankDatabase.Shutdown.ShutdownDatabase();
+		while ( true )
+		{
+			lock ( InitialisationController.DatabaseStateLock )
+			{
+				if ( InitialisationController.CurrentDatabaseState == DatabaseState.Uninitialised )
+					break;
+
+				// This will signal to the ticker to kill the background threads and complete the shutdown.
+				InitialisationController.CurrentDatabaseState = DatabaseState.ShuttingDown;
+			}
+
+			await Task.Delay( 10 );
+		}
 	}
 }

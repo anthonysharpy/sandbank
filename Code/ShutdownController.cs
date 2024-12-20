@@ -2,8 +2,13 @@
 
 namespace SandbankDatabase;
 
-internal static class Shutdown
+internal static class ShutdownController
 {
+	/// <summary>
+	/// Once shutdown has been triggered, the database cannot be initialised again.
+	/// </summary>
+	public static bool ShutdownHasBegun = false;
+
 	/// <summary>
 	/// S&amp;box doesn't automatically wipe static fields yet so we have to do this
 	/// ourselves.
@@ -20,8 +25,12 @@ internal static class Shutdown
 	{
 		// Theoretical possibility that the database could be shut down during initialistion,
 		// if closed quickly enough.
-		lock ( Initialisation.InitialisationLock )
+		lock ( InitialisationController.InitialisationLock )
 		{
+			if ( InitialisationController.CurrentDatabaseState != DatabaseState.ShuttingDown )
+				Logging.Warn( $"trying to shut down database from state {InitialisationController.CurrentDatabaseState.ToString()} " +
+					"- this is a bug!" );
+
 			if ( Config.STARTUP_SHUTDOWN_MESSAGES )
 			{
 				Log.Info( "==================================" );
@@ -30,26 +39,21 @@ internal static class Shutdown
 
 			try
 			{
-				if ( Initialisation.CurrentDatabaseState == DatabaseState.Initialised )
-				{
-					// Set this as a matter of priority since if this is wrong on the next start,
-					// it won't be wiped automatically by s&box, and there is a risk the user could
-					// do an operation on an uninitialised database.
-					Initialisation.CurrentDatabaseState = DatabaseState.Uninitialised;
+				Logging.Info( "shutting down database..." );
 
-					Logging.Info( "shutting down database..." );
-
-					Cache.ForceFullWrite();
-					WipeStaticFields();
-				}
-
-				// Maybe it was in an irrecoverable error state. Let's just set it back.
-				Initialisation.CurrentDatabaseState = DatabaseState.Uninitialised;
+				Cache.ForceFullWrite();
+				WipeStaticFields();
 			}
 			catch ( Exception e )
 			{
-				Initialisation.CurrentDatabaseState = DatabaseState.Uninitialised;
 				Logging.Error( $"failed to shutdown database properly - some data may have been lost: {Logging.ExtractExceptionString( e )}" );
+			}
+			finally
+			{
+				lock ( InitialisationController.DatabaseStateLock )
+				{
+					InitialisationController.CurrentDatabaseState = DatabaseState.Uninitialised;
+				}
 			}
 
 			if ( Config.STARTUP_SHUTDOWN_MESSAGES )

@@ -37,7 +37,7 @@ The basics you need to know:
 
 - You can't use different class types with the same collection. It's one class per collection.
 
-- Any data you want saved must be a public property with the `[Saved]` or `[AutoSaved]` attribute. If you're putting it on something like a class or a List of classes, all public properties in those classes will get saved. If you don't want this, you can add the `[JsonIgnore]` attribute probably to the properties you don't want saved (I will probably add more control over this later).
+- Any data you want saved must be a public property with the `[Saved]` or `[AutoSaved]` attribute. If you put this on something like a class or a `List` of classes, all public properties in those classes will get saved. If you don't want this, you can add the `[JsonIgnore]` attribute probably to the properties you don't want saved (I will probably add more control over this later).
 
 - Every document _**must**_ have a _**public string property**_ called "UID" (unique ID). This is the _**unique**_ primary ID of the document and is also used as the document's file name. You can set this to be whatever you want. For example, you might want it to be a player's Steam ID. Alternatively, you can leave it empty, and the database will automatically populate the ID for you as a random GUID.
 
@@ -47,7 +47,7 @@ The basics you need to know:
 
 There are two ways to save data with Sandbank.
 
-The first way is the convenient but potentially less performant way. You attach the `[AutoSaved]` attribute to each property you want to save. In the attribute you must specify the name of the collection you want the class to be saved in (e.g. `[AutoSaved("players")]`). Whenever that property is updated, the data is saved to file automatically. The reason this is slower is because if the property is updated often, there can be an excessive amount of inserts. ***Note that `[AutoSaved]` will not do anything if the UID is empty (saving the record will populate the UID automatically, or you can populate it yourself)***.
+The first way is the convenient but potentially less performant way. You attach the `[AutoSaved]` attribute to each property you want to save. In the attribute you must specify the name of the collection you want the class to be saved in (e.g. `[AutoSaved("players")]`). Whenever that property is updated, the data is saved to file automatically. The reason this is slower is because if the property is updated often, there can be an excessive amount of inserts. ***Note that `[AutoSaved]` will not do anything if the UID is empty (manually saving the record will populate the UID automatically, or you can populate it yourself)***.
 
 The second way is the less convenient but more performant way. You attach the `[Saved]` attribute to your property. You then have to manually insert the data into the database in order to actually save it. You can do this straight away, or if you want to maximise performance, you might save all your data every few seconds in a background loop.
 
@@ -138,8 +138,6 @@ GameTask.RunInThreadAsync( () => {
 });
 ```
 
-If you find this doesn't suit your needs then please make an issue.
-
 ### Renaming properties
 
 If you rename the properties in your data class, the data is not lost. For example, if you renamed a property called `Name` to `PlayerName`, the `Name` property will still be saved on file, and `PlayerName` will be created alongside it.
@@ -163,6 +161,10 @@ You must then set `MERGE_JSON` back to true, or it will spam warnings at you.
 
 Sandbank supports saving data on the client or server (or both). It just depends on where you call the code from. By default, saving on the client is not allowed, but this can be enabled in `Config.cs`.
 
+### Backups
+
+Sandbank supports backups and these are enabled by default. Backup settings can be configured in `Config.cs`.
+
 ### File obfuscation
 
 Sandbank supports file obfuscation, which can be enabled in `Config.cs`. This makes the saved data files unreadable and uneditable. This is useful if you are saving data on the client and don't want them to be able to see or change it.
@@ -172,6 +174,13 @@ The obfuscation can be reverse-engineered, so it does not prevent data editing. 
 You can disable or enable obfuscation at any time and it will still work. Note that once a file is obfuscated, it can only become unobfuscated after it has been saved again.
 
 Obfuscation has a slight impact on performance.
+
+### Updating Sandbank
+
+Due to the fact that the library stores your settings in a code file (`Config.cs`), if you update the library from within s&box, any settings you have configured in this file will get wiped. To avoid this, you have the following options:
+
+- Create a backup of `Config.cs` before updating.
+- Clone and update the library via Git, which will allow you to fetch the latest code without conflicts.
 
 # Performance
 
@@ -185,15 +194,15 @@ Here are some benchmarks using the above PlayerData class on a Ryzen 5 5500 with
 
 | Operation                                                                                  | Total Time    | Speed                             | Notes                  |
 |--------------------------------------------------------------------------------------------|---------------|-----------------------------------|------------------------|
-| 100,800 inserts (one task) | 0.6117 seconds | 165,000 documents inserted/second | In reality this is probably faster than your disk could keep up with anyway. |
-| 100,800 inserts (24 tasks) | 0.1263 seconds | 798,000 documents inserted/second | |
-| Search 100,800 documents [x => x.Health >= 90] (one task) | 0.0377 seconds | 2,674,000 documents searched/second | ~10,080 records being returned here. |
-| Search 2,419,200 documents [x => x.Health >= 90] (24 tasks) | 0.1910 seconds | 12,666,000 documents searched/second | ~10,080 records being returned here per task. |
-| Search 2,419,200 documents [x => x.Health == 100] (24 tasks) | 0.1097 seconds | 22,053,000 documents searched/second | ~1,008 records being returned here per task, hence much faster due to less memory copying. This is probably the more realistic scenario. |
-| Search 100,800 documents [x => x.Health >= 90] (one task, unsafe references) | 0.0273 seconds | 3,692,000 documents searched/second |  ~10,080 records being returned here. |
-| Search 2,419,200 documents [x => x.Health >= 90] (24 tasks, unsafe references) | 0.0990 seconds | 24,436,000 documents searched/second |  ~10,080 records being returned here per task. |
-| Search 100,800 documents by ID 100,000 times (one task) | 0.1170 seconds | 855,000 lookups/second | 1 document returned. |
-| Search 100,800 documents by ID 2,400,000 times (24 tasks) | 0.5930 seconds | 4,047,000 lookups/second | 1 document returned. |
+| 100,800 inserts (one task) | 0.475 seconds | 212,000 documents inserted/second | In reality this is probably faster than your disk could keep up with anyway. |
+| 100,800 inserts (24 tasks) | 0.114 seconds | 884,000 documents inserted/second | |
+| Search 100,800 documents [x => x.Health >= 90] (one task) | 0.044 seconds | 2,290,000 documents searched/second | ~10,080 records being returned here. |
+| Search 2,419,200 documents [x => x.Health >= 90] (24 tasks) | 0.188 seconds | 12,868,000 documents searched/second | ~10,080 records being returned here per task. |
+| Search 2,419,200 documents [x => x.Health == 100] (24 tasks) | 0.073 seconds | 33,140,000 documents searched/second | ~1,008 records being returned here per task, hence much faster due to less memory copying. This is probably the more realistic scenario. |
+| Search 100,800 documents [x => x.Health >= 90] (one task, unsafe references) | 0.0182 seconds | 5,538,000 documents searched/second |  ~10,080 records being returned here. |
+| Search 2,419,200 documents [x => x.Health >= 90] (24 tasks, unsafe references) | 0.071 seconds | 34,073,000 documents searched/second |  ~10,080 records being returned here per task. |
+| Search 100,800 documents by ID 100,000 times (one task) | 0.124 seconds | 806,000 lookups/second | 1 document returned. |
+| Search 100,800 documents by ID 2,400,000 times (24 tasks) | 0.55 seconds | 4,364,000 lookups/second | 1 document returned. |
 
 The above figures represent the time it took to write/read the data to/from the cache only (not to disk). As you can see, searching by ID is basically instant, inserts are very quick, and regular searches are relatively quick. These benchmarks used an optimal pool size of around 200,000 (about 240mb worth of extra memory).
 
@@ -214,14 +223,7 @@ The disk space used is less than the amount of memory used. Changes to the cache
 
 Data is written to disk slowly over time. The frequency at which this is done, as well as a number of other things, is configurable in `Config.cs`. By default, the database aims to write any change to disk in under 10 seconds.
 
-Sandbank attempts to shut itself down gracefully in the background when the server stops. However, it is still recommended to call `Shutdown()` before an anticipated server shutdown to ensure that the database is terminated properly. If the server crashes or if the server process is suddenly terminated, any data that is not written to disk by that point is lost.
-
-# Updating the library
-
-Due to the fact that the library stores your settings in a code file (`Config.cs`), if you update the library from within s&box, any settings you have configured in this file will get wiped. To avoid this, you have the following options:
-
-- Create a backup of `Config.cs` before updating.
-- Clone and update the library via Git, which will allow you to fetch the latest code without conflicts.
+Sandbank attempts to shut itself down gracefully in the background when the game stops, saving all remaining data. However, it is still recommended to call `Shutdown()` before an anticipated server shutdown to ensure that the database is terminated properly. If the server crashes or if the server process is suddenly terminated, any data that is not written to disk by that point will probably be lost.
 
 # Contributions
 

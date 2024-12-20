@@ -38,10 +38,6 @@ public static class SandbankAutoSavedEventHandler
 	{
 		p.Setter( p.Value );
 
-		// Don't auto-save while we are initialising. It is pointless.
-		if ( !Sandbank.IsInitialised )
-			return;
-
 		string id = (string)GlobalGameNamespace.TypeLibrary.GetPropertyValue( p.Object, "UID" );
 
 		// If the UID is not set then we can assume this document hasn't even been fully created yet.

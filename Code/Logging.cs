@@ -11,6 +11,7 @@ static class Logging
 
 		Sandbox.Internal.GlobalGameNamespace.Log.Info( $"Sandbank: {message}" );
 	}
+
 	public static void Info( string message )
 	{
 		if ( !Config.ENABLE_LOGGING )

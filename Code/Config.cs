@@ -116,4 +116,15 @@ static class Config
 	/// that here.
 	/// </summary>
 	public static OnEndpointErrorBehaviour ON_ENDPOINT_ERROR_BEHAVIOUR = OnEndpointErrorBehaviour.LogWarning;
+	/// <summary>
+	/// Controls how often the database should be backed up.
+	/// </summary>
+	public static BackupFrequency BACKUP_FREQUENCY = BackupFrequency.Hourly;
+	/// <summary>
+	/// How many backups should be kept. If the number of backups is greater than this, the oldest backup is deleted.
+	/// <br/><br/>
+	/// Make sure you have enough storage to cover your needs. For example, if your database is 10MB big, and you want 100
+	/// backups, then you need at least 1GB of free disk storage.
+	/// </summary>
+	public static int BACKUPS_TO_KEEP = 10;
 }

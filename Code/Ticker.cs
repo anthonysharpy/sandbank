@@ -1,27 +1,90 @@
 ﻿using Sandbox;
+using System;
 using System.Threading.Tasks;
 
 namespace SandbankDatabase;
 
+/// <summary>
+/// Polls stuff in the database at short intervals.
+/// </summary>
 internal static class Ticker
 {
-	public static async void Initialise()
+	private static float _timeSinceTickedBackups = 0;
+	private static float _timeSinceTickedCache = 0;
+	private static float _timeSinceTickedPool = 0;
+
+	public static void Initialise()
 	{
-		Logging.Log( "Initialising ticker..." );
-
-		while( Game.IsPlaying || TestHelpers.IsUnitTests )
+#pragma warning disable CS1998
+		// It's really important that this gets its own thread. Putting it in an async task would block up the
+		// default worker threads, which could cause freezes if it gets in the way of user code.
+		GameTask.RunInThreadAsync( async () =>
 		{
-			Cache.Tick();
-			ObjectPool.TryCheckPool();
+			_ = BackgroundTicker();
+		} );
+#pragma warning restore CS1998
+	}
 
-			await Task.Delay( (int)(Config.TICK_DELTA * 1000f) );
+	private static async Task BackgroundTicker()
+	{
+		Logging.Log( "initialising ticker..." );
+
+		var lastCheckTime = DateTime.UtcNow;
+
+		while ( InitialisationController.CurrentDatabaseState == DatabaseState.Initialised )
+		{
+			if ( !Game.IsPlaying && !TestHelpers.IsUnitTests )
+			{
+				lock ( InitialisationController.DatabaseStateLock )
+				{
+					InitialisationController.CurrentDatabaseState = DatabaseState.ShuttingDown;
+					break;
+				}
+			}
+
+			if ( _timeSinceTickedBackups >= 10 )
+			{
+				_timeSinceTickedBackups = 0;
+				TickBackups();
+			}
+			if ( _timeSinceTickedCache >= Config.TICK_DELTA )
+			{
+				_timeSinceTickedCache = 0;
+				TickCache();
+			}
+			if ( _timeSinceTickedPool >= 1 )
+			{
+				_timeSinceTickedPool = 0;
+				TickPool();
+			}
+
+			await Task.Delay( 100 );
+
+			// TimeSince does not work at all. So let's do it manually.
+			var difference = (float)(DateTime.UtcNow - lastCheckTime).TotalSeconds;
+			_timeSinceTickedPool += difference;
+			_timeSinceTickedCache += difference;
+			_timeSinceTickedBackups += difference;
+
+			lastCheckTime = DateTime.UtcNow;
 		}
 
-		// We also try to "reset" the database when calling Initialise(). However, this doesn't
-		// work right now, because static fields don't wipe on stop/play, so if someone does a 
-		// request before Initialise() is called after playing the game for a second time, it will
-		// think it's initialised when it's actually not. This can lead to subtle errors. So, let's
-		// shutdown the database here.
-		Shutdown.ShutdownDatabase();
+		// Try and shut down the database.
+		ShutdownController.ShutdownDatabase();
+	}
+
+	private static void TickBackups()
+	{
+		Backups.CheckBackupStatus();
+	}
+
+	private static void TickCache()
+	{
+		Cache.Tick();
+	}
+
+	private static void TickPool()
+	{
+		ObjectPool.CheckPool();
 	}
 }

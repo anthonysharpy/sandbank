@@ -11,13 +11,11 @@ namespace SandbankDatabase;
 /// </summary>
 internal static class ObjectPool
 {
-	private static DateTime _timeLastCheckedPool;
 	private static ConcurrentDictionary<string, PoolTypeDefinition> _objectPool = new();
 
 	public static void WipeStaticFields()
 	{
 		_objectPool = new();
-		_timeLastCheckedPool = DateTime.UtcNow.AddHours( -1 );
 	}
 
 	public static T CloneObject<T>( T theObject, string classTypeName ) where T : class, new()
@@ -74,15 +72,8 @@ internal static class ObjectPool
 		};
 	}
 
-	public static void TryCheckPool()
+	public static void CheckPool()
 	{
-		var now = DateTime.UtcNow;
-
-		if ( now.Subtract( _timeLastCheckedPool ).TotalMilliseconds <= 1000 )
-			return;
-
-		_timeLastCheckedPool = now;
-
 		foreach (var poolPair in _objectPool)
 		{
 			if ( Config.CLASS_INSTANCE_POOL_SIZE - poolPair.Value.TypePool.Count >= Config.CLASS_INSTANCE_POOL_SIZE / 2)
@@ -92,7 +83,7 @@ internal static class ObjectPool
 		}
 	}
 
-	private static async void ReplenishPoolType(string classTypeName, Type classType )
+	private static void ReplenishPoolType(string classTypeName, Type classType )
 	{
 		var concurrentList = _objectPool[classTypeName].TypePool;
 		int instancesToCreate = Config.CLASS_INSTANCE_POOL_SIZE - concurrentList.Count;

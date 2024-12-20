@@ -14,9 +14,10 @@ static internal class Cache
 	public static object WriteInProgressLock = new();
 
 	/// <summary>
-	/// All the stale documents.
+	/// All the stale documents. The key is in the format {COLLECTIONNAME}{UID}. We use a dictionary so that we
+	/// don't save multiple copies of the same document twice, causing unecessary writes.
 	/// </summary>
-	public static ConcurrentBag<Document> StaleDocuments = new();
+	public static ConcurrentDictionary<string, Document> StaleDocuments = new();
 
 	private static ConcurrentDictionary<string, Collection> _collections = new();
 	private static float _timeSinceLastFullWrite = 0;
@@ -43,10 +44,10 @@ static internal class Cache
 		if ( !TestHelpers.IsUnitTests )
 			throw new Exception( "this can only be called during tests" );
 
-		StaleDocuments = new();
+		StaleDocuments.Clear();
 
 		foreach ( var collection in _collections )
-			collection.Value.CachedDocuments = new();
+			collection.Value.CachedDocuments.Clear();
 	}
 
 	/// <summary>
@@ -72,6 +73,11 @@ static internal class Cache
 			_partialWriteInterval = 1f / Config.PARTIAL_WRITES_PER_SECOND;
 			_timeSinceLastPartialWrite = 0;
 		}
+	}
+
+	public static List<Collection> GetAllCollections()
+	{
+		return _collections.Values.ToList();
 	}
 
 	public static Collection GetCollectionByName<T>( string name, bool createIfDoesntExist )
@@ -156,9 +162,9 @@ static internal class Cache
 			_collections[collection].CachedDocuments[document.UID] = document;
 	}
 
-	public static async void Tick()
+	public static void Tick()
 	{
-		if ( Initialisation.CurrentDatabaseState != DatabaseState.Initialised || !_cacheWriteEnabled)
+		if ( InitialisationController.CurrentDatabaseState != DatabaseState.Initialised || !_cacheWriteEnabled)
 			return;
 
 		lock ( _timeSinceLastFullWriteLock )
@@ -285,25 +291,23 @@ static internal class Cache
 
 		_staleDocumentsWrittenSinceLastFullWrite += numberToWrite;
 
-		int misses = 0;
 		int failures = 0;
+		int i = 0;
 
-		for ( int i = 0; i < numberToWrite; i++ )
+		foreach ( var item in StaleDocuments )
 		{
-			if ( !StaleDocuments.TryTake( out Document document ) )
-			{
-				misses++;
-				continue;
-			}
+			if ( i >= numberToWrite )
+				break;
 
-			if ( !PersistDocumentToDisk( document ) )
+			if ( !PersistDocumentToDisk( item.Value ) )
 				failures++;
+			else
+				StaleDocuments.TryRemove( item ); // If we fail to remove it, it's probably not a big deal.
+
+			i++;
 		}
 
-		if (misses > 0)
-			Logging.Log( $"missed {misses} times when persisting stale documents..." );
-
-		_staleDocumentsWrittenSinceLastFullWrite -= (misses + failures);
+		_staleDocumentsWrittenSinceLastFullWrite -= failures;
 	}
 
 	/// <summary>
