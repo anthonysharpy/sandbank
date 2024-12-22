@@ -20,9 +20,9 @@ internal sealed class FileIOProvider : IFileIOProvider
 		FileSystem.Data.CreateDirectory( directory );
 	}
 
-	public void DeleteDirectory( string directory, bool recursive = false )
+	public void DeleteDirectory( string directory )
 	{
-		FileSystem.Data.DeleteDirectory( directory, recursive );
+		FileSystem.Data.DeleteDirectory( directory, true );
 	}
 
 	public bool DirectoryExists( string directory )

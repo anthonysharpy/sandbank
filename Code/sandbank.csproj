@@ -5,7 +5,7 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<AssemblyName>sandbank</AssemblyName>
 		<PackageId>sandbank</PackageId>
-		<LangVersion>11</LangVersion>
+		<LangVersion>13</LangVersion>
 		<NoWarn>1701;1702;1591;</NoWarn>
 		<WarningsAsErrors></WarningsAsErrors>
 		<TreatWarningsAsErrors>False</TreatWarningsAsErrors>
