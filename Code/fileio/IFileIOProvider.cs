@@ -9,7 +9,7 @@ internal interface IFileIOProvider
 {
 	public bool DirectoryExists( string directory );
 	public void CreateDirectory( string directory );
-	public void DeleteDirectory( string directory, bool recursive = false );
+	public void DeleteDirectory( string directory );
 	public void WriteAllText( string file, string text );
 	public string ReadAllText( string file );
 	public void DeleteFile( string file );

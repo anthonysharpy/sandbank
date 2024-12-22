@@ -35,7 +35,7 @@ internal sealed class MockFileIOProvider : IFileIOProvider
 	/// Don't know how a directory deletion could ever not be recursive but that's
 	/// how s&amp;box has it.
 	/// </summary>
-	public void DeleteDirectory( string directory, bool recursive = false )
+	public void DeleteDirectory( string directory )
 	{
 		Logging.Info( $"deleting directory {directory}" );
 

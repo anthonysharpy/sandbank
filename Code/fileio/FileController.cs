@@ -302,7 +302,7 @@ internal static class FileController
 		{
 			lock ( _collectionWriteLocks[name] )
 			{
-				IOProvider.DeleteDirectory( $"{Config.DATABASE_NAME}/{name}", true );
+				IOProvider.DeleteDirectory( $"{Config.DATABASE_NAME}/{name}" );
 			}
 
 			return null;
