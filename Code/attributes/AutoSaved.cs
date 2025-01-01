@@ -24,6 +24,9 @@ public class AutoSaved : Attribute
 	}
 }
 
+/// <summary>
+/// This class is only visible because codegen needs it. Don't use it directly.
+/// </summary>
 public static class SandbankAutoSavedEventHandler
 {
 	private static object _autoSaveLock = new();

@@ -1,4 +1,4 @@
-﻿namespace SandbankDatabase; 
+﻿namespace SandbankDatabase;
 
 static class Config
 {

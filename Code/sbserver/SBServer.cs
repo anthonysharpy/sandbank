@@ -74,7 +74,7 @@ public static class SBServer
 		}
 		catch (	Exception e )
 		{
-			throw new Exception( $"Sandbank Server: failed deserialising JSON response from server for endpoint " +
+			throw new SandbankException( $"Sandbank Server: failed deserialising JSON response from server for endpoint " +
 				$"{endpointName} - either your response type is wrong or there is a bug on the server: {e.Message} " +
 				$"... {e.InnerException}");
 		}

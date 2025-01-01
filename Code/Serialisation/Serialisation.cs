@@ -42,7 +42,7 @@ internal static class Serialisation
 	}
 }
 
-public class GenericSavedDataConverter : JsonConverter<object>
+internal sealed class GenericSavedDataConverter : JsonConverter<object>
 {
 	public override object Read( ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options )
 	{
@@ -52,7 +52,7 @@ public class GenericSavedDataConverter : JsonConverter<object>
 
 		if ( reader.TokenType != JsonTokenType.StartObject )
 		{
-			throw new JsonException();
+			throw new SandbankException("unexpected JSON token");
 		}
 
 		while ( reader.Read() )
@@ -64,7 +64,7 @@ public class GenericSavedDataConverter : JsonConverter<object>
 
 			if ( reader.TokenType != JsonTokenType.PropertyName )
 			{
-				throw new JsonException();
+				throw new SandbankException( "unexpected JSON token");
 			}
 
 			var propertyName = reader.GetString();
@@ -83,7 +83,7 @@ public class GenericSavedDataConverter : JsonConverter<object>
 			}
 		}
 
-		throw new JsonException( "Expected end of object." );
+		throw new SandbankException( "expected end of JSON object" );
 	}
 
 	public override void Write( Utf8JsonWriter writer, object value, JsonSerializerOptions options )
