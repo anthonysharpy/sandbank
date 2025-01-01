@@ -42,7 +42,7 @@ static internal class Cache
 	public static void WipeCaches()
 	{
 		if ( !TestHelpers.IsUnitTests )
-			throw new Exception( "this can only be called during tests" );
+			throw new SandbankException( "this can only be called during tests" );
 
 		StaleDocuments.Clear();
 
@@ -56,7 +56,7 @@ static internal class Cache
 	public static void DisableCacheWriting()
 	{
 		if ( !TestHelpers.IsUnitTests )
-			throw new Exception( "this can only be called during tests" );
+			throw new SandbankException( "this can only be called during tests" );
 
 		_cacheWriteEnabled = false;
 	}

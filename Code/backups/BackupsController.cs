@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using System.Threading;
 
 namespace SandbankDatabase;
 
@@ -87,7 +86,7 @@ internal static class Backups
 			case BackupFrequency.Weekly:
 				return DateTime.UtcNow.Subtract( mostRecentBackupTime ).TotalDays >= 7;
 			default:
-				throw new Exception( $"unknown backup frequency {Config.BACKUP_FREQUENCY}" );
+				throw new SandbankException( $"unknown backup frequency {Config.BACKUP_FREQUENCY}" );
 		}
 	}
 
