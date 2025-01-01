@@ -47,7 +47,7 @@ internal static class FileController
 		{
 			lock ( _collectionWriteLocks[collection] )
 			{
-				IOProvider.DeleteFile( $"{Config.DATABASE_NAME}/{collection}/{documentID}" );
+				IOProvider.DeleteFile( $"{ConfigController.DATABASE_NAME}/{collection}/{documentID}" );
 			}
 
 			return null;
@@ -56,6 +56,21 @@ internal static class FileController
 		{
 			return Logging.ExtractExceptionString( e );
 		}
+	}
+
+	public static void WriteFile( string path, string contents )
+	{
+		IOProvider.WriteAllText( path, contents );
+	}
+
+	public static void DeleteFile( string path )
+	{
+		IOProvider.DeleteFile( path );
+	}
+
+	public static bool FileExists( string fileName, string folder )
+	{
+		return IOProvider.FindFile( folder ).Any(x => x == fileName);
 	}
 
 	/// <summary>
@@ -72,14 +87,14 @@ internal static class FileController
 			string finalJSONData = "";
 
 			// Load document currently stored on disk, if there is one.
-			string data = Config.MERGE_JSON ?
-				IOProvider.ReadAllText( $"{Config.DATABASE_NAME}/{document.CollectionName}/{document.UID}" )
+			string data = ConfigController.MERGE_JSON ?
+				IOProvider.ReadAllText( $"{ConfigController.DATABASE_NAME}/{document.CollectionName}/{document.UID}" )
 				: null;
 
 			if ( data != null && data[0] == 'O' )
 				data = Obfuscation.UnobfuscateFileText( data );
 
-			if ( Config.MERGE_JSON && data != null )
+			if ( ConfigController.MERGE_JSON && data != null )
 			{
 				var currentDocument = JsonDocument.Parse( data );
 
@@ -134,12 +149,12 @@ internal static class FileController
 				finalJSONData = Serialisation.SerialiseClass( document.Data, document.DocumentType );
 			}
 
-			if ( Config.OBFUSCATE_FILES )
+			if ( ConfigController.OBFUSCATE_FILES )
 				finalJSONData = Obfuscation.ObfuscateFileText( finalJSONData );
 
 			lock ( _collectionWriteLocks[document.CollectionName] )
 			{
-				IOProvider.WriteAllText( $"{Config.DATABASE_NAME}/{document.CollectionName}/{document.UID}", finalJSONData );
+				IOProvider.WriteAllText( $"{ConfigController.DATABASE_NAME}/{document.CollectionName}/{document.UID}", finalJSONData );
 			}
 
 			return null;
@@ -158,7 +173,7 @@ internal static class FileController
 	{
 		try
 		{
-			return (IOProvider.FindDirectory( Config.DATABASE_NAME ).ToList(), null);
+			return (IOProvider.FindDirectory( ConfigController.DATABASE_NAME ).ToList(), null);
 		}
 		catch ( Exception e )
 		{
@@ -180,7 +195,7 @@ internal static class FileController
 
 			lock ( _collectionWriteLocks[collectionName] )
 			{
-				data = IOProvider.ReadAllText( $"{Config.DATABASE_NAME}/{collectionName}/definition.txt" );
+				data = IOProvider.ReadAllText( $"{ConfigController.DATABASE_NAME}/{collectionName}/definition.txt" );
 			}
 
 			if ( data == null )
@@ -230,13 +245,13 @@ internal static class FileController
 
 			lock ( _collectionWriteLocks[collection.CollectionName] )
 			{
-				var files = IOProvider.FindFile( $"{Config.DATABASE_NAME}/{collection.CollectionName}/" )
+				var files = IOProvider.FindFile( $"{ConfigController.DATABASE_NAME}/{collection.CollectionName}/" )
 					.Where( x => x != "definition.txt" )
 					.ToList();
 
 				foreach ( var file in files )
 				{
-					var contents = IOProvider.ReadAllText( $"{Config.DATABASE_NAME}/{collection.CollectionName}/{file}" );
+					var contents = IOProvider.ReadAllText( $"{ConfigController.DATABASE_NAME}/{collection.CollectionName}/{file}" );
 
 					if ( contents[0] == 'O' )
 						contents = Obfuscation.UnobfuscateFileText( contents );
@@ -279,10 +294,10 @@ internal static class FileController
 
 			lock ( _collectionWriteLocks[collection.CollectionName] )
 			{
-				if ( !IOProvider.DirectoryExists( $"{Config.DATABASE_NAME}/{collection.CollectionName}" ) )
-					IOProvider.CreateDirectory( $"{Config.DATABASE_NAME}/{collection.CollectionName}" );
+				if ( !IOProvider.DirectoryExists( $"{ConfigController.DATABASE_NAME}/{collection.CollectionName}" ) )
+					IOProvider.CreateDirectory( $"{ConfigController.DATABASE_NAME}/{collection.CollectionName}" );
 
-				IOProvider.WriteAllText( $"{Config.DATABASE_NAME}/{collection.CollectionName}/definition.txt", data );
+				IOProvider.WriteAllText( $"{ConfigController.DATABASE_NAME}/{collection.CollectionName}/definition.txt", data );
 			}
 
 			return null;
@@ -302,7 +317,7 @@ internal static class FileController
 		{
 			lock ( _collectionWriteLocks[name] )
 			{
-				IOProvider.DeleteDirectory( $"{Config.DATABASE_NAME}/{name}" );
+				IOProvider.DeleteDirectory( $"{ConfigController.DATABASE_NAME}/{name}" );
 			}
 
 			return null;
@@ -379,12 +394,12 @@ internal static class FileController
 					return "failed to ensure filesystem is setup after 10 tries: " + error;
 
 				// Create main directory.
-				if ( !IOProvider.DirectoryExists( Config.DATABASE_NAME ) )
-					IOProvider.CreateDirectory( Config.DATABASE_NAME );
+				if ( !IOProvider.DirectoryExists( ConfigController.DATABASE_NAME ) )
+					IOProvider.CreateDirectory( ConfigController.DATABASE_NAME );
 
 				// Create backups directory.
-				if ( !IOProvider.DirectoryExists( $"{Config.DATABASE_NAME}_backups" ) )
-					IOProvider.CreateDirectory( $"{Config.DATABASE_NAME}_backups" );
+				if ( !IOProvider.DirectoryExists( $"{ConfigController.DATABASE_NAME}_backups" ) )
+					IOProvider.CreateDirectory( $"{ConfigController.DATABASE_NAME}_backups" );
 
 				return null;
 			}
@@ -398,7 +413,7 @@ internal static class FileController
 	public static void SaveBackupCollectionDefinition( string backupFolderName, Collection collection )
 	{
 		var data = Serialisation.SerialiseClass( collection );
-		var path = $"{Config.DATABASE_NAME}_backups/{backupFolderName}/{collection.CollectionName}/definition.txt";
+		var path = $"{ConfigController.DATABASE_NAME}_backups/{backupFolderName}/{collection.CollectionName}/definition.txt";
 
 		IOProvider.WriteAllText( path, data );
 	}
@@ -407,10 +422,10 @@ internal static class FileController
 	{
 		string jsonData = Serialisation.SerialiseClass( document.Data, document.DocumentType );
 
-		if (Config.OBFUSCATE_FILES )
+		if ( ConfigController.OBFUSCATE_FILES )
 			jsonData = Obfuscation.ObfuscateFileText( jsonData );
 
-		var path = $"{Config.DATABASE_NAME}_backups/{backupFolderName}/{collection.CollectionName}/{document.UID}";
+		var path = $"{ConfigController.DATABASE_NAME}_backups/{backupFolderName}/{collection.CollectionName}/{document.UID}";
 
 		IOProvider.WriteAllText( path, jsonData );
 	}
@@ -430,16 +445,16 @@ internal static class FileController
 	/// </summary>
 	public static List<string> ListBackupFolders()
 	{
-		return IOProvider.FindDirectory( $"{Config.DATABASE_NAME}_backups" ).ToList();
+		return IOProvider.FindDirectory( $"{ConfigController.DATABASE_NAME}_backups" ).ToList();
 	}
 
 	public static void CreateBackupCollectionFolder( string backupFolderName, Collection collection )
 	{
-		IOProvider.CreateDirectory( $"{Config.DATABASE_NAME}_backups/{backupFolderName}/{collection.CollectionName}" );
+		IOProvider.CreateDirectory( $"{ConfigController.DATABASE_NAME}_backups/{backupFolderName}/{collection.CollectionName}" );
 	}
 
 	public static void DeleteBackup( string backupFolderName )
 	{
-		IOProvider.DeleteDirectory( $"{Config.DATABASE_NAME}_backups/{backupFolderName}" );
+		IOProvider.DeleteDirectory( $"{ConfigController.DATABASE_NAME}_backups/{backupFolderName}" );
 	}
 }

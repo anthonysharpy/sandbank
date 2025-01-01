@@ -47,7 +47,7 @@ internal static class Ticker
 				_timeSinceTickedBackups = 0;
 				TickBackups();
 			}
-			if ( _timeSinceTickedCache >= Config.TICK_DELTA )
+			if ( _timeSinceTickedCache >= ConfigController.TICK_DELTA )
 			{
 				_timeSinceTickedCache = 0;
 				TickCache();

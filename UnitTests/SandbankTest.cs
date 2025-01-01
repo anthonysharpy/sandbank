@@ -19,7 +19,7 @@ public partial class SandbankTest
 	[TestCleanup]
 	public void Cleanup()
 	{
-		Config.OBFUSCATE_FILES = false;
+		ConfigController.OBFUSCATE_FILES = false;
 
 		Sandbank.DeleteAllData();
 		Sandbank.Shutdown().GetAwaiter().GetResult();
@@ -339,7 +339,7 @@ public partial class SandbankTest
 	[TestMethod]
 	public void SavingAndLoadingWorksWithObfuscation()
 	{
-		Config.OBFUSCATE_FILES = true;
+		ConfigController.OBFUSCATE_FILES = true;
 
 		var readmeExample = new TestClasses.ReadmeExample();
 

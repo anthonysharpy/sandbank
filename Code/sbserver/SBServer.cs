@@ -52,8 +52,8 @@ public static class SBServer
 		jsonData ??= "null";
 
 		var message = "{" +
-			"\"userID\":\"" + Config.SBSERVER_USER_ID + "\"," +
-			"\"publicKey\":\"" + Config.SBSERVER_PUBLIC_KEY + "\"," +
+			"\"userID\":\"" + ConfigController.SBSERVER_USER_ID + "\"," +
+			"\"publicKey\":\"" + ConfigController.SBSERVER_PUBLIC_KEY + "\"," +
 			"\"endpoint\":\"" + endpointName + "\"," +
 			"\"data\":" + jsonData + "" +
 		"}";
@@ -82,7 +82,7 @@ public static class SBServer
 
 	private static void HandleResponseType( string endpointName, HttpResponseMessage response )
 	{
-		if ( Config.ON_ENDPOINT_ERROR_BEHAVIOUR == OnEndpointErrorBehaviour.DoNothing )
+		if ( ConfigController.ON_ENDPOINT_ERROR_BEHAVIOUR == OnEndpointErrorBehaviour.DoNothing )
 			return;
 
 		if ( response.IsSuccessStatusCode )

@@ -6,7 +6,7 @@ static class Logging
 {
 	public static void Log( string message )
 	{
-		if ( !Config.ENABLE_LOGGING )
+		if ( !ConfigController.ENABLE_LOGGING )
 			return;
 
 		Sandbox.Internal.GlobalGameNamespace.Log.Info( $"Sandbank: {message}" );
@@ -14,7 +14,7 @@ static class Logging
 
 	public static void Info( string message )
 	{
-		if ( !Config.ENABLE_LOGGING )
+		if ( !ConfigController.ENABLE_LOGGING )
 			return;
 
 		Sandbox.Internal.GlobalGameNamespace.Log.Info( $"Sandbank: {message}" );
@@ -29,7 +29,7 @@ static class Logging
 
 	public static void Warn( string message )
 	{
-		if ( Config.WARNINGS_AS_EXCEPTIONS )
+		if ( ConfigController.WARNINGS_AS_EXCEPTIONS )
 			throw new SandbankException( $"Sandbank: {message}" );
 
 		Sandbox.Internal.GlobalGameNamespace.Log.Warning( $"Sandbank: {message}" );
@@ -37,7 +37,7 @@ static class Logging
 
 	public static void Error( string message )
 	{
-		if ( Config.WARNINGS_AS_EXCEPTIONS )
+		if ( ConfigController.WARNINGS_AS_EXCEPTIONS )
 			throw new SandbankException( $"Sandbank: {message}" );
 
 		Sandbox.Internal.GlobalGameNamespace.Log.Error( $"Sandbank: {message}" );

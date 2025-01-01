@@ -34,7 +34,7 @@ internal static class Backups
 				var numberOfBackups = backups.Count + 1;
 
 				// Delete a backup if we have too many.
-				if ( numberOfBackups > Config.BACKUPS_TO_KEEP )
+				if ( numberOfBackups > ConfigController.BACKUPS_TO_KEEP )
 					FileController.DeleteBackup( backups.First().FolderName );
 			}
 			catch ( Exception e )
@@ -75,7 +75,7 @@ internal static class Backups
 	{
 		var mostRecentBackupTime = backups.Count > 0 ? backups.Last().BackupTime : DateTime.MinValue;
 
-		switch ( Config.BACKUP_FREQUENCY )
+		switch ( ConfigController.BACKUP_FREQUENCY )
 		{
 			case BackupFrequency.Never:
 				return false;
@@ -86,7 +86,7 @@ internal static class Backups
 			case BackupFrequency.Weekly:
 				return DateTime.UtcNow.Subtract( mostRecentBackupTime ).TotalDays >= 7;
 			default:
-				throw new SandbankException( $"unknown backup frequency {Config.BACKUP_FREQUENCY}" );
+				throw new SandbankException( $"unknown backup frequency {ConfigController.BACKUP_FREQUENCY}" );
 		}
 	}
 
