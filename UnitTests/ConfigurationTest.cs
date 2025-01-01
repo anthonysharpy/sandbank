@@ -3,29 +3,36 @@
 [TestClass]
 public partial class ConfigurationTest
 {
+	[TestInitialize]
+	public void Initialise()
+	{
+		FileController.Initialise();
+
+		// Do this on start and on finish so not to have any interference from (or to) other tests.
+		FileController.DeleteFile( "sandbank_config.ini" );
+	}
+
 	[TestCleanup]
 	public void Cleanup()
 	{
 		Sandbank.Shutdown().GetAwaiter().GetResult();
-		FileController.DeleteFile( "config.ini" );
+		FileController.DeleteFile( "sandbank_config.ini" );
 	}
 
 	[TestMethod]
 	public void TestConfigFilesGetsCreatedAutomatically()
 	{
-		FileController.Initialise();
-		Assert.IsFalse( FileController.FileExists( "config.ini", "/" ) );
+		Assert.IsFalse( FileController.FileExists( "sandbank_config.ini", "/" ) );
 		InitialisationController.Initialise();
-		Assert.IsTrue( FileController.FileExists( "config.ini", "/" ) );
+		Assert.IsTrue( FileController.FileExists( "sandbank_config.ini", "/" ) );
 	}
 
 	[TestMethod]
 	public void TestConfigFileUsedIfAlreadyExists()
 	{
-		FileController.Initialise();
 		var defaultFile = ConfigController.GetDefaultConfigFileContents();
 		defaultFile = defaultFile.Replace( "BACKUPS_TO_KEEP=10", "BACKUPS_TO_KEEP=123" );
-		FileController.WriteFile( "config.ini", defaultFile );
+		FileController.WriteFile( "sandbank_config.ini", defaultFile );
 
 		InitialisationController.Initialise();
 
@@ -35,11 +42,10 @@ public partial class ConfigurationTest
 	[TestMethod]
 	public void TestEnumsAreParsedCorrectly()
 	{
-		FileController.Initialise();
 		var defaultFile = ConfigController.GetDefaultConfigFileContents();
 		defaultFile = defaultFile.Replace( "ON_ENDPOINT_ERROR_BEHAVIOUR=LogWarning", "ON_ENDPOINT_ERROR_BEHAVIOUR=DoNothing" );
 		defaultFile = defaultFile.Replace( "BACKUP_FREQUENCY=Hourly", "BACKUP_FREQUENCY=Daily" );
-		FileController.WriteFile( "config.ini", defaultFile );
+		FileController.WriteFile( "sandbank_config.ini", defaultFile );
 
 		InitialisationController.Initialise();
 
@@ -50,10 +56,9 @@ public partial class ConfigurationTest
 	[TestMethod]
 	public void TestThrowsErrorIfKeyMissing()
 	{
-		FileController.Initialise();
 		var defaultFile = ConfigController.GetDefaultConfigFileContents();
 		defaultFile = defaultFile.Replace( "BACKUPS_TO_KEEP=10", "BACKUPS_TO_KEE=10" );
-		FileController.WriteFile( "config.ini", defaultFile );
+		FileController.WriteFile( "sandbank_config.ini", defaultFile );
 
 		// This will throw an exception and the database won't be initialised.
 		InitialisationController.Initialise();

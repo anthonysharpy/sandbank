@@ -126,10 +126,10 @@ BACKUPS_TO_KEEP=10";
 
 	public static void CreateConfigFileIfNone()
 	{
-		if ( FileController.FileExists( "config.ini", "/" ) )
+		if ( FileController.FileExists( "sandbank_config.ini", "/" ) )
 			return;
 
-		FileController.WriteFile( "config.ini", DEFAULT_CONFIG_FILE );
+		FileController.WriteFile( "sandbank_config.ini", DEFAULT_CONFIG_FILE );
 	}
 
 	private static T InterpretConfigOption<T>( string[] fileLines, string key ) where T : notnull
@@ -137,7 +137,7 @@ BACKUPS_TO_KEEP=10";
 		var line = fileLines.Where( x => x.StartsWith( key ) ).LastOrDefault();
 
 		if ( line == null )
-			throw new SandbankException( $"config.ini is corrupt - it is missing the \"{key}\" option" );
+			throw new SandbankException( $"sandbank_config.ini is corrupt - it is missing the \"{key}\" option" );
 
 		var parts = line.Split( '=' );
 		var value = "";
@@ -159,7 +159,7 @@ BACKUPS_TO_KEEP=10";
 
 	public static void LoadConfigFile()
 	{
-		var lines = FileController.ReadFile( "config.ini" ).Replace("\r", "").Split( '\n' );
+		var lines = FileController.ReadFile( "sandbank_config.ini" ).Replace("\r", "").Split( '\n' );
 
 		STARTUP_SHUTDOWN_MESSAGES = InterpretConfigOption<bool>( lines, "STARTUP_SHUTDOWN_MESSAGES" );
 		WARNINGS_AS_EXCEPTIONS = InterpretConfigOption<bool>( lines, "WARNINGS_AS_EXCEPTIONS" );
