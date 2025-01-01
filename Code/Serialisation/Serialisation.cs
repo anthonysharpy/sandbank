@@ -12,7 +12,7 @@ internal static class Serialisation
 	private static JsonSerializerOptions _jsonOptions = new()
 	{
 		ReadCommentHandling = JsonCommentHandling.Skip,
-		WriteIndented = Config.INDENT_JSON,
+		WriteIndented = ConfigController.INDENT_JSON,
 		Converters = { new GenericSavedDataConverter() }
 	};
 

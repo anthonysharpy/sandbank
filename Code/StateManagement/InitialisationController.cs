@@ -24,7 +24,7 @@ sealed class InitialisationController : GameObjectSystem, ISceneStartup
 
 	void ISceneStartup.OnClientInitialize()
 	{
-		if ( Networking.IsClient && Config.CLIENTS_CAN_USE )
+		if ( Networking.IsClient && ConfigController.CLIENTS_CAN_USE )
 			LoadClient();
 	}
 
@@ -58,19 +58,22 @@ sealed class InitialisationController : GameObjectSystem, ISceneStartup
 
 		lock ( InitialisationLock )
 		{
-			if ( !Config.MERGE_JSON )
-				Logging.ScaryWarn( "Config.MERGE_JSON is set to false - this will delete data if you rename or remove a data field" );
-
-			if ( Config.STARTUP_SHUTDOWN_MESSAGES )
-			{
-				Log.Info( "==================================" );
-				Log.Info( "Initialising Sandbank..." );
-			}
-
 			try
 			{
-				ShutdownController.WipeStaticFields();
 				FileController.Initialise();
+				ConfigController.CreateConfigFileIfNone();
+				ConfigController.LoadConfigFile();
+
+				if ( !ConfigController.MERGE_JSON )
+					Logging.ScaryWarn( "Config.MERGE_JSON is set to false - this will delete data if you rename or remove a data field" );
+
+				if ( ConfigController.STARTUP_SHUTDOWN_MESSAGES )
+				{
+					Log.Info( "==================================" );
+					Log.Info( "Initialising Sandbank..." );
+				}
+
+				ShutdownController.WipeStaticFields();
 				FileController.EnsureFileSystemSetup();
 				LoadCollections();
 
@@ -83,7 +86,7 @@ sealed class InitialisationController : GameObjectSystem, ISceneStartup
 
 				Ticker.Initialise();
 
-				if ( Config.STARTUP_SHUTDOWN_MESSAGES )
+				if ( ConfigController.STARTUP_SHUTDOWN_MESSAGES )
 				{
 					Log.Info( "Sandbank initialisation finished successfully" );
 					Log.Info( "==================================" );
@@ -93,7 +96,7 @@ sealed class InitialisationController : GameObjectSystem, ISceneStartup
 			{
 				Logging.Error( $"failed to initialise database: {Logging.ExtractExceptionString( e )}" );
 
-				if ( Config.STARTUP_SHUTDOWN_MESSAGES )
+				if ( ConfigController.STARTUP_SHUTDOWN_MESSAGES )
 				{
 					Log.Info( "Sandbank initialisation finished unsuccessfully" );
 					Log.Info( "==================================" );

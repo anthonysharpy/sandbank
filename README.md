@@ -31,7 +31,7 @@ Data files are saved in s&box's data folder. For example:
 `C:\Program Files (x86)\Steam\steamapps\common\sbox\data\my_organisation\my_project\sandbank`.
 
 The basics you need to know:
-- To configure the database and change some performance-related settings, you can modify `Config.cs` (the default settings will work very well for 95% of people).
+- After the first time running, the database automatically creates a `sandbank_config.ini` file. Here you can configure the database and change some performance-related settings (the default settings will work very well for 95% of people).
 
 - The data you want to save must be in a _**class**_. Structs are not supported. Structs are supported when used inside a class, though.
 
@@ -64,7 +64,7 @@ class PlayerData : Component
 {
 	[Saved] public string UID { get; set; }
 	[Saved, Sync] public float Health { get; set; }
-	[AutoSaved("players")], Sync] public string Name { get; set; }
+	[AutoSaved("players"), Sync] public string Name { get; set; }
 	[Saved, Sync] public int Level { get; set; }
 	[Saved] public DateTime LastPlayTime { get; set; }
 	[Saved, Sync] public List<string> Items { get; set; } = new();
@@ -153,34 +153,27 @@ Sandbank.Insert<PlayerData>("players", playerData);
 
 Next, check the changes were applied and _**make a backup of your data**_. Make sure you don't have any other unused fields as they will get deleted next.
 
-Lastly, set `MERGE_JSON` in `Config.cs` to false. Then, start up the database again and wait a few seconds for the changes to take effect. The renamed data should be gone now.
+Lastly, set `MERGE_JSON` in `sandbank_config.ini` to false. Then, start up the database again and wait a few seconds for the changes to take effect. The renamed data should be gone now.
 
 You must then set `MERGE_JSON` back to true, or it will spam warnings at you.
 
 ### Saving on the client or the server
 
-Sandbank supports saving data on the client or server (or both). It just depends on where you call the code from. By default, saving on the client is not allowed, but this can be enabled in `Config.cs`.
+Sandbank supports saving data on the client or server (or both). It just depends on where you call the code from. By default, saving on the client is not allowed, but this can be enabled in `sandbank_config.ini`.
 
 ### Backups
 
-Sandbank supports backups and these are enabled by default. Backup settings can be configured in `Config.cs`.
+Sandbank supports backups and these are enabled by default. Backup settings can be configured in `sandbank_config.ini`.
 
 ### File obfuscation
 
-Sandbank supports file obfuscation, which can be enabled in `Config.cs`. This makes the saved data files unreadable and uneditable. This is useful if you are saving data on the client and don't want them to be able to see or change it.
+Sandbank supports file obfuscation, which can be enabled in `sandbank_config.ini`. This makes the saved data files unreadable and uneditable. This is useful if you are saving data on the client and don't want them to be able to see or change it.
 
 The obfuscation can be reverse-engineered, so it does not prevent data editing. But it makes it so that 99.9% of people will not bother.
 
 You can disable or enable obfuscation at any time and it will still work. Note that once a file is obfuscated, it can only become unobfuscated after it has been saved again.
 
 Obfuscation has a slight impact on performance.
-
-### Updating Sandbank
-
-Due to the fact that the library stores your settings in a code file (`Config.cs`), if you update the library from within s&box, any settings you have configured in this file will get wiped. To avoid this, you have the following options:
-
-- Create a backup of `Config.cs` before updating.
-- Clone and update the library via Git, which will allow you to fetch the latest code without conflicts.
 
 # Performance
 
@@ -221,7 +214,7 @@ The disk space used is less than the amount of memory used. Changes to the cache
 
 # Data consistency
 
-Data is written to disk slowly over time. The frequency at which this is done, as well as a number of other things, is configurable in `Config.cs`. By default, the database aims to write any change to disk in under 10 seconds.
+Data is written to disk slowly over time. The frequency at which this is done, as well as a number of other things, is configurable in `sandbank_config.ini`. By default, the database aims to write any change to disk in under 10 seconds.
 
 Sandbank attempts to shut itself down gracefully in the background when the game stops, saving all remaining data. However, it is still recommended to call `Shutdown()` before an anticipated server shutdown to ensure that the database is terminated properly. If the server crashes or if the server process is suddenly terminated, any data that is not written to disk by that point will probably be lost.
 

@@ -11,9 +11,9 @@ public partial class BackupsTest
 	[TestCleanup]
 	public void Cleanup()
 	{
-		Config.BACKUP_FREQUENCY = BackupFrequency.Daily;
-		Config.BACKUPS_TO_KEEP = 10;
-		Config.OBFUSCATE_FILES = false;
+		ConfigController.BACKUP_FREQUENCY = BackupFrequency.Daily;
+		ConfigController.BACKUPS_TO_KEEP = 10;
+		ConfigController.OBFUSCATE_FILES = false;
 
 		Sandbank.DeleteAllData();
 		Sandbank.Shutdown().GetAwaiter().GetResult();
@@ -185,7 +185,7 @@ public partial class BackupsTest
 	[TestMethod]
 	public void TestBackupWorksWithObfuscation()
 	{
-		Config.OBFUSCATE_FILES = true;
+		ConfigController.OBFUSCATE_FILES = true;
 
 		Sandbank.Insert( "test", new ReadmeExample()
 		{
@@ -208,7 +208,7 @@ public partial class BackupsTest
 	[TestMethod]
 	public void TestBackupDeletesOldestBackup()
 	{
-		Config.BACKUPS_TO_KEEP = 3;
+		ConfigController.BACKUPS_TO_KEEP = 3;
 
 		var collection = new Collection
 		{
@@ -252,7 +252,7 @@ public partial class BackupsTest
 	[TestMethod]
 	public void TestBackupNotCreatedIfBackupFrequencySetToNever()
 	{
-		Config.BACKUP_FREQUENCY = BackupFrequency.Never;
+		ConfigController.BACKUP_FREQUENCY = BackupFrequency.Never;
 
 		Sandbank.Insert( "test", new ReadmeExample()
 		{

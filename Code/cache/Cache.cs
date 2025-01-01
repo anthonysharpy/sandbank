@@ -24,7 +24,7 @@ static internal class Cache
 	private static object _timeSinceLastFullWriteLock = new();
 	private static int _staleDocumentsFoundAfterLastFullWrite;
 	private static int _staleDocumentsWrittenSinceLastFullWrite;
-	private static float _partialWriteInterval = 1f / Config.PARTIAL_WRITES_PER_SECOND;
+	private static float _partialWriteInterval = 1f / ConfigController.PARTIAL_WRITES_PER_SECOND;
 	private static TimeSince _timeSinceLastPartialWrite = 0;
 	private static object _collectionCreationLock = new();
 	private static bool _cacheWriteEnabled = true;
@@ -70,7 +70,7 @@ static internal class Cache
 			_staleDocumentsFoundAfterLastFullWrite = 0;
 			_staleDocumentsWrittenSinceLastFullWrite = 0;
 			StaleDocuments.Clear();
-			_partialWriteInterval = 1f / Config.PARTIAL_WRITES_PER_SECOND;
+			_partialWriteInterval = 1f / ConfigController.PARTIAL_WRITES_PER_SECOND;
 			_timeSinceLastPartialWrite = 0;
 		}
 	}
@@ -169,10 +169,10 @@ static internal class Cache
 
 		lock ( _timeSinceLastFullWriteLock )
 		{
-			_timeSinceLastFullWrite += Config.TICK_DELTA;
+			_timeSinceLastFullWrite += ConfigController.TICK_DELTA;
 		}
 
-		if ( GetTimeSinceLastFullWrite() >= Config.PERSIST_EVERY_N_SECONDS )
+		if ( GetTimeSinceLastFullWrite() >= ConfigController.PERSIST_EVERY_N_SECONDS )
 		{
 			// Do this immediately otherwise when the server is stuttering it can spam
 			// full writes.
@@ -211,7 +211,7 @@ static internal class Cache
 	/// </summary>
 	private static int GetNumberOfDocumentsToWrite()
 	{
-		float progressToNextWrite = GetTimeSinceLastFullWrite() / Config.PERSIST_EVERY_N_SECONDS;
+		float progressToNextWrite = GetTimeSinceLastFullWrite() / ConfigController.PERSIST_EVERY_N_SECONDS;
 		int documentsWeShouldHaveWrittenByNow = (int)(_staleDocumentsFoundAfterLastFullWrite * progressToNextWrite);
 		int numberToWrite = documentsWeShouldHaveWrittenByNow - _staleDocumentsWrittenSinceLastFullWrite;
 

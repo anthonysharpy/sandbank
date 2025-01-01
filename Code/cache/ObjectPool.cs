@@ -76,7 +76,7 @@ internal static class ObjectPool
 	{
 		foreach (var poolPair in _objectPool)
 		{
-			if ( Config.CLASS_INSTANCE_POOL_SIZE - poolPair.Value.TypePool.Count >= Config.CLASS_INSTANCE_POOL_SIZE / 2)
+			if ( ConfigController.CLASS_INSTANCE_POOL_SIZE - poolPair.Value.TypePool.Count >= ConfigController.CLASS_INSTANCE_POOL_SIZE / 2)
 			{
 				ReplenishPoolType( poolPair.Key, poolPair.Value.ObjectType );
 			}
@@ -86,7 +86,7 @@ internal static class ObjectPool
 	private static void ReplenishPoolType(string classTypeName, Type classType )
 	{
 		var concurrentList = _objectPool[classTypeName].TypePool;
-		int instancesToCreate = Config.CLASS_INSTANCE_POOL_SIZE - concurrentList.Count;
+		int instancesToCreate = ConfigController.CLASS_INSTANCE_POOL_SIZE - concurrentList.Count;
 
 		for ( int i = 0; i < instancesToCreate; i++ )
 		{

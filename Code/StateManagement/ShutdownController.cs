@@ -31,7 +31,7 @@ internal static class ShutdownController
 				Logging.Warn( $"trying to shut down database from state {InitialisationController.CurrentDatabaseState.ToString()} " +
 					"- this is a bug!" );
 
-			if ( Config.STARTUP_SHUTDOWN_MESSAGES )
+			if ( ConfigController.STARTUP_SHUTDOWN_MESSAGES )
 			{
 				Log.Info( "==================================" );
 				Log.Info( "Shutting down Sandbank..." );
@@ -56,7 +56,7 @@ internal static class ShutdownController
 				}
 			}
 
-			if ( Config.STARTUP_SHUTDOWN_MESSAGES )
+			if ( ConfigController.STARTUP_SHUTDOWN_MESSAGES )
 			{
 				Log.Info( "Shutdown completed" );
 				Log.Info( "==================================" );
