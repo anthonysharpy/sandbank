@@ -15,6 +15,10 @@ Replace "players" with the name of your collection. It must match the name of th
 
 Alternatively, if you want to re-create the collection from scratch, just delete the folder entirely.
 
+## sandbank_config.ini is corrupt
+
+You probably put a typo into `sandbank_config.ini`. If your settings aren't important, an easy way to fix this is just to delete `sandbank_config.ini`, and it will be re-made automatically.
+
 ## the CollectionName in the definition.txt differed from the name of the directory
 
 "CollectionName" in the definition.txt must match the name of the folder it is in. Either re-name your folder or edit the definition.txt.
