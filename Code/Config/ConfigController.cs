@@ -31,9 +31,9 @@ STARTUP_SHUTDOWN_MESSAGES=true
 # if you want. This is used in the unit tests to make life easier.
 WARNINGS_AS_EXCEPTIONS=false
 
-# Set this to true if you want clients to be able to use the database too. You probably don't want this - none of the
-# data will get synced between host and clients (that's not what it's designed to do). But there might be some situations
-# where you want to store data on the client for some reason.
+# Set this to true if you want clients to be able to use the database too. You probably don't want this - turning this on
+# doesn't magically sync data between host and clients. But there might be some situations where you want to store data on
+# the client for some reason.
 CLIENTS_CAN_USE=false
 
 # This controls whether the written JSON files are indented or not. Indentation makes them more human-readable, but
@@ -61,15 +61,15 @@ DATABASE_NAME=sandbank
 TICK_DELTA=0.1
 
 # The number of instances of each class used by your database that will be cached in RAM for faster fetching. Increasing this
-# will improve performance if you are selecting lots of records at once. For example, if you were fetching 1,000 records per
-# second, for optimal performance, the recommended value for this would be 2,000 (about twice as much). You will probably see
-# little-to-no performance gain by increasing this further.
+# will improve performance if you are selecting lots of records. The optimal value for this is roughly twice your peak per-second
+# fetch rate. For example, if at your peak you are fetching 1,000 records per second, for optimal performance, the recommended
+# value for this would be 2,000. You will probably see little-to-no performance gain by increasing this further.
 #
-# Increasing this will increase memory usage. The memory increase is not affected by the size of a collection, but is is affected
-# by the size of your data class in memory. As a very rough rule, a 100,000 pool size takes up around 200mb RAM for each
-# collection. A very rough formula for estimating the total memory usage is:
+# Increasing this will increase memory usage. The memory increase is not affected by the number of records in a collection,
+# but it is affected by the complexity of your data class. As a very rough rule, a 100,000 pool size takes up around 200mb
+# RAM for each collection. A very rough formula for estimating the total memory usage is:
 #
-# 200mb * number of collections * CLASS_INSTANCE_POOL_SIZE / 100,000
+# 1mb * number of collections * CLASS_INSTANCE_POOL_SIZE / 500
 CLASS_INSTANCE_POOL_SIZE=2000
 
 # This should always true unless you know what you are doing.
