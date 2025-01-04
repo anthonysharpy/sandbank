@@ -2,7 +2,7 @@ Code samples for Sandbank.
 
 Something you think could be added here? Please make an issue.
 
-# Load an existing player record, or create a new record if one doesn't exist
+## Load an existing player record, or create a new record if one doesn't exist
 
 A player has joined. Try and load their data, or create a new record for them if they have no data.
 
@@ -50,13 +50,13 @@ public void OnPlayerJoined( Connection connection )
 }
 ```
 
-# Search for a record
+## Search for a record
 
 ```
 var playerWith100Health = Sandbank.SelectOne<PlayerData>("players", x => x.Health == 100);
 ```
 
-# Delete a record
+## Delete a record
 
 ```
 Sandbank.DeleteWithID<PlayerData>("players", myPlayer.UID);
