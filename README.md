@@ -18,11 +18,13 @@ Alternatively you can get the latest version of the source code from https://git
 
 # Usage and features
 
+### Quick code examples
+[See here for ready-to-go code examples.](RepairGuide.md) 
+**_If you find yourself getting confused, make sure you have read the entire readme!_**
+
 ### Basic introduction
 
-The database uses the document model. This means that data is saved as JSON files. It also means that there is no need to create SQL queries or do joins or anything like that.
-
-A "document" is just a class containing some data. For example, data for a specific player.
+The database uses the document model. This means that data is saved as JSON files. A "document" is just a class containing some data. For example, data for a specific player.
 
 Each document belongs to a "collection". Every collection contains many documents. Most databases will have multiple collections. For example, you might have a "players" collection for player data, and a "houses" collection for players' houses, etc.
 
@@ -47,72 +49,17 @@ The basics you need to know:
 
 There are two ways to save data with Sandbank.
 
-The first way is the convenient but potentially less performant way. You attach the `[AutoSaved]` attribute to each property you want to save. In the attribute you must specify the name of the collection you want the class to be saved in (e.g. `[AutoSaved("players")]`). Whenever that property is updated, the data is saved to file automatically. The reason this is slower is because if the property is updated often, there can be an excessive amount of inserts. ***Note that `[AutoSaved]` will not do anything if the UID is empty (manually saving the record will populate the UID automatically, or you can populate it yourself)***.
+The first way is the convenient but potentially less performant way. You attach the `[AutoSaved]` attribute to each property you want to save. In the attribute you must specify the name of the collection you want the class to be saved in (e.g. `[AutoSaved("players")]`). Whenever that property is updated, the data is saved to file in that collection automatically. The reason this is slower is because if the property is updated often, there can be an excessive amount of inserts. ***Note that `[AutoSaved]` will not do anything if the UID is empty (manually saving the record will populate the UID automatically, or you can populate it yourself)***.
 
 The second way is the less convenient but more performant way. You attach the `[Saved]` attribute to your property. You then have to manually insert the data into the database in order to actually save it. You can do this straight away, or if you want to maximise performance, you might save all your data every few seconds in a background loop.
 
 In practice, unless you are making a game with lots of players or lots of things that need to be saved, `[AutoSaved]` will probably be fine for you.
 
-Here is an example of tagging data using both `[Saved]` and `[AutoSaved]`:
+### Query speed
 
-```
-// Note how this is also a component. This is the recommended way to do it.
-// If you store your data in a component you can sync it over the network as
-// well as save it.
+Generally you should only be fetching documents by their ID, which will return instantly.
 
-class PlayerData : Component
-{
-	[Saved] public string UID { get; set; }
-	[Saved, Sync] public float Health { get; set; }
-	[AutoSaved("players"), Sync] public string Name { get; set; }
-	[Saved, Sync] public int Level { get; set; }
-	[Saved] public DateTime LastPlayTime { get; set; }
-	[Saved, Sync] public List<string> Items { get; set; } = new();
-}
-```
-
-### Inserting, querying and deleting
-```
-using SandbankDatabase;
-
-private PlayerData _myPlayerData = new();
-
-public void SaveData()
-{
-	Log.Info($"My ID is empty: {_myPlayerData.UID}");
-
-	_myPlayerData.Health = 100;
-	_myPlayerData.Name = "Bob";
-
-	// Insert the player. Their ID is populated from within the function because the
-	// class is passed by reference.
-	Sandbank.Insert("players", _myPlayerData);
-
-	Log.Info($"My ID is now populated: {_myPlayerData.UID}");
-
-	var playerWith100Health = Sandbank.SelectOne<PlayerData>("players", x => x.Health == 100);
-
-	Log.Info($"The player with 100 health is: {playerWith100Health.Name}"); // "Bob".
-
-	Sandbank.DeleteWithID<PlayerData>("players", playerWith100Health.UID);
-}
-```
-
-### Using the data
-
-If you fetch data from the database and want to put it in a component in the scene or something like that, you can either copy each field yourself, or use the helper method `CopySavedData`, which will copy all `[Saved]` and `[AutoSaved]` public properties:
-
-```
-var player = GetOurPlayer(); // Get the player in the scene.
-var ourPlayerData = Sandbank.SelectOneWithID<PlayerData>("players", "123");
-Sandbank.CopySavedData<PlayerData>(ourPlayerData, player.Data);
-```
-
-### Slow queries
-
-A well-designed query should return instantly.
-
-However, if you're doing something hardcore, you should consider wrapping the call in its own async task or thread:
+However, if you're doing more complex searches, you should consider wrapping it in its own async task or thread:
 
 ```
 public bool Something()
