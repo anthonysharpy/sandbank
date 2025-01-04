@@ -19,7 +19,7 @@ Alternatively you can get the latest version of the source code from https://git
 # Usage and features
 
 ### Quick code examples
-[See here for ready-to-go code examples.](RepairGuide.md) 
+[See here for ready-to-go code examples.](CodeSamples.md) 
 **_If you find yourself getting confused, make sure you have read the entire readme!_**
 
 ### Basic introduction
