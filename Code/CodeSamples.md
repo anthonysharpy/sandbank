@@ -20,6 +20,8 @@ public class MyPlayer : Component
 
 public Player CreatePlayer()
 {
+	// This assumes you have a player prefab which has a player component.
+	// You don't have to do this, this is just an example.
 	var playerObject = PlayerPrefab.Clone();
 	return playerObject.Components.Get<MyPlayer>();
 }
@@ -35,7 +37,7 @@ public void OnPlayerJoined( Connection connection )
 
 	if ( playerData == null )
 	{
-		// They have no data. Set up a fresh copy.
+		// They have no data. Set-up a fresh copy.
 		// Because these are [AutoSaved], the data will be saved automatically once we have
 		// populated the UID. 
 		player.Data.UID = connection.SteamId.ToString();
@@ -50,14 +52,16 @@ public void OnPlayerJoined( Connection connection )
 }
 ```
 
+If you wanted to use `[Saved]` instead of `[AutoSaved]`, the code is the same, except you would have to manually call `Sandbank.Insert<>()`.
+
 ## Search for a record
 
 ```
-var playerWith100Health = Sandbank.SelectOne<PlayerData>("players", x => x.Health == 100);
+var playerWith100Health = Sandbank.SelectOne<MyPlayer>("players", x => x.Health == 100);
 ```
 
 ## Delete a record
 
 ```
-Sandbank.DeleteWithID<PlayerData>("players", myPlayer.UID);
+Sandbank.DeleteWithID<MyPlayer>("players", myPlayer.UID);
 ```
