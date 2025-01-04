@@ -18,7 +18,7 @@ public class MyPlayer : Component
 	[Sync, AutoSaved("players")] public float Health { get; set; }
 }
 
-public Player CreatePlayer()
+public MyPlayer CreatePlayer()
 {
 	// This assumes you have a player prefab which has a player component.
 	// You don't have to do this, this is just an example.
