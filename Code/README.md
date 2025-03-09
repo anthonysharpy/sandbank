@@ -4,7 +4,7 @@ Are you using Sandbank in your project? If so, let me know and I'll advertise yo
 
 Sandbank is the fast, easy-to-use no-SQL database for s&box.
 
-Sandbank is a local data store and does not save anything in the cloud. If you're looking for a service that lets you host data, call endpoints and do other server-related logic, we have a separate service called Sandbank Server that you can [read about here](SandbankServer.md).
+Sandbank is a local data store and does not save anything in the cloud.
 
 # Installation
 
